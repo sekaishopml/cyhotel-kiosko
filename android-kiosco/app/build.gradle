@@ -16,7 +16,7 @@ android {
         applicationId "com.hoteldelvalle.kiosco"
         minSdk 26
         targetSdk 34
-        versionCode 3
+        versionCode 30000
         versionName "3.0.0"
     }
 
