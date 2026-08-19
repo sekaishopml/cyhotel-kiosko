@@ -1,0 +1,24 @@
+# Builds y artefactos
+/dist/
+*.apk
+android-kiosco/.gradle/
+android-kiosco/app/build/
+android-kiosco/build/
+*.iml
+
+# Secretos / firma
+/keys/
+*.jks
+keystore.properties
+local.properties
+.env
+.env.*
+
+# Python
+__pycache__/
+*.pyc
+
+# Sistema / editor
+.DS_Store
+.vscode/
+.idea/

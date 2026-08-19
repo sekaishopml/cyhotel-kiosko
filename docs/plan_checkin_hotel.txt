@@ -1,0 +1,215 @@
+PLAN DEL SISTEMA DE CHECK-IN Y DASHBOARD ADMINISTRATIVO PARA HOTEL
+Kiosco de autoservicio en tablet, panel admin por pisos, verificación de identidad y
+venta de servicios adicionales
+Preparado con Claude · Agosto 2026
+
+=====================================================================
+1. RESUMEN EJECUTIVO
+=====================================================================
+El objetivo es reemplazar el check-in manual en recepción por un flujo de autoservicio en tablet: el huésped
+acepta términos, elige su cuarto, agrega servicios (snacks, comidas, farmacia, cosméticos), paga y recibe el
+resumen por correo. Al lanzamiento, el cobro es en efectivo confirmado por el staff; el sistema queda
+diseñado desde el inicio para activar una pasarela de pago digital más adelante sin rehacer el flujo. En
+paralelo, el hotel opera un dashboard administrativo que muestra el estado de cada cuarto por piso, el tiempo
+restante de estadía, el stock disponible y una cola de verificación de identidad con foto y datos del
+documento. El sistema se apoya en cuatro piezas: la app del kiosco, el panel admin, un backend central y una
+base de datos con integraciones externas (pago, verificación de identidad, correo).
+
+=====================================================================
+2. ARQUITECTURA GENERAL
+=====================================================================
+El sistema se organiza en cuatro componentes que se comunican a través de una sola API central. Esto
+permite que el kiosco y el panel admin compartan siempre la misma información en tiempo real (por ejemplo,
+si el admin anula una orden, el kiosco y el reporte de ocupación se actualizan al instante).
+
+Componente                          Función
+----------------------------------  -------------------------------------------------
+App del kiosco (tablet)             Interfaz táctil en recepción. Guía al huésped por el flujo de check-in y
+                                    venta de add-ons.
+Panel administrativo (web)          Uso del staff. Control de cuartos por piso, stock, novedades y verificación
+                                    de identidad.
+Backend API                         Lógica de negocio: reservas, cálculo de totales, control de stock, reglas de
+                                    anulación.
+Base de datos                       Guarda cuartos, órdenes, huéspedes, inventario y registros de auditoría.
+Servicios externos                  Servicio de OCR / verificación facial y envío de correo. La pasarela de
+                                    pago se conecta como módulo aparte cuando se active (ver sección 8).
+
+PRINCIPIO DE DISEÑO: PAGOS COMO MÓDULO INTERCAMBIABLE
+El backend define los pagos como un módulo independiente con un método por defecto: "efectivo",
+confirmado manualmente por el staff. Activar una pasarela digital más adelante (PayPhone, Kushki,
+Datafast) es solo sumar un método de pago adicional al mismo módulo — no requiere rediseñar el flujo
+del kiosco, el dashboard ni la base de datos.
+
+=====================================================================
+3. FLUJO DE LA APP EN EL KIOSCO
+=====================================================================
+Cinco bloques de pantallas, en el orden en que los recorre el huésped:
+
+#   Pantalla                        Contenido
+--- ------------------------------  -------------------------------------------------
+1   Inicio y términos               Pantalla de bienvenida y aceptación de términos y condiciones.
+2   Selección de cuarto             Tipo de cuarto, fechas de entrada/salida y número de huéspedes. Muestra
+                                    subtotal y detalle.
+3   Servicios adicionales           Refrescos, snacks, desayuno, almuerzo, merienda, cosméticos y farmacia. El
+                                    total se recalcula en vivo.
+4   Pago y verificación             Por ahora, cobro en efectivo confirmado por el staff en recepción, más
+                                    captura de cédula o pasaporte para verificar identidad. La pantalla ya está
+                                    preparada para activar pago con tarjeta o billetera digital sin rediseñar el flujo.
+5   Confirmación final              Resumen del pedido con opción de enviar el detalle completo al correo del
+                                    huésped.
+
+=====================================================================
+4. DASHBOARD ADMINISTRATIVO DEL HOTEL
+=====================================================================
+Es la parte que más valor agrega frente a un kiosco genérico de check-in. Secciones sugeridas:
+
+VISTA POR PISOS
+Mapa de habitaciones agrupado por piso, con color según estado (libre, ocupado, en limpieza, bloqueado) y
+cuenta regresiva del tiempo restante de cada estadía.
+
+DETALLE DE ORDEN POR CUARTO
+Huésped, add-ons comprados, monto total y horario. Cada orden muestra su método de pago (efectivo por
+ahora) con un botón de "marcar como pagado" para que recepción confirme el cobro en efectivo; cuando se
+active una pasarela digital, ese estado se actualizará solo. Permite anular una orden completa o solo un ítem
+específico (por ejemplo, si el huésped marcó mal la cantidad de desayunos), y deja registro de qué usuario
+admin hizo el cambio para efectos de auditoría.
+
+NOVEDADES E INCIDENCIAS
+Tablero tipo ticket por cuarto para mantenimiento, quejas u objetos olvidados, con estado abierto o resuelto.
+
+INVENTARIO Y STOCK
+Control de snacks, desayunos, farmacia y cosméticos con cantidad disponible y alertas de stock bajo. Cuando
+un ítem llega a cero, desaparece automáticamente del kiosco.
+
+COLA DE VERIFICACIÓN DE IDENTIDAD
+Check-ins pendientes de validar, con la foto del documento y los datos extraídos lado a lado para que el staff
+confirme o rechace con un clic.
+
+REPORTES Y ROLES
+Ocupación por día, ingresos por habitación vs. add-ons, productos más vendidos, y accesos diferenciados por
+rol (recepción, housekeeping, gerencia).
+
+=====================================================================
+5. RECONOCIMIENTO Y VERIFICACIÓN DE IDENTIDAD
+=====================================================================
+Se resuelve en dos capas, sin necesidad de programar reconocimiento facial desde cero:
+
+- Captura: la tablet toma foto del documento (cédula o pasaporte) y, opcionalmente, una selfie del huésped.
+- Extracción y verificación: un servicio de OCR lee los datos del documento (nombre, número, fecha de
+  nacimiento) y un servicio de comparación facial calcula la probabilidad de que sea la misma persona de la
+  selfie.
+- Opciones de servicio: AWS Rekognition + Textract o Azure Face API + Document Intelligence para
+  buena precisión con pago por uso; o Tesseract OCR (open source) más una librería facial open source
+  como alternativa de bajo costo para volúmenes iniciales pequeños.
+- En el dashboard: cada huésped aparece como una tarjeta con foto del documento, foto de la selfie, datos
+  editables y un semáforo de confianza del match. El staff siempre da el visto bueno final — nunca se
+  aprueba automáticamente sin supervisión humana.
+
+DATO IMPORTANTE SOBRE DATOS SENSIBLES
+Vas a almacenar fotos de documentos de identidad, lo que en Ecuador cae bajo la Ley Orgánica de
+Protección de Datos Personales. Desde el diseño conviene cifrar esas imágenes en el storage, definir un
+tiempo de retención y no exponerlas nunca fuera del panel admin.
+
+=====================================================================
+6. FUNCIONALIDADES ADICIONALES SUGERIDAS
+=====================================================================
+- Multi-idioma en la tablet (español/inglés como mínimo, detectado según el documento del huésped).
+- Entrega de llave electrónica: integración con cerraduras tipo Assa Abloy o dormakaba para activar
+  tarjeta o enviar un código PIN por correo/SMS.
+- Notificaciones en tiempo real en el dashboard vía WebSockets: nuevo check-in, tiempo de cuarto por
+  vencer, stock en cero.
+- Modo offline básico en el kiosco para que una caída breve de internet no pierda la sesión del huésped.
+- Facturación electrónica integrada al SRI al cerrar cada orden.
+- Integración con un PMS (sistema de gestión hotelera) existente, para no duplicar la base de reservas.
+- Arquitectura multi-hotel: si el proyecto puede crecer a más sedes, conviene que cada hotel sea un
+  "tenant" separado desde el diseño de la base de datos.
+
+=====================================================================
+7. STACK TECNOLÓGICO RECOMENDADO
+=====================================================================
+Componente                Tecnología sugerida                              Por qué
+------------------------  ---------------------------------------------   -------------------------------------------------
+App del kiosco            React (Next.js) o Flutter, en modo kiosco       UI táctil grande, fácil de bloquear en pantalla
+                          sobre tablet Android                            completa, funciona bien con caché local offline.
+Panel admin               React + Next.js, Tailwind CSS, Recharts,        Rápido de construir y se actualiza en vivo cuando
+                          Socket.io                                       cambia el estado de un cuarto.
+Backend                   Node.js con NestJS (TypeScript)                 Tipado fuerte, reduce errores en lógica de pagos y
+                                                                          stock.
+Base de datos             PostgreSQL + Redis (caché)                      PostgreSQL maneja bien las relaciones
+                                                                          cuarto–orden–huésped; Redis acelera sesiones y
+                                                                          datos frecuentes.
+Almacenamiento            S3 o equivalente, con cifrado                   Para fotos de documentos de identidad y
+                                                                          comprobantes.
+Verificación de           AWS Rekognition + Textract, o                   OCR y comparación facial sin desarrollarlo desde
+identidad                 Azure Face API                                  cero.
+Correo                    SendGrid o Amazon SES                           Envío del resumen de pedido al huésped.
+Infraestructura           Docker + VPS o AWS/GCP, CI/CD con               Un solo VPS decente alcanza para un hotel;
+                          GitHub Actions                                  escalable a la nube cuando crezca.
+
+=====================================================================
+8. PAGOS: EFECTIVO AL LANZAMIENTO, LISTO PARA PASARELA DIGITAL
+=====================================================================
+Para el lanzamiento, el kiosco cobra en efectivo: el huésped arma su pedido, la pantalla de pago muestra el
+total a pagar en recepción y el staff lo marca como cobrado desde el dashboard. Esto evita la complejidad y el
+costo de integrar una pasarela desde el día uno, sin bloquear esa opción más adelante — el módulo de pagos
+del backend ya está diseñado para aceptar un método adicional sin tocar el resto del sistema (ver nota de
+diseño en la sección 2).
+
+Cuando el hotel decida activar cobro digital, esta es la comparación de las pasarelas más usadas en el
+mercado ecuatoriano en 2026:
+
+Pasarela      Comisión aprox.                        Ventaja principal                     Cuándo conviene
+-----------   ------------------------------------   -----------------------------------  -------------------------------
+PayPhone      ≈5% + IVA sobre la comisión            Setup en minutos, sin costos fijos   Activarla primero, por su
+                                                     ni mensualidades                      rapidez de integración
+Kushki        ≈2.95% + $0.25 por transacción         Mejor tarifa en volumen alto,        Sumar cuando el negocio
+                                                     integración algo más técnica          escala o suma sedes
+Datafast      Comisión bancaria variable             Respaldo bancario tradicional         Si se prefiere trabajar con
+                                                     (Dataweb)                              un banco conocido
+
+Recomendación para ese momento: activar primero PayPhone por su rapidez de integración y sin costos
+fijos; sumar Kushki como respaldo o para reducir comisión cuando el volumen de transacciones crezca.
+
+=====================================================================
+9. FASES DE DESARROLLO
+=====================================================================
+Etapa                  Alcance
+---------------------  -------------------------------------------------
+Fase 1 · MVP           Flujo completo del kiosco (sin add-ons todavía) con cobro en efectivo confirmado por el
+                       staff, y dashboard básico con estado de cuartos y anulación de órdenes.
+Fase 2                 Catálogo de add-ons con control de stock, y cola de verificación de identidad manual (el
+                       staff revisa foto vs. datos). El pago sigue siendo en efectivo.
+Fase 3                 Automatizar OCR y comparación facial, notificaciones en tiempo real.
+Fase 4 · opcional      Activar pasarela de pago digital (PayPhone y luego Kushki) como método adicional al
+                       efectivo, sin cambios en el flujo del kiosco ni en el dashboard.
+Fase 5 · opcional      Integraciones adicionales: PMS, cerraduras electrónicas, facturación electrónica, y
+                       soporte multi-hotel si aplica.
+
+Este orden permite tener algo usable en producción rápidamente y sumar la parte más compleja
+(reconocimiento de identidad automático) una vez validado el resto del flujo con huéspedes reales.
+
+=====================================================================
+10. CONSIDERACIONES LEGALES Y DE SEGURIDAD
+=====================================================================
+- Cifrar en reposo las fotos de documentos de identidad y limitar su acceso solo al panel admin.
+- Definir una política clara de retención de datos personales (cuánto tiempo se guardan las imágenes y
+  datos del huésped).
+- Cumplir con la Ley Orgánica de Protección de Datos Personales de Ecuador para el manejo de esta
+  información.
+- Si se procesan pagos con tarjeta directamente, seguir los lineamientos PCI-DSS o delegar ese manejo a la
+  pasarela de pago.
+- Registrar auditoría de cada anulación o edición de orden hecha por el staff (quién, cuándo, qué cambió).
+- Definir roles y permisos claros en el dashboard para evitar que cualquier usuario pueda anular órdenes o
+  ver documentos de identidad sin justificación.
+
+=====================================================================
+11. PRÓXIMOS PASOS
+=====================================================================
+- Definir el esquema de base de datos (cuartos, órdenes, add-ons, stock, verificaciones de identidad).
+- Construir el MVP del flujo del kiosco y el dashboard básico (Fase 1).
+- Construir el flujo de pago en efectivo con confirmación del staff; dejar el módulo de pagos listo para sumar
+  PayPhone (recomendado) cuando el hotel decida activar cobro digital.
+- Definir con el hotel la política de retención de datos antes de activar la captura de documentos de
+  identidad.
+
+Fin del documento.

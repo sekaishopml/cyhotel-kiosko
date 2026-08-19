@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CyHotel · Consolidado</title>
+<meta name="theme-color" content="#123526">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500;1,600&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #123526;
+    --primary: #17452F;
+    --green: #2E7D4F;
+    --green-soft: #3E9A63;
+    --clean-bg: #DFE9E2;
+    --blocked: #A49A87;
+    --error: #A63D2C;
+    --tint-error: rgba(166,61,44,.09);
+    --tint-green: rgba(46,125,79,.10);
+    --line: rgba(18,53,38,.14);
+    --line-soft: rgba(18,53,38,.08);
+    --muted: rgba(18,53,38,.55);
+    --soft: rgba(18,53,38,.75);
+    --amber: #9C7A1E;
+    --white: #FFFFFF;
+    --r-sm: 4px;
+    --r-md: 8px;
+    --sidebar-w: 250px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  [hidden] { display: none !important; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: 'Manrope', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--white);
+    color: var(--ink);
+    min-height: 100vh;
+    line-height: 1.5;
+    font-size: 15px;
+  }
+  ::selection { background: var(--ink); color: var(--white); }
+  :focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+  .num { font-variant-numeric: tabular-nums; }
+
+  .wordmark { display: flex; flex-direction: column; line-height: 1.02; }
+  .wordmark-hot {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .46em;
+    text-indent: .46em;
+    color: var(--soft);
+  }
+  .wordmark-valle {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: .1em;
+    color: var(--ink);
+  }
+
+  .login-view {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background: var(--white);
+  }
+  .login-card {
+    width: 100%;
+    max-width: 410px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-top: 4px solid var(--primary);
+    border-radius: var(--r-md);
+    padding: 44px 38px 34px;
+    text-align: center;
+  }
+  .login-card .wordmark-hot { color: var(--muted); }
+  .login-sub {
+    margin-top: 12px;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: var(--muted);
+  }
+  .login-form {
+    margin-top: 28px;
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .login-form label {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--soft);
+    margin-top: 12px;
+  }
+  .login-form label:first-child { margin-top: 0; }
+  .login-form input {
+    width: 100%;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--white);
+    padding: 12px 13px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .login-form input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--tint-green); }
+  .login-error {
+    margin-top: 14px;
+    border: 1px solid var(--error);
+    background: var(--tint-error);
+    color: var(--error);
+    border-radius: var(--r-sm);
+    padding: 10px 13px;
+    font-size: 12px;
+    font-weight: 700;
+  }
+  .login-submit {
+    margin-top: 22px;
+    width: 100%;
+    border: 1px solid var(--primary);
+    border-radius: var(--r-sm);
+    background: var(--primary);
+    color: var(--white);
+    padding: 13px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 12px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    cursor: pointer;
+    min-height: 48px;
+  }
+  .login-submit:hover:not(:disabled) { background: var(--ink); border-color: var(--ink); }
+  .login-submit:disabled { opacity: .55; cursor: wait; }
+  .login-foot {
+    margin-top: 22px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+
+  #panelView { display: flex; min-height: 100vh; }
+  .sidebar {
+    width: var(--sidebar-w);
+    flex: none;
+    background: var(--ink);
+    color: var(--white);
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    transition: transform .2s ease;
+  }
+  .sidebar-wordmark { padding: 24px 22px 20px; }
+  .sidebar-wordmark .wordmark-hot { color: rgba(255,255,255,.7); font-size: 10px; }
+  .sidebar-wordmark .wordmark-valle { color: var(--white); font-size: 26px; }
+  .nav-list { flex: 1; padding: 8px 0; }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 48px;
+    padding: 0 20px;
+    border: none;
+    border-left: 3px solid transparent;
+    background: none;
+    color: rgba(255,255,255,.78);
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: .02em;
+    text-align: left;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .nav-item:hover { background: rgba(255,255,255,.06); color: var(--white); }
+  .nav-item.active { background: rgba(255,255,255,.10); color: var(--white); border-left-color: var(--white); }
+  .nav-icon { width: 17px; height: 17px; flex: none; }
+  .sidebar-foot {
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,.14);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.45);
+  }
+
+  .app-main {
+    flex: 1;
+    min-width: 0;
+    margin-left: var(--sidebar-w);
+    display: flex;
+    flex-direction: column;
+  }
+  .topbar {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: var(--white);
+    border-bottom: 1px solid var(--line);
+    padding: 10px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    min-height: 62px;
+    flex-wrap: wrap;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; min-width: 0; }
+  .page-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 25px;
+    line-height: 1.1;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+  .topbar-right { display: flex; align-items: center; gap: 18px; min-width: 0; flex-wrap: wrap; }
+  .clock { text-align: right; white-space: nowrap; }
+  .clock-time { font-size: 15px; font-weight: 800; color: var(--ink); }
+  .clock-date {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    text-transform: capitalize;
+  }
+  .sync { display: flex; align-items: center; gap: 8px; white-space: nowrap; }
+  .sync-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: var(--green);
+    flex: none;
+    border: 1px solid var(--line);
+  }
+  .sync-dot.loading {
+    background: transparent;
+    border: 2px solid var(--line);
+    border-top-color: var(--amber);
+    animation: spin .8s linear infinite;
+  }
+  .sync-dot.error { background: var(--error); border-color: rgba(166,61,44,.4); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .sync-text { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .btn {
+    border: 1px solid transparent;
+    border-radius: var(--r-sm);
+    padding: 8px 14px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .btn:disabled { opacity: .45; cursor: not-allowed; }
+  .btn-primary { background: var(--primary); color: var(--white); }
+  .btn-primary:hover:not(:disabled) { background: var(--ink); }
+  .btn-ghost { border-color: var(--green); color: var(--primary); background: var(--white); }
+  .btn-ghost:hover:not(:disabled) { background: var(--tint-green); }
+  .btn-soft { border-color: var(--line); color: var(--soft); background: var(--white); }
+  .btn-soft:hover:not(:disabled) { border-color: var(--green); color: var(--primary); }
+  .btn-refresh {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    background: var(--white);
+    color: var(--primary);
+    border: 1px solid var(--green);
+  }
+  .btn-refresh:hover:not(:disabled) { background: var(--tint-green); }
+  .btn-refresh svg { width: 14px; height: 14px; }
+  .btn-refresh.spinning svg { animation: spin .8s linear infinite; }
+  .btn-logout {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--white);
+    color: var(--soft);
+    font-family: 'Manrope', sans-serif;
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .btn-logout:hover { border-color: var(--error); color: var(--error); background: var(--tint-error); }
+  .top-user { text-align: right; white-space: nowrap; }
+  .top-user-name { font-size: 13px; font-weight: 800; color: var(--ink); }
+  .top-user-role {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--green);
+  }
+  .nav-toggle {
+    display: none;
+    border: 1px solid var(--line);
+    background: var(--white);
+    border-radius: var(--r-sm);
+    padding: 8px 10px;
+    cursor: pointer;
+  }
+  .nav-toggle svg { width: 20px; height: 20px; display: block; color: var(--ink); }
+  .scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(18,53,38,.45);
+    z-index: 35;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity .2s ease;
+  }
+  body.sidebar-open .scrim { opacity: 1; pointer-events: auto; }
+
+  .content { padding: 24px 28px 48px; max-width: 1400px; width: 100%; margin: 0 auto; }
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn .25s ease-out; }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+  .panel {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 18px 20px;
+  }
+  .panel-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .panel-note {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    margin-top: 10px;
+  }
+
+  .kpi-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 16px 18px;
+    min-width: 0;
+  }
+  .kpi-label {
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: var(--muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .kpi-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--ink);
+    margin-top: 6px;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+  }
+  .kpi-value small { font-size: 15px; font-weight: 800; color: var(--muted); }
+  .kpi.featured { background: var(--primary); border-color: var(--primary); }
+  .kpi.featured .kpi-label { color: rgba(255,255,255,.72); }
+  .kpi.featured .kpi-value { color: var(--white); }
+  .kpi.featured .kpi-value small { color: rgba(255,255,255,.72); }
+
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  .dash-col { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+
+  .alertas-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px; }
+  .alert-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    background: var(--white);
+    padding: 16px 18px;
+  }
+  .alert-card.ok { background: rgba(223,233,226,.5); }
+  .alert-card.warn { background: var(--tint-error); border-color: var(--error); }
+  .alert-num {
+    font-size: 34px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    color: var(--soft);
+    min-width: 52px;
+    text-align: center;
+  }
+  .alert-card.warn .alert-num { color: var(--error); }
+  .alert-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .alert-card.warn .alert-label { color: var(--error); }
+  .alert-sub { font-size: 12px; font-weight: 600; color: var(--muted); }
+  .alert-card.warn .alert-sub { color: rgba(166,61,44,.85); }
+
+  .bar-row { margin-bottom: 16px; }
+  .bar-row:last-child { margin-bottom: 0; }
+  .bar-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 7px; }
+  .bar-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--soft); }
+  .bar-val { font-size: 13px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+  .bar-track {
+    height: 10px;
+    border-radius: 999px;
+    background: rgba(18,53,38,.07);
+    overflow: hidden;
+  }
+  .bar-fill { height: 100%; border-radius: 999px; background: var(--green); }
+  .bar-fill.efectivo { background: var(--primary); }
+  .bar-fill.transferencia { background: var(--green); }
+
+  .prod-row {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    padding: 9px 0;
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .prod-row:last-child { border-bottom: none; }
+  .prod-name { font-size: 13px; font-weight: 700; color: var(--ink); flex: 1; min-width: 0; }
+  .prod-count { font-size: 12px; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .prod-total { font-size: 13px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+  .table-wrap {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    overflow-x: auto;
+  }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 980px; }
+  thead th {
+    text-align: left;
+    padding: 11px 14px;
+    background: var(--clean-bg);
+    border-bottom: 1px solid var(--line);
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+    color: var(--primary);
+    white-space: nowrap;
+  }
+  tbody td { padding: 11px 14px; border-bottom: 1px solid var(--line-soft); vertical-align: middle; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background .15s ease; }
+  tbody tr:hover { background: var(--tint-green); }
+  .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+  .actions .btn { min-height: 34px; padding: 6px 11px; }
+  .empty-state {
+    padding: 34px 20px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+  }
+
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    padding: 3px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
+    align-self: flex-start;
+  }
+  .pill::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .pill.pendiente { background: rgba(164,154,135,.22); color: #57534A; }
+  .pill.por_asignar { background: var(--tint-green); color: var(--primary); border: 1px dashed var(--primary); }
+  .pill.pagado, .pill.confirmada { background: var(--tint-green); color: var(--primary); }
+  .pill.finalizada { background: rgba(23,69,47,.16); color: var(--ink); }
+  .pill.vencida { background: var(--tint-error); color: var(--error); }
+  .pill.anulado { background: rgba(164,154,135,.22); color: var(--muted); }
+  .pill.activo { background: var(--green); color: var(--white); }
+  .pill.oculto { background: rgba(164,154,135,.22); color: var(--muted); }
+  .pill.none { background: rgba(18,53,38,.07); color: var(--muted); }
+
+  .hoteles-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .h-card {
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .h-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+  .h-name { font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 700; color: var(--ink); }
+  .h-slug { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 2px; letter-spacing: .03em; }
+  .h-occ { text-align: right; }
+  .h-occ-num { font-size: 22px; font-weight: 800; color: var(--primary); font-variant-numeric: tabular-nums; }
+  .h-occ-label { font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+  .h-bar { display: flex; height: 10px; border-radius: 999px; overflow: hidden; background: rgba(18,53,38,.07); gap: 1px; }
+  .h-bar i { display: block; height: 100%; }
+  .h-bar .seg-libre { background: var(--green); }
+  .h-bar .seg-ocupado { background: var(--primary); }
+  .h-bar .seg-limpieza { background: #9DB8A6; }
+  .h-bar .seg-bloqueado { background: var(--blocked); }
+  .h-legend { display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .h-leg-item { font-size: 11px; font-weight: 700; color: var(--soft); font-variant-numeric: tabular-nums; }
+  .h-leg-item i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; }
+  .h-leg-item .seg-libre { background: var(--green); }
+  .h-leg-item .seg-ocupado { background: var(--primary); }
+  .h-leg-item .seg-limpieza { background: #9DB8A6; }
+  .h-leg-item .seg-bloqueado { background: var(--blocked); }
+  .h-foot { margin-top: auto; }
+
+  .filters {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    margin-bottom: 16px;
+    background: var(--white);
+    border: 1px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 16px 18px;
+  }
+  .filters label {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    font-size: 10px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    color: var(--muted);
+  }
+  .filters select, .filters input {
+    border: 1px solid var(--line);
+    border-radius: var(--r-sm);
+    background: var(--white);
+    padding: 9px 10px;
+    font-family: 'Manrope', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    min-width: 150px;
+  }
+  .filters select:focus, .filters input:focus { outline: none; border-color: var(--green); box-shadow: 0 0 0 3px var(--tint-green); }
+  .pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 14px; flex-wrap: wrap; }
+  .pager-info { font-size: 12px; font-weight: 700; color: var(--muted); }
+  .pager-btns { display: flex; gap: 8px; }
+
+  .toast-container {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 120;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 360px;
+  }
+  .toast {
+    padding: 13px 16px;
+    border-radius: var(--r-sm);
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid var(--line);
+    background: var(--white);
+    color: var(--ink);
+    box-shadow: 0 6px 20px rgba(18,53,38,.14);
+    animation: toastIn .2s ease-out;
+  }
+  .toast.success { border-color: var(--green); background: var(--clean-bg); color: var(--primary); }
+  .toast.error { border-color: var(--error); background: var(--tint-error); color: var(--error); }
+  @keyframes toastIn { from { transform: translateX(16px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+  .sk { position: relative; overflow: hidden; background: rgba(18,53,38,.07); border-radius: var(--r-sm); }
+  .sk::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,.65), transparent);
+    animation: shimmer 1.2s infinite;
+    transform: translateX(-100%);
+  }
+  @keyframes shimmer { to { transform: translateX(100%); } }
+  .sk-line { height: 12px; margin: 9px 0; }
+  .sk-table { height: 150px; }
+  .sk-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+  .sk-block { height: 88px; border-radius: var(--r-md); }
+  .sk-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 16px; }
+  .sk-card { height: 190px; border-radius: var(--r-md); }
+
+  @media (max-width: 1199px) {
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .sk-grid { grid-template-columns: repeat(2, 1fr); }
+    .dash-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 899px) {
+    .sidebar { transform: translateX(-100%); }
+    body.sidebar-open .sidebar { transform: translateX(0); }
+    .app-main { margin-left: 0; }
+    .nav-toggle { display: block; }
+    .content { padding: 18px 16px 40px; }
+    .topbar { padding: 10px 16px; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+    .sk-grid { grid-template-columns: repeat(2, 1fr); }
+    .alertas-grid { grid-template-columns: 1fr; }
+    .kpi-value { font-size: 23px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="login-view" id="loginView">
+  <div class="login-card">
+    <div class="wordmark">
+      <span class="wordmark-hot">CYHOTEL</span>
+      <span class="wordmark-valle">CONSOLIDADO</span>
+    </div>
+    <div class="login-sub">Panel gerencial multi-hotel</div>
+    <form class="login-form" id="loginForm" novalidate>
+      <label for="loginUser">Usuario</label>
+      <input id="loginUser" name="username" type="text" autocomplete="username" required>
+      <label for="loginPass">Contraseña</label>
+      <input id="loginPass" name="password" type="password" autocomplete="current-password" required>
+      <div class="login-error" id="loginError" hidden></div>
+      <button type="submit" class="login-submit" id="loginBtn">Ingresar</button>
+    </form>
+    <div class="login-foot">Acceso exclusivo para gerencia y contabilidad</div>
+  </div>
+</div>
+
+<div id="panelView" hidden>
+  <div class="scrim" id="scrim"></div>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-wordmark">
+      <div class="wordmark">
+        <span class="wordmark-hot">CYHOTEL</span>
+        <span class="wordmark-valle">CONSOLIDADO</span>
+      </div>
+    </div>
+    <nav class="nav-list">
+      <button type="button" class="nav-item active" data-view="resumen">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+        <span class="nav-label">Resumen</span>
+      </button>
+      <button type="button" class="nav-item" data-view="hoteles">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16"/><path d="M9 7h1m4 0h1m-1 4h1m-6 0h1m4 4h1m-6 0h1"/></svg>
+        <span class="nav-label">Hoteles</span>
+      </button>
+      <button type="button" class="nav-item" data-view="ordenes">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M8 13h8M8 17h5"/></svg>
+        <span class="nav-label">Órdenes</span>
+      </button>
+    </nav>
+    <div class="sidebar-foot">Vista consolidada · Todos los hoteles</div>
+  </aside>
+
+  <main class="app-main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button type="button" class="nav-toggle" id="navToggle" aria-label="Abrir menú">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+        </button>
+        <h1 class="page-title" id="mainTitle">Resumen</h1>
+      </div>
+      <div class="topbar-right">
+        <div class="clock">
+          <div class="clock-time num" id="clockTime">--:--:--</div>
+          <div class="clock-date" id="clockDate"></div>
+        </div>
+        <div class="sync" title="Actualización automática cada 30 segundos">
+          <span class="sync-dot" id="syncDot"></span>
+          <span class="sync-text" id="syncText">Actualizado: --</span>
+        </div>
+        <button type="button" class="btn btn-refresh" id="btnRefresh">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          Actualizar
+        </button>
+        <div class="top-user">
+          <div class="top-user-name" id="topUser">—</div>
+          <div class="top-user-role" id="topRole">—</div>
+        </div>
+        <button type="button" class="btn-logout" id="btnLogout">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>
+          Salir
+        </button>
+      </div>
+    </header>
+
+    <div class="content">
+      <section class="section active" id="sec-resumen">
+        <div class="kpi-strip" id="kpiGrid"></div>
+        <div class="alertas-grid" id="alertasGrid"></div>
+        <div class="dash-grid">
+          <div class="dash-col">
+            <div class="panel">
+              <div class="panel-title">Por hotel</div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Hotel</th>
+                      <th>Ocupadas</th>
+                      <th>En limpieza</th>
+                      <th>Ingresos hoy</th>
+                      <th>Pagos pendientes</th>
+                      <th>Por asignar</th>
+                      <th>Salidas vencidas</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="tablaHoteles"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Ingresos por método</div>
+              <div id="metodoBars"></div>
+            </div>
+          </div>
+          <div class="dash-col">
+            <div class="panel">
+              <div class="panel-title">Por producto</div>
+              <div id="productosList"></div>
+            </div>
+            <div class="panel">
+              <div class="panel-title">Alertas del consolidado</div>
+              <div class="alertas-grid" id="alertasGrid2" style="margin-bottom:0"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="section" id="sec-hoteles">
+        <div class="hoteles-grid" id="hotelesGrid"></div>
+      </section>
+
+      <section class="section" id="sec-ordenes">
+        <div class="filters">
+          <label>
+            Hotel
+            <select id="ordFiltroHotel"></select>
+          </label>
+          <label>
+            Estado
+            <select id="ordFiltroEstado">
+              <option value="">Todos</option>
+              <option value="por_asignar">Por asignar</option>
+              <option value="pendiente">Pendiente</option>
+              <option value="pagado">Pagado</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="finalizada">Finalizada</option>
+              <option value="vencida">Vencida</option>
+              <option value="anulado">Anulada</option>
+            </select>
+          </label>
+          <label>
+            Desde
+            <input type="date" id="ordFiltroDesde">
+          </label>
+          <label>
+            Hasta
+            <input type="date" id="ordFiltroHasta">
+          </label>
+          <button type="button" class="btn btn-soft" id="ordReset">Limpiar filtros</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Hotel</th>
+                <th>Habitación</th>
+                <th>Huésped</th>
+                <th>Producto</th>
+                <th>Entrada</th>
+                <th>Salida</th>
+                <th>Total</th>
+                <th>Estado</th>
+                <th>Pago</th>
+                <th>Creada</th>
+              </tr>
+            </thead>
+            <tbody id="ordTableBody"></tbody>
+          </table>
+        </div>
+        <div class="pager">
+          <div class="pager-info" id="ordInfo"></div>
+          <div class="pager-btns">
+            <button type="button" class="btn btn-soft" id="ordPrev">Anterior</button>
+            <button type="button" class="btn btn-soft" id="ordNext">Siguiente</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast-container" id="toastContainer" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  var STORAGE_KEY = 'cyhotel_master';
+  var REFRESH_MS = 30000;
+
+  var ORDER_STATUS_LABEL = {
+    por_asignar: 'Por asignar', pendiente: 'Pendiente', pagado: 'Pagado',
+    confirmada: 'Confirmada', finalizada: 'Finalizada', vencida: 'Vencida',
+    anulado: 'Anulada'
+  };
+  var PRODUCT_LABEL = {
+    momento: 'Momento', amanecida: 'Amanecida',
+    hospedaje: 'Hospedaje', reserva: 'Reserva'
+  };
+  var PAY_LABEL = {
+    efectivo: 'Efectivo', transferencia: 'Transferencia', pendiente: 'Pendiente'
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  var session = null;
+  var handling401 = false;
+  var loading = false;
+  var refreshTimer = null;
+  var clockTimer = null;
+  var lastUpdate = null;
+
+  var state = {
+    view: 'resumen',
+    dashboard: null,
+    hotels: [],
+    orders: null,
+    orderFilters: { hotel_id: '', status: '', from: '', to: '' },
+    orderPage: 1,
+    loaded: { resumen: false, hoteles: false, ordenes: false }
+  };
+
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function pad2(n) { return n < 10 ? '0' + n : String(n); }
+
+  function fmtMoney(v) {
+    var n = Number(v) || 0;
+    var neg = n < 0;
+    n = Math.abs(n);
+    var parts = n.toFixed(2).split('.');
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+    return (neg ? '-$' : '$') + parts[0] + '.' + parts[1];
+  }
+
+  function fmtDT(s) {
+    if (!s) return '—';
+    var m = String(s).match(/^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})/);
+    if (m) return m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5];
+    return s;
+  }
+
+  function fmtClockTime(d) {
+    var parts = new Intl.DateTimeFormat('es-EC', {
+      timeZone: 'America/Guayaquil', hour: '2-digit', minute: '2-digit',
+      second: '2-digit', hour12: false
+    }).formatToParts(d);
+    var h = '', m = '', s = '';
+    for (var i = 0; i < parts.length; i++) {
+      if (parts[i].type === 'hour') h = parts[i].value;
+      if (parts[i].type === 'minute') m = parts[i].value;
+      if (parts[i].type === 'second') s = parts[i].value;
+    }
+    return h + ':' + m + ':' + s;
+  }
+
+  function fmtAsOf(s) {
+    var d = new Date(s);
+    if (isNaN(d.getTime())) return '—';
+    var p = new Intl.DateTimeFormat('es-EC', {
+      timeZone: 'America/Guayaquil', day: '2-digit', month: '2-digit',
+      year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false
+    }).formatToParts(d);
+    var out = { d: '', m: '', y: '', h: '', i: '' };
+    for (var k = 0; k < p.length; k++) {
+      var t = p[k].type;
+      if (t === 'day') out.d = p[k].value;
+      if (t === 'month') out.m = p[k].value;
+      if (t === 'year') out.y = p[k].value;
+      if (t === 'hour') out.h = p[k].value;
+      if (t === 'minute') out.i = p[k].value;
+    }
+    return out.d + '/' + out.m + '/' + out.y + ' ' + out.h + ':' + out.i;
+  }
+
+  function hotelName(o) {
+    return o.hotel_nombre || o.hotel_name || '—';
+  }
+
+  function toast(message, type) {
+    var el = document.createElement('div');
+    el.className = 'toast ' + (type || 'info');
+    el.textContent = message;
+    $('toastContainer').appendChild(el);
+    setTimeout(function () {
+      el.style.opacity = '0';
+      el.style.transition = 'opacity .3s';
+      setTimeout(function () { el.remove(); }, 350);
+    }, 4200);
+  }
+
+  /* Sesión */
+
+  function saveSession() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(session));
+  }
+
+  function loadSession() {
+    try {
+      var s = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      return s && s.token ? s : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function clearSession() {
+    session = null;
+    localStorage.removeItem(STORAGE_KEY);
+  }
+
+  function showLogin() {
+    $('panelView').hidden = true;
+    $('loginView').hidden = false;
+    $('loginError').hidden = true;
+    $('loginForm').reset();
+    setTimeout(function () { $('loginUser').focus(); }, 60);
+  }
+
+  function showPanel() {
+    $('loginView').hidden = true;
+    $('panelView').hidden = false;
+    $('topUser').textContent = session.username;
+    $('topRole').textContent = session.role === 'master' ? 'Consolidado · Master' : (session.role || '');
+    startClocks();
+    loadAll(true);
+    if (refreshTimer) clearInterval(refreshTimer);
+    refreshTimer = setInterval(function () {
+      if (session && !loading) loadAll(false);
+    }, REFRESH_MS);
+  }
+
+  function handle401() {
+    if (handling401) return;
+    handling401 = true;
+    clearSession();
+    if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    toast('Tu sesión expiró. Ingresa nuevamente.', 'error');
+    showLogin();
+    setTimeout(function () { handling401 = false; }, 500);
+  }
+
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = opts.headers || {};
+    if (session) headers.Authorization = 'Bearer ' + session.token;
+    return fetch(path, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body
+    }).then(function (res) {
+      if (res.status === 401) {
+        handle401();
+        var e = new Error('No autorizado');
+        e.status = 401;
+        throw e;
+      }
+      return res.json().catch(function () { return {}; }).then(function (data) {
+        if (!res.ok) {
+          var err = new Error(data.error || 'Error del servidor (' + res.status + ')');
+          err.status = res.status;
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  function setSync(stateClass, text) {
+    $('syncDot').className = 'sync-dot' + (stateClass ? ' ' + stateClass : '');
+    $('syncText').textContent = text;
+  }
+
+  /* Reloj */
+
+  function startClocks() {
+    tickClock();
+    if (clockTimer) clearInterval(clockTimer);
+    clockTimer = setInterval(tickClock, 1000);
+  }
+
+  function tickClock() {
+    var d = new Date();
+    $('clockTime').textContent = fmtClockTime(d);
+    $('clockDate').textContent = new Intl.DateTimeFormat('es-EC', {
+      timeZone: 'America/Guayaquil', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    }).format(d);
+  }
+
+  function touchUpdate() {
+    lastUpdate = new Date();
+    setSync('', 'Actualizado: ' + fmtClockTime(lastUpdate).slice(0, 5));
+  }
+
+  /* Carga */
+
+  function loadAll(first) {
+    if (loading) return;
+    loading = true;
+    setSync('loading', 'Actualizando…');
+    var p = Promise.all([
+      loadDashboard(first),
+      loadHotels(first)
+    ]);
+    p.then(function () {
+      if (state.view === 'ordenes') return loadOrders(first);
+    }).catch(function () {}).then(function () {
+      loading = false;
+      setSync('', lastUpdate ? 'Actualizado: ' + fmtClockTime(lastUpdate).slice(0, 5) : '');
+    });
+  }
+
+  function loadDashboard(first) {
+    if (first && !state.loaded.resumen) renderResumenSkeleton();
+    return api('/api/master/dashboard').then(function (data) {
+      state.dashboard = data;
+      state.loaded.resumen = true;
+      renderResumen();
+      touchUpdate();
+    }).catch(function (err) {
+      if (err.status !== 401) toast('No se pudo cargar el resumen: ' + err.message, 'error');
+    });
+  }
+
+  function loadHotels(first) {
+    if (first && !state.loaded.hoteles) renderHotelesSkeleton();
+    return api('/api/master/hotels').then(function (data) {
+      state.hotels = data.hotels || [];
+      state.loaded.hoteles = true;
+      renderHotelesSelect();
+      renderHoteles();
+      touchUpdate();
+    }).catch(function (err) {
+      if (err.status !== 401) toast('No se pudieron cargar los hoteles: ' + err.message, 'error');
+    });
+  }
+
+  function loadOrders(first) {
+    if (first && !state.loaded.ordenes) renderOrdenesSkeleton();
+    var qs = [];
+    if (state.orderFilters.hotel_id) qs.push('hotel_id=' + encodeURIComponent(state.orderFilters.hotel_id));
+    if (state.orderFilters.status) qs.push('status=' + encodeURIComponent(state.orderFilters.status));
+    if (state.orderFilters.from) qs.push('from=' + encodeURIComponent(state.orderFilters.from));
+    if (state.orderFilters.to) qs.push('to=' + encodeURIComponent(state.orderFilters.to));
+    qs.push('limit=50');
+    qs.push('page=' + state.orderPage);
+    return api('/api/master/orders?' + qs.join('&')).then(function (data) {
+      state.orders = data;
+      state.loaded.ordenes = true;
+      renderOrdenes();
+      touchUpdate();
+    }).catch(function (err) {
+      if (err.status !== 401) toast('No se pudieron cargar las órdenes: ' + err.message, 'error');
+    });
+  }
+
+  /* Navegación */
+
+  function showView(view) {
+    state.view = view;
+    document.querySelectorAll('.nav-item').forEach(function (b) {
+      b.classList.toggle('active', b.getAttribute('data-view') === view);
+    });
+    document.body.classList.remove('sidebar-open');
+    var titles = { resumen: 'Resumen', hoteles: 'Hoteles', ordenes: 'Órdenes' };
+    $('mainTitle').textContent = titles[view] || 'Resumen';
+    $('sec-resumen').classList.toggle('active', view === 'resumen');
+    $('sec-hoteles').classList.toggle('active', view === 'hoteles');
+    $('sec-ordenes').classList.toggle('active', view === 'ordenes');
+    if (view === 'resumen' && !state.loaded.resumen) renderResumenSkeleton();
+    if (view === 'hoteles' && !state.loaded.hoteles) renderHotelesSkeleton();
+    if (view === 'ordenes' && !state.loaded.ordenes) renderOrdenesSkeleton();
+    if (view === 'ordenes' && !loading) loadOrders(true);
+  }
+
+  function goHotelOrders(hotelId) {
+    state.orderFilters.hotel_id = String(hotelId);
+    state.orderFilters.status = '';
+    state.orderFilters.from = '';
+    state.orderFilters.to = '';
+    $('ordFiltroDesde').value = '';
+    $('ordFiltroHasta').value = '';
+    state.orderPage = 1;
+    syncFiltersToDom();
+    showView('ordenes');
+    if (state.loaded.ordenes && !loading) loadOrders(false);
+  }
+
+  /* Resumen */
+
+  function skBlocks(n, cls) {
+    var out = '';
+    for (var i = 0; i < n; i++) out += '<div class="sk ' + (cls || 'sk-block') + '"></div>';
+    return out;
+  }
+
+  function renderResumenSkeleton() {
+    $('kpiGrid').innerHTML = skBlocks(4, 'sk-block');
+    $('alertasGrid').innerHTML = skBlocks(2, 'sk-block');
+    $('tablaHoteles').innerHTML = '';
+    var tr = '<tr><td colspan="8"><div class="sk sk-table"></div></td></tr>';
+    $('tablaHoteles').innerHTML = tr;
+    $('metodoBars').innerHTML = '<div class="sk sk-line" style="margin:12px 0"></div><div class="sk sk-line"></div>';
+    $('productosList').innerHTML = '<div class="sk sk-line" style="margin:12px 0"></div><div class="sk sk-line"></div>';
+  }
+
+  function renderResumen() {
+    var d = state.dashboard;
+    if (!d) return;
+    var t = d.totales || {};
+
+    $('kpiGrid').innerHTML =
+      kpi('Hoteles activos', String(t.hoteles || 0), '') +
+      kpi('Cuartos totales', String(t.cuartos || 0), '') +
+      kpi('Ocupadas', String(t.ocupadas || 0), '') +
+      kpi('Libres', String(t.libres || 0), '') +
+      kpi('En limpieza', String(t.en_limpieza || 0), '') +
+      kpi('Bloqueadas', String(t.bloqueadas || 0), '') +
+      kpi('Ocupación', (t.ocupacion_pct || 0).toFixed(1) + '%', '') +
+      kpi('Ingresos hoy', fmtMoney(d.ingresos_hoy), '', true);
+
+    $('alertasGrid').innerHTML =
+      alertCard('salidas', d.salidas_vencidas || 0) +
+      alertCard('limpieza', d.limpieza_pendiente || 0);
+
+    var rows = d.por_hotel || [];
+    if (!rows.length) {
+      $('tablaHoteles').innerHTML = '<tr><td colspan="8"><div class="empty-state">Sin hoteles activos.</div></td></tr>';
+    } else {
+      $('tablaHoteles').innerHTML = rows.map(function (h) {
+        var pillCls = (h.salidas_vencidas || 0) > 0 ? 'pill vencida' : 'pill none';
+        var pillTxt = (h.salidas_vencidas || 0) > 0 ? h.salidas_vencidas + ' vencidas' : 'Sin vencidas';
+        return '<tr>' +
+          '<td><strong>' + esc(h.nombre) + '</strong></td>' +
+          '<td class="num">' + (h.ocupadas || 0) + '</td>' +
+          '<td class="num">' + (h.en_limpieza || 0) + '</td>' +
+          '<td class="num"><strong>' + fmtMoney(h.ingresos_hoy) + '</strong></td>' +
+          '<td class="num">' + (h.pagos_pendientes || 0) + '</td>' +
+          '<td class="num">' + (h.to_assign || 0) + '</td>' +
+          '<td><span class="' + pillCls + '">' + pillTxt + '</span></td>' +
+          '<td><div class="actions"><button type="button" class="btn btn-ghost" data-hotel-ver="' + esc(h.id) + '">Ver</button></div></td>' +
+          '</tr>';
+      }).join('');
+    }
+
+    var ph = d.pagos_hoy || {};
+    var ef = Number(ph.efectivo) || 0;
+    var tr2 = Number(ph.transferencia) || 0;
+    var maxM = Math.max(ef, tr2, 1);
+    $('metodoBars').innerHTML =
+      (ef === 0 && tr2 === 0 ? '<div class="empty-state">Sin pagos registrados hoy.</div>' : '') +
+      barRow('Efectivo', ef, ef / maxM * 100, 'efectivo') +
+      barRow('Transferencia', tr2, tr2 / maxM * 100, 'transferencia');
+
+    var prods = d.por_producto || [];
+    if (!prods.length) {
+      $('productosList').innerHTML = '<div class="empty-state">Sin ventas registradas hoy.</div>';
+    } else {
+      $('productosList').innerHTML = prods.map(function (p) {
+        return '<div class="prod-row">' +
+          '<span class="prod-name">' + esc(p.label || PRODUCT_LABEL[p.product] || p.product) + '</span>' +
+          '<span class="prod-count">' + (p.count || 0) + ' venta' + ((p.count || 0) === 1 ? '' : 's') + '</span>' +
+          '<span class="prod-total num">' + fmtMoney(p.total) + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    $('alertasGrid2').innerHTML =
+      alertCard('salidas', d.salidas_vencidas || 0) +
+      alertCard('limpieza', d.limpieza_pendiente || 0);
+  }
+
+  function kpi(label, value, sub, featured) {
+    return '<div class="kpi' + (featured ? ' featured' : '') + '">' +
+      '<div class="kpi-label">' + esc(label) + '</div>' +
+      '<div class="kpi-value num">' + value + (sub ? ' <small>' + sub + '</small>' : '') + '</div>' +
+      '</div>';
+  }
+
+  function alertCard(kind, count) {
+    var warn = count > 0;
+    var label = kind === 'salidas' ? 'Salidas vencidas' : 'Limpieza pendiente';
+    var sub = kind === 'salidas'
+      ? (warn ? 'Huéspedes con hora de salida vencida' : 'Sin salidas vencidas')
+      : (warn ? 'Habitaciones esperando limpieza' : 'Sin limpieza pendiente');
+    return '<div class="alert-card ' + (warn ? 'warn' : 'ok') + '">' +
+      '<div class="alert-num num">' + count + '</div>' +
+      '<div><div class="alert-label">' + label + '</div><div class="alert-sub">' + sub + '</div></div>' +
+      '</div>';
+  }
+
+  function barRow(label, val, pct, cls) {
+    var w = Math.max(0, Math.min(100, pct));
+    return '<div class="bar-row">' +
+      '<div class="bar-head"><span class="bar-label">' + label + '</span><span class="bar-val num">' + fmtMoney(val) + '</span></div>' +
+      '<div class="bar-track"><div class="bar-fill ' + cls + '" style="width:' + w.toFixed(1) + '%"></div></div>' +
+      '</div>';
+  }
+
+  /* Hoteles */
+
+  function renderHotelesSkeleton() {
+    $('hotelesGrid').innerHTML = skBlocks(4, 'sk-card');
+  }
+
+  function renderHoteles() {
+    var hotels = state.hotels || [];
+    if (!hotels.length) {
+      $('hotelesGrid').innerHTML = '<div class="empty-state" style="grid-column:1/-1">Sin hoteles registrados.</div>';
+      return;
+    }
+    $('hotelesGrid').innerHTML = hotels.map(function (h) {
+      var total = h.rooms_total || 0;
+      var libre = h.libres || 0;
+      var ocup = h.ocupadas || 0;
+      var limp = h.en_limpieza || 0;
+      var bloq = h.bloqueadas || 0;
+      var seg = '';
+      if (total > 0) {
+        seg =
+          segBar(libre / total, 'seg-libre') +
+          segBar(ocup / total, 'seg-ocupado') +
+          segBar(limp / total, 'seg-limpieza') +
+          segBar(bloq / total, 'seg-bloqueado');
+      }
+      var pillCls = h.activo ? 'pill activo' : 'pill oculto';
+      var pillTxt = h.activo ? 'Activo' : 'Oculto';
+      return '<div class="h-card">' +
+        '<div class="h-head">' +
+          '<div><div class="h-name">' + esc(h.nombre) + '</div>' +
+          '<div class="h-slug">' + esc(h.slug) + ' · ' + total + ' cuartos</div></div>' +
+          '<div class="h-occ"><div class="h-occ-num num">' + (h.ocupacion_pct || 0).toFixed(1) + '%</div>' +
+          '<div class="h-occ-label">Ocupación</div></div>' +
+        '</div>' +
+        '<span class="pill ' + pillCls + '">' + pillTxt + '</span>' +
+        '<div class="h-bar">' + (seg || '<i class="seg-libre" style="width:100%"></i>') + '</div>' +
+        '<div class="h-legend">' +
+          '<span class="h-leg-item"><i class="seg-libre"></i>' + libre + ' libres</span>' +
+          '<span class="h-leg-item"><i class="seg-ocupado"></i>' + ocup + ' ocupadas</span>' +
+          '<span class="h-leg-item"><i class="seg-limpieza"></i>' + limp + ' limpieza</span>' +
+          '<span class="h-leg-item"><i class="seg-bloqueado"></i>' + bloq + ' bloqueadas</span>' +
+        '</div>' +
+        '<div class="h-foot"><button type="button" class="btn btn-ghost" data-hotel-ver="' + esc(h.id) + '">Órdenes de este hotel</button></div>' +
+        '</div>';
+    }).join('');
+  }
+
+  function segBar(pct, cls) {
+    var w = Math.max(0, Math.min(100, pct * 100));
+    return '<i class="' + cls + '" style="width:' + w.toFixed(1) + '%"></i>';
+  }
+
+  function renderHotelesSelect() {
+    var hotels = state.hotels || [];
+    var opts = '<option value="">Todos los hoteles</option>' + hotels.map(function (h) {
+      var sel = state.orderFilters.hotel_id === String(h.id) ? ' selected' : '';
+      return '<option value="' + esc(h.id) + '"' + sel + '>' + esc(h.nombre) + '</option>';
+    }).join('');
+    $('ordFiltroHotel').innerHTML = opts;
+  }
+
+  function syncFiltersToDom() {
+    $('ordFiltroHotel').value = state.orderFilters.hotel_id;
+    $('ordFiltroEstado').value = state.orderFilters.status;
+  }
+
+  /* Órdenes */
+
+  function renderOrdenesSkeleton() {
+    var rows = '';
+    for (var i = 0; i < 6; i++) {
+      rows += '<tr><td colspan="11"><div class="sk sk-line" style="margin:6px 0"></div></td></tr>';
+    }
+    $('ordTableBody').innerHTML = rows;
+    $('ordInfo').textContent = '';
+  }
+
+  function renderOrdenes() {
+    var data = state.orders;
+    if (!data) return;
+    var orders = data.orders || [];
+    if (!orders.length) {
+      $('ordTableBody').innerHTML = '<tr><td colspan="11"><div class="empty-state">Sin órdenes para los filtros seleccionados.</div></td></tr>';
+    } else {
+      $('ordTableBody').innerHTML = orders.map(function (o) {
+        var method = o.payment_method || 'pendiente';
+        var methodCls = method === 'pendiente' ? 'pill none' : 'pill ' + method;
+        return '<tr>' +
+          '<td class="num">' + esc(o.id) + '</td>' +
+          '<td><strong>' + esc(hotelName(o)) + '</strong></td>' +
+          '<td class="num">' + esc(o.room_number || '—') + '</td>' +
+          '<td>' + esc(o.guest_name) + '</td>' +
+          '<td>' + esc(o.product_label || PRODUCT_LABEL[o.product] || o.product || '—') + '</td>' +
+          '<td class="num">' + esc(fmtDT(o.check_in_fmt || o.check_in)) + '</td>' +
+          '<td class="num">' + esc(fmtDT(o.check_out_fmt || o.check_out)) + '</td>' +
+          '<td class="num"><strong>' + fmtMoney(o.subtotal) + '</strong></td>' +
+          '<td><span class="pill ' + esc(o.status) + '">' + esc(ORDER_STATUS_LABEL[o.status] || o.status) + '</span></td>' +
+          '<td><span class="' + methodCls + '">' + esc(PAY_LABEL[method] || method) + '</span></td>' +
+          '<td class="num">' + esc(fmtDT(o.created_at)) + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+    var total = data.total || 0;
+    var page = data.page || 1;
+    var pages = data.pages || 1;
+    var from = total === 0 ? 0 : (page - 1) * 50 + 1;
+    var to = Math.min(page * 50, total);
+    $('ordInfo').textContent = total === 0
+      ? 'Sin resultados'
+      : 'Mostrando ' + from + '–' + to + ' de ' + total + ' · Página ' + page + ' de ' + pages;
+    $('ordPrev').disabled = page <= 1;
+    $('ordNext').disabled = page >= pages;
+  }
+
+  function applyOrderFilters() {
+    state.orderFilters.hotel_id = $('ordFiltroHotel').value;
+    state.orderFilters.status = $('ordFiltroEstado').value;
+    state.orderFilters.from = $('ordFiltroDesde').value;
+    state.orderFilters.to = $('ordFiltroHasta').value;
+    state.orderPage = 1;
+    if (!loading) loadOrders(false);
+  }
+
+  /* Eventos */
+
+  function bindEvents() {
+    $('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var u = $('loginUser').value.trim();
+      var p = $('loginPass').value;
+      var btn = $('loginBtn');
+      if (!u || !p) {
+        $('loginError').textContent = 'Ingresa usuario y contraseña.';
+        $('loginError').hidden = false;
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = 'Ingresando…';
+      fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      }).then(function (res) {
+        return res.json().catch(function () { return {}; }).then(function (data) {
+          if (!res.ok) {
+            var err = new Error(data.error || 'Credenciales inválidas');
+            err.status = res.status;
+            throw err;
+          }
+          return data;
+        });
+      }).then(function (data) {
+        if (data.scope !== 'master') {
+          var err = new Error('Este usuario no tiene acceso al panel consolidado.');
+          throw err;
+        }
+        session = { token: data.token, username: data.username, role: data.role, scope: data.scope };
+        saveSession();
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+        showPanel();
+      }).catch(function (err) {
+        btn.disabled = false;
+        btn.textContent = 'Ingresar';
+        $('loginError').textContent = err.message || 'No se pudo iniciar sesión.';
+        $('loginError').hidden = false;
+      });
+    });
+
+    document.querySelectorAll('.nav-item').forEach(function (b) {
+      b.addEventListener('click', function () {
+        showView(b.getAttribute('data-view'));
+      });
+    });
+
+    $('navToggle').addEventListener('click', function () {
+      document.body.classList.toggle('sidebar-open');
+    });
+
+    $('scrim').addEventListener('click', function () {
+      document.body.classList.remove('sidebar-open');
+    });
+
+    $('btnRefresh').addEventListener('click', function () {
+      if (loading) return;
+      loadAll(false);
+    });
+
+    $('btnLogout').addEventListener('click', function () {
+      clearSession();
+      showLogin();
+      toast('Sesión cerrada.', 'success');
+    });
+
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-hotel-ver]');
+      if (btn) {
+        goHotelOrders(btn.getAttribute('data-hotel-ver'));
+      }
+    });
+
+    $('ordFiltroHotel').addEventListener('change', applyOrderFilters);
+    $('ordFiltroEstado').addEventListener('change', applyOrderFilters);
+    $('ordFiltroDesde').addEventListener('change', applyOrderFilters);
+    $('ordFiltroHasta').addEventListener('change', applyOrderFilters);
+    $('ordReset').addEventListener('click', function () {
+      $('ordFiltroHotel').value = '';
+      $('ordFiltroEstado').value = '';
+      $('ordFiltroDesde').value = '';
+      $('ordFiltroHasta').value = '';
+      applyOrderFilters();
+    });
+    $('ordPrev').addEventListener('click', function () {
+      if (state.orderPage > 1) {
+        state.orderPage -= 1;
+        if (!loading) loadOrders(false);
+      }
+    });
+    $('ordNext').addEventListener('click', function () {
+      if (state.orders && state.orderPage < (state.orders.pages || 1)) {
+        state.orderPage += 1;
+        if (!loading) loadOrders(false);
+      }
+    });
+  }
+
+  function init() {
+    bindEvents();
+    session = loadSession();
+    if (!session) {
+      showLogin();
+      return;
+    }
+    api('/api/admin/me').then(function (me) {
+      if (me.scope !== 'master') throw new Error('Acceso no permitido.');
+      session.username = me.username || session.username;
+      session.role = me.role || session.role;
+      session.scope = me.scope || session.scope;
+      saveSession();
+      showPanel();
+    }).catch(function (err) {
+      if (err.status === 401) {
+        clearSession();
+        showLogin();
+      } else {
+        toast('No se pudo validar la sesión: ' + err.message, 'error');
+        showLogin();
+      }
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

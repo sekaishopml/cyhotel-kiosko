@@ -1,0 +1,39 @@
+plugins { id 'com.android.application' }
+
+def ksFile = new File('/home/CyHotel/keys/keystore.properties')
+def ksProps = new Properties()
+if (ksFile.exists()) { ksFile.withInputStream { ksProps.load(it) } }
+
+android {
+    namespace 'com.hoteldelvalle.kiosco'
+    compileSdk 34
+
+    defaultConfig {
+        applicationId "com.hoteldelvalle.kiosco"
+        minSdk 26
+        targetSdk 34
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(ksProps['KEYSTORE'] ?: '')
+            storePassword ksProps['KS_PASS']
+            keyAlias ksProps['KEY_ALIAS']
+            keyPassword ksProps['KEY_PASS']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}

@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">Kiosko</string>
+    <string name="default_url">http://68.168.20.219:8000/kiosco</string>
+    <string name="default_pin">12345</string>
+    <string name="settings_title">Configuración Kiosko</string>
+    <string name="hint_url">http://IP:puerto/kiosco</string>
+    <string name="hint_pin" formatted="false">PIN de salida: %1$s</string>
+    <string name="pin_dialog_hint">Ingrese el PIN</string>
+    <string name="btn_test">Probar conexión</string>
+    <string name="btn_save">Guardar</string>
+    <string name="btn_retry">Reintentar</string>
+    <string name="error_network">Sin conexión con el servidor. Reintentando…</string>
+    <string name="kiosk_pin_title">Ingrese PIN</string>
+    <string name="kiosk_menu_title">Menú administrador</string>
+    <string name="opt_configure">Configurar servidor</string>
+    <string name="opt_exit">Salir del quiosco</string>
+    <string name="bad_pin">PIN incorrecto</string>
+    <string name="status_testing">Probando conexión…</string>
+    <string name="status_ok">Conexión OK</string>
+    <string name="status_fail">Error de conexión</string>
+    <string name="status_saved">Configuración guardada</string>
+</resources>

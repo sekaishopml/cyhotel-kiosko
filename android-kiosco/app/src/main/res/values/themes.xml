@@ -1,0 +1,8 @@
+<resources>
+    <style name="Theme.Kiosko" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/blanco</item>
+        <item name="android:statusBarColor">@color/verde</item>
+        <item name="android:navigationBarColor">@color/negro</item>
+        <item name="android:colorAccent">@color/verde</item>
+    </style>
+</resources>
