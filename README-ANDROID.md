@@ -77,3 +77,25 @@ Para una tablet dedicada como quiosco se recomienda:
 - La app se conecta al backend alojado en la VPS (`http://68.168.20.219:8000/kiosco`).
 - Si cambia la IP del servidor, usar la pantalla de configuración de la app
   (botón "K" o 5 toques → PIN → "Configurar servidor").
+
+## Versionado y releases en GitHub
+
+Repositorio privado: `https://github.com/sekaishopml/cyhotel-kiosko`
+
+- Cada versión publica el APK firmado como **GitHub Release** (asset
+  `HotelDelValle-Kiosko.apk`).
+- Para sacar una versión nueva, ejecutar:
+
+  ```bash
+  /home/CyHotel/scripts/release.sh 1.1.0 "descripción de los cambios"
+  ```
+
+  El script: aumenta `versionCode`/`versionName` en `app/build.gradle`,
+  compila y firma con el keystore de release, copia el APK a `dist/`, hace
+  commit + tag `vX.Y.Z`, los sube a GitHub y crea el release con el APK
+  adjunto.
+
+- **IMPORTANTE (seguridad):** el keystore y las contraseñas (`/home/CyHotel/keys/`)
+  NO se suben al repo (están en `.gitignore`). Son el certificado de firma de
+  la app: respáldalos y no los pierdas. Para firmar nuevas versiones, deben
+  seguir existiendo en `/home/CyHotel/keys/` en esta VPS.
