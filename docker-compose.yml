@@ -6,7 +6,7 @@ services:
     container_name: cyhotel-db
     environment:
       POSTGRES_USER: cyhotel
-      POSTGRES_PASSWORD: cyhotel_secret_2026
+      POSTGRES_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
       POSTGRES_DB: cyhotel
     volumes:
       - pgdata:/var/lib/postgresql/data
@@ -30,7 +30,7 @@ services:
     environment:
       APP_MODE: kiosco
       HOTEL_ID: "1"
-      DATABASE_URL: postgresql://cyhotel:cyhotel_secret_2026@db:5432/cyhotel
+      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
     ports:
       - "8000:8000"
     depends_on:
@@ -50,7 +50,7 @@ services:
     environment:
       APP_MODE: admin
       HOTEL_ID: "1"
-      DATABASE_URL: postgresql://cyhotel:cyhotel_secret_2026@db:5432/cyhotel
+      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
     ports:
       - "8001:8000"
     depends_on:
@@ -69,7 +69,7 @@ services:
     container_name: cyhotel-master
     environment:
       APP_MODE: master
-      DATABASE_URL: postgresql://cyhotel:cyhotel_secret_2026@db:5432/cyhotel
+      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
     ports:
       - "8002:8000"
     depends_on:

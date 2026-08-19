@@ -38,13 +38,15 @@ Toda la hora del sistema usa la zona horaria **America/Guayaquil**.
 
 ## Acceso al admin
 
-Credenciales de seed (se crean la primera vez que se inicia la base):
+Credenciales de seed (se crean la primera vez que se inicia la base;
+las contraseñas se definen con las variables de entorno `CYHOTEL_SEED_*_PASS`,
+ver `/home/CyHotel/.env` fuera del repo — no se versionan):
 
-| Usuario   | Contraseña    | Rol                  |
-|-----------|---------------|----------------------|
-| admin     | gerencia123   | gerencia             |
-| recepcion | recepcion123  | recepcion            |
-| limpieza  | limpieza123   | limpieza (housekeeping) |
+| Usuario   | Contraseña            | Rol                  |
+|-----------|-----------------------|----------------------|
+| admin     | `CYHOTEL_SEED_ADMIN_PASS`   | gerencia             |
+| recepcion | `CYHOTEL_SEED_RECEPCION_PASS` | recepcion            |
+| limpieza  | `CYHOTEL_SEED_LIMPIEZA_PASS` | limpieza (housekeeping) |
 
 **AVISO: cambiar estas contraseñas antes de producción** (la base se re-seedea
 solo si la tabla `users` está vacía).

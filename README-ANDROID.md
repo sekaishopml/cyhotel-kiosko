@@ -80,7 +80,7 @@ Para una tablet dedicada como quiosco se recomienda:
 
 ## Versionado y releases en GitHub
 
-Repositorio privado: `https://github.com/sekaishopml/cyhotel-kiosko`
+Repositorio público: `https://github.com/sekaishopml/cyhotel-kiosko`
 
 - Cada versión publica el APK firmado como **GitHub Release** (asset
   `HotelDelValle-Kiosko.apk`).

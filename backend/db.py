@@ -87,13 +87,13 @@ SEED_ROOMS = [
 ]
 
 SEED_USERS = [
-    # (username, contraseña, rol)
-    ("admin", "gerencia123", "gerencia"),
-    ("recepcion", "recepcion123", "recepcion"),
-    ("limpieza", "limpieza123", "housekeeping"),
+    # (username, contraseña, rol) — contraseñas vía env; placeholders por defecto
+    ("admin", os.environ.get("CYHOTEL_SEED_ADMIN_PASS", "cambiar_admin_2026"), "gerencia"),
+    ("recepcion", os.environ.get("CYHOTEL_SEED_RECEPCION_PASS", "cambiar_recepcion_2026"), "recepcion"),
+    ("limpieza", os.environ.get("CYHOTEL_SEED_LIMPIEZA_PASS", "cambiar_limpieza_2026"), "housekeeping"),
 ]
 
-MASTER_USER = ("master", "master123", "master")
+MASTER_USER = ("master", os.environ.get("CYHOTEL_SEED_MASTER_PASS", "cambiar_master_2026"), "master")
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS hotels (
