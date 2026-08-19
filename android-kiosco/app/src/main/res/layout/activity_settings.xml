@@ -2,63 +2,70 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/blanco"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:background="#FFFFFF"
+    android:padding="24dp"
+    android:gravity="center">
 
     <TextView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/settings_title"
-        android:textColor="@color/negro"
-        android:textSize="22sp"
-        android:textStyle="bold" />
+        android:text="Configuración del servidor"
+        android:textColor="#143A2A"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="24dp" />
 
     <EditText
         android:id="@+id/etUrl"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:hint="@string/hint_url"
+        android:layout_height="52dp"
+        android:hint="URL del servidor"
         android:inputType="textUri"
-        android:singleLine="true" />
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="16dp"
+        android:textColor="#10281D"
+        android:textSize="15sp"
+        android:layout_marginBottom="12dp" />
 
     <EditText
         android:id="@+id/etPin"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:hint="@string/hint_pin"
+        android:layout_height="52dp"
+        android:hint="PIN de acceso"
         android:inputType="numberPassword"
-        android:singleLine="true" />
+        android:background="@drawable/bg_input"
+        android:paddingHorizontal="16dp"
+        android:textColor="#10281D"
+        android:textSize="15sp"
+        android:layout_marginBottom="24dp" />
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:orientation="horizontal">
 
         <Button
-            android:id="@+id/btnTest"
+            android:id="@+id/btnCancel"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="52dp"
             android:layout_weight="1"
-            android:text="@string/btn_test" />
+            android:text="Cancelar"
+            android:textColor="#143A2A"
+            android:textSize="16sp"
+            android:background="@drawable/bg_btn_ghost"
+            android:layout_marginEnd="8dp" />
 
         <Button
             android:id="@+id/btnSave"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_height="52dp"
             android:layout_weight="1"
-            android:text="@string/btn_save" />
+            android:text="Guardar"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:background="@drawable/bg_btn_primary" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/tvStatus"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:gravity="center"
-        android:textSize="14sp" />
 </LinearLayout>

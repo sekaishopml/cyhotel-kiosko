@@ -3,37 +3,36 @@ package com.hoteldelvalle.kiosco;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public final class Prefs {
-
-    private static final String NAME = "prefs";
-    private static final String KEY_URL = "url";
+public class Prefs {
+    private static final String NAME = "kiosko_prefs";
+    private static final String KEY_BASE_URL = "base_url";
     private static final String KEY_PIN = "pin";
+    private static final String DEFAULT_BASE_URL = "http://68.168.20.219:8000";
+    private static final String DEFAULT_PIN = "12345";
 
-    private final Context context;
-    private final SharedPreferences sp;
+    private final SharedPreferences prefs;
 
     public Prefs(Context context) {
-        this.context = context.getApplicationContext();
-        sp = this.context.getSharedPreferences(NAME, Context.MODE_PRIVATE);
+        prefs = context.getSharedPreferences(NAME, Context.MODE_PRIVATE);
     }
 
-    public String getUrl() {
-        return sp.getString(KEY_URL, context.getString(R.string.default_url));
+    public String getBaseUrl() {
+        return prefs.getString(KEY_BASE_URL, DEFAULT_BASE_URL);
     }
 
-    public void setUrl(String url) {
-        sp.edit().putString(KEY_URL, url == null ? "" : url.trim()).apply();
+    public void setBaseUrl(String url) {
+        prefs.edit().putString(KEY_BASE_URL, url).apply();
     }
 
     public String getPin() {
-        return sp.getString(KEY_PIN, context.getString(R.string.default_pin));
+        return prefs.getString(KEY_PIN, DEFAULT_PIN);
     }
 
     public void setPin(String pin) {
-        sp.edit().putString(KEY_PIN, pin == null ? "" : pin.trim()).apply();
+        prefs.edit().putString(KEY_PIN, pin).apply();
     }
 
     public boolean isConfigured() {
-        return !sp.getString(KEY_URL, "").isEmpty();
+        return prefs.contains(KEY_BASE_URL);
     }
 }

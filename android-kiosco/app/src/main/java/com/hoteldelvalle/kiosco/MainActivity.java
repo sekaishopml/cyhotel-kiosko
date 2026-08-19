@@ -1,251 +1,230 @@
 package com.hoteldelvalle.kiosco;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.SystemClock;
-import android.text.InputType;
-import android.view.MotionEvent;
 import android.view.View;
-import android.webkit.WebResourceError;
-import android.webkit.WebResourceRequest;
-import android.webkit.WebResourceResponse;
-import android.webkit.WebSettings;
-import android.webkit.WebView;
-import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class MainActivity extends Activity {
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentTransaction;
 
-    private static final long RETRY_DELAY_MS = 8000L;
-    private static final long TAP_WINDOW_MS = 2000L;
-    private static final int TAPS_REQUIRED = 5;
-    private static final long REAPPLY_DELAY_MS = 200L;
+import java.util.UUID;
 
-    private WebView webView;
-    private View errorOverlay;
-    private TextView errorMsg;
-    private Button btnRetry;
-    private View btnAdmin;
+public class MainActivity extends AppCompatActivity
+        implements PlanFragment.OnPlanSelectedListener,
+        RoomFragment.OnRoomListener,
+        CheckinFragment.OnCheckinListener {
 
+    private FrameLayout container;
+    private TextView btnAdmin;
     private Prefs prefs;
-    private boolean init = true;
-    private String currentUrl = "";
-    private int tapCount = 0;
+
+    private Plan selectedPlan;
+    private RoomType selectedRoom;
+    private String selectedExtra;
+    private Integer selectedDays;
+    private int adminTapCount = 0;
     private long lastTapTime = 0;
-
-    private final Handler handler = new Handler(Looper.getMainLooper());
-
-    private final Runnable retryRunnable = new Runnable() {
-        @Override
-        public void run() {
-            retry();
-        }
-    };
-
-    private final Runnable reapplyRunnable = new Runnable() {
-        @Override
-        public void run() {
-            if (KioskManager.isImmersive()) {
-                KioskManager.reEnter(MainActivity.this);
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        KioskManager.enterKioskMode(this);
+        setContentView(R.layout.activity_main);
+
+        KioskManager.enableKioskMode(this);
+
+        container = findViewById(R.id.container);
+        btnAdmin = findViewById(R.id.btnAdmin);
         prefs = new Prefs(this);
+
+        btnAdmin.setOnClickListener(v -> handleAdminTap());
+
         if (!prefs.isConfigured()) {
             startActivity(new Intent(this, SettingsActivity.class));
-            finish();
-            return;
+        } else {
+            loadFragment(new PlanFragment());
         }
-        setContentView(R.layout.activity_main);
-        initViews();
-        initWebView();
-        loadUrl(prefs.getUrl());
     }
 
-    private void initViews() {
-        webView = findViewById(R.id.webview);
-        errorOverlay = findViewById(R.id.errorOverlay);
-        errorMsg = findViewById(R.id.errorMsg);
-        btnRetry = findViewById(R.id.btnRetry);
-        btnAdmin = findViewById(R.id.btnAdmin);
-        btnRetry.setOnClickListener(v -> retry());
-        btnAdmin.setOnClickListener(v -> showPinDialog());
+    @Override
+    protected void onResume() {
+        super.onResume();
+        KioskManager.enableKioskMode(this);
     }
 
-    private void initWebView() {
-        WebSettings settings = webView.getSettings();
-        settings.setJavaScriptEnabled(true);
-        settings.setDomStorageEnabled(true);
-        settings.setSupportZoom(false);
-        settings.setBuiltInZoomControls(false);
-        settings.setDisplayZoomControls(false);
-        settings.setMediaPlaybackRequiresUserGesture(false);
-        webView.setWebViewClient(new KioskWebViewClient());
-        webView.setOnTouchListener((v, event) -> {
-            if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                onWebViewTouched();
-            }
-            return false;
-        });
-    }
-
-    private void loadUrl(String url) {
-        currentUrl = url;
-        webView.loadUrl(url);
-    }
-
-    private void onWebViewTouched() {
-        long now = SystemClock.uptimeMillis();
-        if (now - lastTapTime > TAP_WINDOW_MS) {
-            tapCount = 0;
+    private void handleAdminTap() {
+        long now = System.currentTimeMillis();
+        if (now - lastTapTime > 2000) {
+            adminTapCount = 0;
         }
         lastTapTime = now;
-        tapCount++;
-        if (tapCount >= TAPS_REQUIRED) {
-            tapCount = 0;
+        adminTapCount++;
+
+        if (adminTapCount >= 5) {
+            adminTapCount = 0;
             showPinDialog();
         }
     }
 
     private void showPinDialog() {
         EditText input = new EditText(this);
-        input.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-        input.setHint(R.string.pin_dialog_hint);
+        input.setHint("PIN");
+        input.setInputType(android.text.InputType.TYPE_CLASS_NUMBER);
+
         new AlertDialog.Builder(this)
-                .setTitle(R.string.kiosk_pin_title)
+                .setTitle("Acceso admin")
                 .setView(input)
-                .setNegativeButton(android.R.string.cancel, null)
-                .setPositiveButton(android.R.string.ok, (d, w) -> checkPin(input.getText().toString().trim()))
+                .setPositiveButton("OK", (dialog, which) -> {
+                    String pin = input.getText().toString();
+                    if (pin.equals(prefs.getPin())) {
+                        showAdminOptions();
+                    } else {
+                        Toast.makeText(this, "PIN incorrecto", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("Cancelar", null)
                 .show();
     }
 
-    private void checkPin(String entered) {
-        if (entered.isEmpty() || !entered.equals(prefs.getPin())) {
-            Toast.makeText(this, R.string.bad_pin, Toast.LENGTH_SHORT).show();
-            return;
-        }
-        showAdminMenu();
-    }
-
-    private void showAdminMenu() {
-        String[] options = {getString(R.string.opt_configure), getString(R.string.opt_exit)};
+    private void showAdminOptions() {
+        String[] options = {"Configurar servidor", "Salir del quiosco"};
         new AlertDialog.Builder(this)
-                .setTitle(R.string.kiosk_menu_title)
-                .setItems(options, (d, which) -> {
+                .setTitle("Admin")
+                .setItems(options, (dialog, which) -> {
                     if (which == 0) {
                         startActivity(new Intent(this, SettingsActivity.class));
-                    } else if (which == 1) {
-                        KioskManager.exitKioskMode(this);
+                    } else {
                         finish();
                     }
                 })
                 .show();
     }
 
-    private void showError(String message) {
-        errorMsg.setText(message);
-        errorOverlay.setVisibility(View.VISIBLE);
-        handler.removeCallbacks(retryRunnable);
-        handler.postDelayed(retryRunnable, RETRY_DELAY_MS);
-    }
-
-    private void hideError() {
-        errorOverlay.setVisibility(View.GONE);
-        handler.removeCallbacks(retryRunnable);
-    }
-
-    private void retry() {
-        if (!currentUrl.isEmpty()) {
-            webView.loadUrl(currentUrl);
-        }
-        handler.removeCallbacks(retryRunnable);
-        handler.postDelayed(retryRunnable, RETRY_DELAY_MS);
+    private void loadFragment(Fragment fragment) {
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.container, fragment);
+        ft.commit();
     }
 
     @Override
-    public void onBackPressed() {
+    public void onPlanSelected(Plan plan) {
+        selectedPlan = plan;
+        selectedRoom = null;
+        selectedExtra = null;
+        selectedDays = null;
     }
 
     @Override
-    public void onWindowFocusChanged(boolean hasFocus) {
-        super.onWindowFocusChanged(hasFocus);
-        if (hasFocus && KioskManager.isImmersive()) {
-            handler.removeCallbacks(reapplyRunnable);
-            handler.postDelayed(reapplyRunnable, REAPPLY_DELAY_MS);
-        }
+    public void onContinueFromPlan() {
+        loadFragment(new RoomFragment());
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        KioskManager.enterKioskMode(this);
+    public void onRoomContinue(String product, RoomType room, String extraKey, Integer days) {
+        selectedRoom = room;
+        selectedExtra = extraKey;
+        selectedDays = days;
+        loadFragment(new CheckinFragment());
     }
 
     @Override
-    protected void onResume() {
-        super.onResume();
-        if (webView == null) {
-            return;
-        }
-        KioskManager.reEnter(this);
-        String url = prefs.getUrl();
-        if (!url.isEmpty() && !url.equals(currentUrl)) {
-            loadUrl(url);
-        }
+    public void onRoomBack() {
+        loadFragment(new PlanFragment());
     }
 
     @Override
-    protected void onDestroy() {
-        handler.removeCallbacksAndMessages(null);
-        if (webView != null) {
-            webView.destroy();
-        }
-        super.onDestroy();
+    public void onCheckinBack() {
+        loadFragment(new RoomFragment());
     }
 
-    private class KioskWebViewClient extends WebViewClient {
+    @Override
+    public void onCheckinConfirmed(String product, RoomType room, String extraKey,
+                                   Integer days, String guestName, String idDocument) {
+        showConfirmationModal();
+    }
 
-        @Override
-        public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
-            super.onReceivedError(view, request, error);
-            if (request.isForMainFrame()) {
-                showError(getString(R.string.error_network));
+    @Override
+    public String getBaseUrl() {
+        return prefs.getBaseUrl();
+    }
+
+    @Override
+    public String getSelectedProduct() {
+        return selectedPlan != null ? selectedPlan.getKey() : null;
+    }
+
+    @Override
+    public RoomType getSelectedRoom() {
+        return selectedRoom;
+    }
+
+    @Override
+    public String getSelectedExtra() {
+        return selectedExtra;
+    }
+
+    @Override
+    public Integer getSelectedDays() {
+        return selectedDays;
+    }
+
+    private void showConfirmationModal() {
+        View modalView = getLayoutInflater().inflate(R.layout.modal_confirmation, null);
+
+        TextView tvModalRoom = modalView.findViewById(R.id.tvModalRoom);
+        TextView tvModalCheckIn = modalView.findViewById(R.id.tvModalCheckIn);
+        TextView tvModalCheckOut = modalView.findViewById(R.id.tvModalCheckOut);
+        TextView tvModalAmount = modalView.findViewById(R.id.tvModalAmount);
+        Button btnModalClose = modalView.findViewById(R.id.btnModalClose);
+        View modalBg = modalView.findViewById(R.id.modalBg);
+
+        if (selectedRoom != null) {
+            tvModalRoom.setText("Habitación: " + selectedRoom.getLabel());
+            int total = selectedRoom.getPrice() != null ? selectedRoom.getPrice() : 0;
+            if (selectedExtra != null && selectedRoom.getExtras() != null) {
+                Extra extra = selectedRoom.getExtras().get(selectedExtra);
+                if (extra != null) total += extra.getPrice();
             }
+            tvModalAmount.setText("Monto: $" + total);
         }
 
-        @Override
-        public void onReceivedError(WebView view, int errorCode, String description, String failingUrl) {
-            super.onReceivedError(view, errorCode, description, failingUrl);
-            showError(getString(R.string.error_network));
-        }
+        tvModalCheckIn.setText("Check-in: Ahora");
+        tvModalCheckOut.setText("Check-out: Pendiente");
 
-        @Override
-        public void onReceivedHttpError(WebView view, WebResourceRequest request, WebResourceResponse errorResponse) {
-            super.onReceivedHttpError(view, request, errorResponse);
-            if (request.isForMainFrame()) {
-                showError(getString(R.string.error_network));
-            }
-        }
+        LinearLayout overlay = new LinearLayout(this);
+        overlay.setLayoutParams(new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+        overlay.setGravity(android.view.Gravity.CENTER);
+        overlay.addView(modalView);
 
-        @Override
-        public void onPageFinished(WebView view, String url) {
-            hideError();
-            if (init) {
-                init = false;
-            }
-        }
+        container.addView(overlay);
+
+        btnModalClose.setOnClickListener(v -> {
+            container.removeView(overlay);
+            resetState();
+            loadFragment(new PlanFragment());
+        });
+
+        modalBg.setOnClickListener(v -> {
+            container.removeView(overlay);
+            resetState();
+            loadFragment(new PlanFragment());
+        });
+    }
+
+    private void resetState() {
+        selectedPlan = null;
+        selectedRoom = null;
+        selectedExtra = null;
+        selectedDays = null;
     }
 }
