@@ -1,14 +1,7 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Kiosko" parent="Theme.MaterialComponents.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/verde_900</item>
-        <item name="colorPrimaryVariant">@color/verde_700</item>
-        <item name="colorOnPrimary">@color/white</item>
-        <item name="colorSecondary">@color/verde_500</item>
-        <item name="colorSecondaryVariant">@color/verde_600</item>
-        <item name="colorOnSecondary">@color/white</item>
-        <item name="android:statusBarColor">@color/verde_900</item>
-        <item name="android:navigationBarColor">@color/verde_900</item>
-        <item name="android:windowBackground">@color/white</item>
+    <style name="Theme.Kiosko" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:statusBarColor">#143A2A</item>
+        <item name="android:navigationBarColor">#000000</item>
     </style>
 </resources>
