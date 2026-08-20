@@ -1,0 +1,10 @@
+[
+    {
+        "merged": "com.hoteldelvalle.kiosco.app-release-4:/drawable_ic_launcher_foreground.png.flat",
+        "source": "com.hoteldelvalle.kiosco.app-main-5:/drawable/ic_launcher_foreground.png"
+    },
+    {
+        "merged": "com.hoteldelvalle.kiosco.app-release-4:/drawable_ic_launcher.png.flat",
+        "source": "com.hoteldelvalle.kiosco.app-main-5:/drawable/ic_launcher.png"
+    }
+]

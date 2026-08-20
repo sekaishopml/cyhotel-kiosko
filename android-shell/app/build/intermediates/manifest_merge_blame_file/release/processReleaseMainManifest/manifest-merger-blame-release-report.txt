@@ -1,11 +1,11 @@
 1<?xml version="1.0" encoding="utf-8"?>
 2<manifest xmlns:android="http://schemas.android.com/apk/res/android"
 3    package="com.hoteldelvalle.kiosco"
-4    android:versionCode="1"
-5    android:versionName="1.0.0" >
+4    android:versionCode="3"
+5    android:versionName="2.0.1" >
 6
 7    <uses-sdk
-8        android:minSdkVersion="26"
+8        android:minSdkVersion="23"
 9        android:targetSdkVersion="34" />
 10
 11    <uses-permission android:name="android.permission.INTERNET" />
@@ -17,8 +17,8 @@
 14        android:allowBackup="false"
 14-->/home/CyHotel/android-shell/app/src/main/AndroidManifest.xml:7:9-36
 15        android:extractNativeLibs="false"
-16        android:icon="@android:drawable/ic_dialog_info"
-16-->/home/CyHotel/android-shell/app/src/main/AndroidManifest.xml:9:9-56
+16        android:icon="@drawable/ic_launcher"
+16-->/home/CyHotel/android-shell/app/src/main/AndroidManifest.xml:9:9-45
 17        android:label="@string/app_name"
 17-->/home/CyHotel/android-shell/app/src/main/AndroidManifest.xml:10:9-41
 18        android:theme="@style/Theme.Kiosko"

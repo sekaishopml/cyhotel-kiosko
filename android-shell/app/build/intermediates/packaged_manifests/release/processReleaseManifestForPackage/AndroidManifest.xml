@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.hoteldelvalle.kiosco"
-    android:versionCode="1"
-    android:versionName="1.0.0" >
+    android:versionCode="3"
+    android:versionName="2.0.1" >
 
     <uses-sdk
-        android:minSdkVersion="26"
+        android:minSdkVersion="23"
         android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -13,7 +13,7 @@
     <application
         android:allowBackup="false"
         android:extractNativeLibs="false"
-        android:icon="@android:drawable/ic_dialog_info"
+        android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
         android:theme="@style/Theme.Kiosko"
         android:usesCleartextTraffic="true" >

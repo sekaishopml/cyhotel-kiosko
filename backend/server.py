@@ -598,6 +598,8 @@ class Handler(BaseHTTPRequestHandler):
                     if not sess:
                         return
                     self.post_settings(data, sess)
+                elif path == "/api/kiosco-crash":
+                    self.kiosco_crash(data)
                 else:
                     self._error(404, "Ruta no encontrada")
                 return
@@ -2614,6 +2616,17 @@ class Handler(BaseHTTPRequestHandler):
         cfg.setdefault("cleaning_sla_minutes", 60)
         self._send(200, {"config": cfg})
 
+    def kiosco_crash(self, data):
+        """Registra crashes de la app Android para diagnóstico remoto."""
+        import datetime as _dt
+        try:
+            with open("/tmp/kiosco-crash.log", "a") as f:
+                f.write(f"\n=== {_dt.datetime.now().isoformat()} ===\n")
+                f.write(json.dumps(data, ensure_ascii=False, indent=2)[:4000] + "\n")
+            self._send(200, {"ok": True})
+        except Exception:
+            self._error(500, "No se pudo registrar crash")
+
     def post_settings(self, data, sess):
         cfg = data.get("config")
         if not isinstance(cfg, dict):
@@ -2983,7 +2996,13 @@ class Handler(BaseHTTPRequestHandler):
         with open(target, "rb") as f:
             body = f.read()
         self.send_response(200)
-        self.send_header("Content-Type", ctype + "; charset=utf-8")
+        if ext == ".apk":
+            self.send_header("Content-Type", "application/vnd.android.package-archive")
+            self.send_header("Content-Disposition", 'attachment; filename="kiosko.apk"')
+        elif ext == ".html":
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+        else:
+            self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(body)))
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")

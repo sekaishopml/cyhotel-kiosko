@@ -6,7 +6,7 @@ import android.content.Context
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.view.GestureDetector
+import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowInsets
@@ -18,8 +18,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import android.widget.Toast
+import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import kotlin.concurrent.thread
@@ -33,6 +33,7 @@ class MainActivity : Activity() {
     private val tapTimeout = 2000L
     private val tapsRequired = 5
     private var updateUrl: String? = null
+    private var crashReporterThread: Thread? = null
 
     companion object {
         const val PREFS = "kiosko_prefs"
@@ -41,10 +42,12 @@ class MainActivity : Activity() {
         const val DEFAULT_URL = "http://68.168.20.219:8000/kiosco"
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
+        const val TAG = "KioskoShell"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        installCrashReporter()
         applyKioskMode()
 
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -56,6 +59,45 @@ class MainActivity : Activity() {
             loadWebView(savedUrl)
         }
     }
+
+    private fun installCrashReporter() {
+        val previous = Thread.getDefaultUncaughtExceptionHandler()
+        Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+            try {
+                val stack = Log.getStackTraceString(throwable)
+                val report = "Thread: ${thread.name}\n${throwable.javaClass.name}: ${throwable.message}\n$stack"
+                sendCrashReport(report)
+            } catch (_: Exception) {
+            } finally {
+                previous?.uncaughtException(thread, throwable) ?: run {
+                    kotlin.system.exitProcess(2)
+                }
+            }
+        }
+    }
+
+    private fun sendCrashReport(report: String) {
+        try {
+            val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            val serverUrl = prefs.getString(KEY_URL, DEFAULT_URL) ?: DEFAULT_URL
+            val base = serverUrl.substringBefore("/kiosco").trimEnd('/')
+            if (base.isEmpty()) return
+            val connection = URL("$base/api/kiosco-crash").openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.doOutput = true
+            connection.connectTimeout = 8000
+            connection.readTimeout = 8000
+            connection.setRequestProperty("Content-Type", "application/json")
+            val json = "{\"crash\":${jsonEscape(report)},\"sdk\":\"${android.os.Build.VERSION.SDK_INT}\",\"model\":\"${jsonEscape(android.os.Build.MODEL)}\",\"version\":\"2.0.0\"}"
+            OutputStreamWriter(connection.outputStream).use { it.write(json) }
+            connection.inputStream.close()
+            connection.disconnect()
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun jsonEscape(s: String): String =
+        "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\""
 
     private fun applyKioskMode() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -83,49 +125,52 @@ class MainActivity : Activity() {
     }
 
     private fun loadWebView(url: String) {
-        webView = WebView(this).apply {
-            settings.javaScriptEnabled = true
-            settings.domStorageEnabled = true
-            settings.databaseEnabled = true
-            settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            settings.cacheMode = WebSettings.LOAD_DEFAULT
-            settings.allowFileAccess = false
-            settings.allowContentAccess = false
+        try {
+            webView = WebView(this).apply {
+                settings.javaScriptEnabled = true
+                settings.domStorageEnabled = true
+                settings.databaseEnabled = true
+                settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
+                settings.cacheMode = WebSettings.LOAD_DEFAULT
+                settings.allowFileAccess = false
+                settings.allowContentAccess = false
 
-            webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    return false
+                webViewClient = object : WebViewClient() {
+                    override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
+                        return false
+                    }
                 }
+                loadUrl(url)
             }
-            loadUrl(url)
-        }
 
-        val tapZone = View(this).apply {
-            setBackgroundColor(0x00000000)
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.MATCH_PARENT
-            )
-        }
+            val container = FrameLayout(this)
+            container.addView(webView, FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
+            ))
 
-        tapZone.setOnTouchListener { _, event ->
-            if (event.action == MotionEvent.ACTION_DOWN) {
-                handleTap()
-            }
+            setContentView(container)
+        } catch (e: Throwable) {
+            sendCrashReport("Error al crear WebView:\n${Log.getStackTraceString(e)}")
+            AlertDialog.Builder(this)
+                .setTitle("Error WebView")
+                .setMessage("No se pudo inicializar WebView:\n${e.message}\n\n" +
+                        "Verifica que 'Android System WebView' esté actualizado en Ajustes → Apps.")
+                .setPositiveButton("Salir") { _, _ -> finish() }
+                .setCancelable(false)
+                .show()
+        }
+    }
+
+    override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
+        if (ev != null && ev.action == MotionEvent.ACTION_DOWN) {
+            handleTap()
+        }
+        return try {
+            super.dispatchTouchEvent(ev)
+        } catch (e: Exception) {
             false
         }
-
-        val container = FrameLayout(this)
-        container.addView(webView, FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
-        ))
-        container.addView(tapZone, FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.MATCH_PARENT,
-            FrameLayout.LayoutParams.MATCH_PARENT
-        ))
-
-        setContentView(container)
     }
 
     private fun handleTap() {
@@ -255,7 +300,7 @@ class MainActivity : Activity() {
 
                 handler.post {
                     if (tagName != null) {
-                        val currentVersion = "1.0.0"
+                        val currentVersion = "2.0.0"
                         val msg = if (tagName != "v$currentVersion") {
                             updateUrl = htmlUrl
                             "Nueva versión disponible: $tagName\n\nVersión actual: v$currentVersion"
@@ -293,5 +338,14 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         applyKioskMode()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        try {
+            webView.stopLoading()
+            webView.destroy()
+        } catch (_: Exception) {
+        }
     }
 }
