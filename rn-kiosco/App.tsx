@@ -19,7 +19,7 @@ import CheckinScreen from './src/screens/CheckinScreen';
 type Screen = 'plan' | 'room' | 'checkin';
 
 const UPDATE_API = 'https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest';
-const APP_VERSION = '6.0.1';
+const APP_VERSION = '6.0.2';
 const ADMIN_PIN = '12345';
 
 function reportCrash(error: unknown, isFatal: boolean) {
