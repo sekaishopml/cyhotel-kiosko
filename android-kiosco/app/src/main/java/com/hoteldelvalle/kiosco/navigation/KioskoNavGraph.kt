@@ -73,7 +73,10 @@ fun KioskoNavGraph(
                     if (selectedRoom != null) {
                         navController.navigate("checkin")
                     }
-                }
+                },
+                onRoomSelected = { selectedRoom = it },
+                onExtraSelected = { selectedExtra = it },
+                onDaysChanged = { selectedDays = it }
             )
         }
 

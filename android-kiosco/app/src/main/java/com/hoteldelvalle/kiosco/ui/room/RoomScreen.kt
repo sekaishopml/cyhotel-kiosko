@@ -17,7 +17,7 @@ import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,6 +57,9 @@ fun RoomScreen(
     plan: Plan,
     onBack: () -> Unit,
     onContinue: () -> Unit,
+    onRoomSelected: (RoomType) -> Unit,
+    onExtraSelected: (String?) -> Unit,
+    onDaysChanged: (Int) -> Unit,
     baseUrl: String,
     modifier: Modifier = Modifier
 ) {
@@ -95,7 +98,7 @@ fun RoomScreen(
             ) {
                 IconButton(onClick = onBack) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = "Atrás",
                         tint = Verde900
                     )
@@ -138,6 +141,9 @@ fun RoomScreen(
                                 selectedRoom = room
                                 selectedExtra = null
                                 selectedDays = 1
+                                onRoomSelected(room)
+                                onExtraSelected(null)
+                                onDaysChanged(1)
                             }
                         )
                     }
@@ -151,8 +157,8 @@ fun RoomScreen(
                 product = plan.key,
                 selectedExtra = selectedExtra,
                 selectedDays = selectedDays,
-                onExtraChange = { selectedExtra = it },
-                onDaysChange = { selectedDays = it },
+                onExtraChange = { selectedExtra = it; onExtraSelected(it) },
+                onDaysChange = { selectedDays = it; onDaysChanged(it) },
                 onBack = onBack,
                 onContinue = onContinue,
                 modifier = Modifier.align(Alignment.BottomCenter)
