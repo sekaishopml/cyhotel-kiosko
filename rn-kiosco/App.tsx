@@ -18,7 +18,7 @@ import CheckinScreen from './src/screens/CheckinScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.0.5';
+const APP_VERSION = '6.0.6';
 const ADMIN_PIN = '12345';
 
 function reportCrash(error: unknown, isFatal: boolean) {
@@ -115,11 +115,11 @@ function App() {
         const apkPath = String(data?.apk ?? '/kiosco.apk');
         Alert.alert(
           'Actualización disponible',
-          `Hay una versión nueva (${remoteVersion}).\n¿Descargarla e instalar ahora?`,
+          'Una nueva versión está lista para instalarse.',
           [
             { text: 'Ahora no', style: 'cancel' },
             {
-              text: 'Descargar e instalar',
+              text: 'Actualizar ahora',
               onPress: async () => {
                 try {
                   const updater = (await import('react-native')).NativeModules.ApkUpdater;
@@ -127,7 +127,7 @@ function App() {
                   if (can === false) {
                     Alert.alert(
                       'Permiso de instalación',
-                      'Habilitá "Instalar apps desconocidas" para esta app.',
+                      'Permanecé en esta pantalla y accedé a Ajustes para habilitar "Instalar apps desconocidas".',
                       [
                         { text: 'Cancelar', style: 'cancel' },
                         { text: 'Configurar', onPress: () => updater.openInstallSettings() },
@@ -135,12 +135,12 @@ function App() {
                     );
                     return;
                   }
-                  Alert.alert('Descargando…', 'La actualización se está descargando e instalará automáticamente.');
+                  Alert.alert('Actualizando…', 'La nueva versión se está descargando e instalando.');
                   await updater.downloadAndInstall(`${base}${apkPath}`);
                 } catch (e) {
                   Alert.alert(
                     'No se pudo actualizar',
-                    e instanceof Error ? e.message : 'Error al descargar. Revisá tu conexión.',
+                    'La app no pudo instalarse ahora. Probá de nuevo más tarde.',
                   );
                 }
               },

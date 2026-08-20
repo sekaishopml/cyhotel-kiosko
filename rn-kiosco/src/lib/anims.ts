@@ -80,11 +80,11 @@ export function slideUp(delay = 0, distance = 80, duration = 350) {
   };
 }
 
-export function scaleOnPress() {
+export function scaleOnPress(to = 0.95) {
   const anim = new Animated.Value(1);
   const pressIn = () => {
     Animated.spring(anim, {
-      toValue: 0.95,
+      toValue: to,
       stiffness: 400,
       damping: 17,
       useNativeDriver: true,

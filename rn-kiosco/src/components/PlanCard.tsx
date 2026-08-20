@@ -1,6 +1,6 @@
 import React from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, fonts, radii } from '../theme';
+import { colors, fonts, sizes, radii, shadows } from '../theme';
 import { PLAN_META } from '../api';
 import { scaleOnPress } from '../lib/anims';
 
@@ -11,13 +11,13 @@ type Props = {
 
 function PlanCard({ planKey, onPress }: Props) {
   const meta = PLAN_META[planKey];
-  const press = scaleOnPress();
+  const press = scaleOnPress(0.97);
 
   const isHero = meta.hero;
   const isSuite = planKey === 'suite';
   const isDawn = planKey === 'amanecida';
 
-  const bg = isHero ? colors.verde900 : isSuite ? '#0B0B0B' : isDawn ? colors.verde700 : colors.verde600;
+  const bg = isHero ? colors.primary : isSuite ? '#0B0B0B' : isDawn ? colors.verde700 : colors.verde600;
 
   return (
     <Animated.View style={[styles.wrap, press.style]}>
@@ -26,9 +26,12 @@ function PlanCard({ planKey, onPress }: Props) {
         onPress={onPress}
         onPressIn={press.pressIn}
         onPressOut={press.pressOut}
-        style={[styles.card, { backgroundColor: bg }]}
+        style={[styles.card, { backgroundColor: bg }, shadows.card]}
+        accessibilityRole="button"
+        accessibilityLabel={`Seleccionar plan ${meta.name}: ${meta.subtitle}`}
+        accessibilityHint="Presiona para continuar"
       >
-        <View style={styles.iconCircle}>
+        <View style={[styles.iconCircle, { borderColor: colors.inkMuted }]}>
           <Text style={styles.icon}>{meta.icon}</Text>
         </View>
 
@@ -43,11 +46,11 @@ function PlanCard({ planKey, onPress }: Props) {
 
         {meta.badge && (
           <View style={styles.badge}>
-            <Text style={styles.badgeText}>{meta.badge}</Text>
+            <Text style={styles.badgeText}>Lo más pedido</Text>
           </View>
         )}
 
-        <Text style={styles.arrow}>→</Text>
+        <Text style={[styles.arrow, { color: colors.inkMuted }]}>→</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -64,21 +67,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 26,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 20,
+    justifyContent: 'space-between',
+    gap: 16,
     overflow: 'hidden',
   },
   iconCircle: {
-    width: 64,
-    height: 64,
+    width: sizes.ring,
+    height: sizes.ring,
     borderRadius: radii.circle,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.35)',
+    borderWidth: 2,
     backgroundColor: 'rgba(255,255,255,0.12)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
-    fontSize: 28,
+    fontSize: sizes.planIcon - 20,
   },
   texts: {
     flex: 1,
@@ -86,31 +89,36 @@ const styles = StyleSheet.create({
   },
   name: {
     fontFamily: fonts.serif,
-    fontSize: 30,
+    fontSize: sizes.planName,
     fontWeight: '600',
-    color: colors.white,
+    letterSpacing: 0.8,
+    lineHeight: 26,
+    color: colors.onPrimary,
   },
   subtitle: {
-    fontSize: 15,
-    color: 'rgba(255,255,255,0.75)',
+    fontSize: sizes.subtitle,
+    fontWeight: '400',
+    letterSpacing: 0.8,
+    lineHeight: 20,
+    color: 'rgba(255,255,255,0.78)',
     marginTop: 2,
   },
   badge: {
-    backgroundColor: colors.terracota,
-    borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
+    backgroundColor: colors.accent,
+    borderRadius: radii.badge,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
   },
   badgeText: {
-    color: colors.white,
-    fontSize: 12,
-    fontWeight: '700',
+    color: colors.onPrimary,
+    fontSize: sizes.micro,
+    fontWeight: '600',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
   arrow: {
-    fontSize: 26,
-    color: 'rgba(255,255,255,0.85)',
+    fontSize: sizes.arrow - 12,
+    fontWeight: '600',
   },
 });
 
