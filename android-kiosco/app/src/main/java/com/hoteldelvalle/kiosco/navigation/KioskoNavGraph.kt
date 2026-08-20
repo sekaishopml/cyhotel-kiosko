@@ -1,6 +1,8 @@
 package com.hoteldelvalle.kiosco.navigation
 
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.runtime.Composable
@@ -14,7 +16,6 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.hoteldelvalle.kiosco.data.Prefs
-import com.hoteldelvalle.kiosco.data.model.Order
 import com.hoteldelvalle.kiosco.data.model.Plan
 import com.hoteldelvalle.kiosco.data.model.RoomType
 import com.hoteldelvalle.kiosco.ui.checkin.CheckinScreen
@@ -39,26 +40,26 @@ fun KioskoNavGraph(
         startDestination = "plan",
         modifier = modifier,
         enterTransition = {
-            slideInHorizontally(tween(300)) { it }
+            slideInHorizontally(tween(350)) { it } + fadeIn(tween(300))
         },
         exitTransition = {
-            slideOutHorizontally(tween(300)) { -it / 3 }
+            slideOutHorizontally(tween(350)) { -it / 4 } + fadeOut(tween(200))
         },
         popEnterTransition = {
-            slideInHorizontally(tween(300)) { -it / 3 }
+            slideInHorizontally(tween(350)) { -it / 4 } + fadeIn(tween(300))
         },
         popExitTransition = {
-            slideOutHorizontally(tween(300)) { it }
+            slideOutHorizontally(tween(350)) { it } + fadeOut(tween(200))
         }
     ) {
         composable("plan") {
             PlanScreen(
-                selectedPlan = selectedPlan,
-                onPlanSelected = { selectedPlan = it },
-                onContinue = {
-                    if (selectedPlan != null) {
-                        navController.navigate("room")
-                    }
+                onPlanSelected = { plan ->
+                    selectedPlan = plan
+                    selectedRoom = null
+                    selectedExtra = null
+                    selectedDays = 1
+                    navController.navigate("room")
                 }
             )
         }

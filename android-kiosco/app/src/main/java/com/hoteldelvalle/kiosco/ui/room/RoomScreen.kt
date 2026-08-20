@@ -1,5 +1,9 @@
 package com.hoteldelvalle.kiosco.ui.room
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,6 +41,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontWeight
 import com.hoteldelvalle.kiosco.data.api.ApiClient
 import com.hoteldelvalle.kiosco.data.api.ApiException
 import com.hoteldelvalle.kiosco.data.model.Plan
@@ -45,7 +52,6 @@ import com.hoteldelvalle.kiosco.ui.components.ChipRow
 import com.hoteldelvalle.kiosco.ui.components.ErrorOverlay
 import com.hoteldelvalle.kiosco.ui.components.RoomCard
 import com.hoteldelvalle.kiosco.ui.components.ShimmerRoomCard
-import com.hoteldelvalle.kiosco.ui.components.Stepper
 import com.hoteldelvalle.kiosco.ui.theme.Verde900
 import com.hoteldelvalle.kiosco.ui.theme.White
 import com.hoteldelvalle.kiosco.util.money
@@ -69,6 +75,7 @@ fun RoomScreen(
     var selectedDays by remember { mutableIntStateOf(1) }
     var isLoading by remember { mutableStateOf(true) }
     var error by remember { mutableStateOf<String?>(null) }
+    var gridVisible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     LaunchedEffect(plan.key) {
@@ -104,10 +111,13 @@ fun RoomScreen(
                     )
                 }
 
-                Stepper(
-                    steps = listOf("Plan", "Habitación", "Check-in"),
-                    currentStep = 1,
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = plan.name,
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 22.sp,
+                    color = Verde900,
+                    letterSpacing = 0.1.sp
                 )
             }
 
@@ -125,27 +135,32 @@ fun RoomScreen(
                     }
                 }
             } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(3),
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(bottom = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                AnimatedVisibility(
+                    visible = gridVisible,
+                    enter = fadeIn(tween(500)) + slideInVertically(tween(500)) { it / 4 }
                 ) {
-                    items(rooms) { room ->
-                        RoomCard(
-                            room = room,
-                            isSelected = selectedRoom?.key == room.key,
-                            baseUrl = baseUrl,
-                            onClick = {
-                                selectedRoom = room
-                                selectedExtra = null
-                                selectedDays = 1
-                                onRoomSelected(room)
-                                onExtraSelected(null)
-                                onDaysChanged(1)
-                            }
-                        )
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(3),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        items(rooms) { room ->
+                            RoomCard(
+                                room = room,
+                                isSelected = selectedRoom?.key == room.key,
+                                baseUrl = baseUrl,
+                                onClick = {
+                                    selectedRoom = room
+                                    selectedExtra = null
+                                    selectedDays = 1
+                                    onRoomSelected(room)
+                                    onExtraSelected(null)
+                                    onDaysChanged(1)
+                                }
+                            )
+                        }
                     }
                 }
             }
@@ -179,7 +194,8 @@ fun RoomScreen(
                     } catch (e: Exception) {
                         error = "Error de conexión"
                     } finally {
-                        isLoading = false
+            isLoading = false
+            gridVisible = true
                     }
                 }
             },

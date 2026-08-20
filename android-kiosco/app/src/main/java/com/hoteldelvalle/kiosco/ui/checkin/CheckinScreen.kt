@@ -52,7 +52,6 @@ import com.hoteldelvalle.kiosco.data.model.Order
 import com.hoteldelvalle.kiosco.data.model.OrderRequest
 import com.hoteldelvalle.kiosco.data.model.Plan
 import com.hoteldelvalle.kiosco.data.model.RoomType
-import com.hoteldelvalle.kiosco.ui.components.Stepper
 import com.hoteldelvalle.kiosco.ui.theme.Crema
 import com.hoteldelvalle.kiosco.ui.theme.ErrorRed
 import com.hoteldelvalle.kiosco.ui.theme.Verde600
@@ -81,11 +80,20 @@ fun CheckinScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var showConfirmation by remember { mutableStateOf(false) }
     var confirmedOrder by remember { mutableStateOf<Order?>(null) }
+    var formVisible by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        formVisible = true
+    }
 
     val total = totalOf(plan.key, room.price, extra, days, room.extras)
 
     Box(modifier = modifier.fillMaxSize().background(White)) {
+        AnimatedVisibility(
+            visible = formVisible,
+            enter = fadeIn(tween(500)) + scaleIn(tween(500), initialScale = 0.95f)
+        ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -103,10 +111,13 @@ fun CheckinScreen(
                     )
                 }
 
-                Stepper(
-                    steps = listOf("Plan", "Habitación", "Check-in"),
-                    currentStep = 2,
-                    modifier = Modifier.weight(1f)
+                Text(
+                    text = "Check-in",
+                    fontFamily = FontFamily.Serif,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 22.sp,
+                    color = Verde900,
+                    letterSpacing = 0.1.sp
                 )
             }
 
@@ -220,6 +231,7 @@ fun CheckinScreen(
                 }
             }
         }
+        } // AnimatedVisibility formVisible
 
         AnimatedVisibility(
             visible = showConfirmation,
