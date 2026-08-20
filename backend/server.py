@@ -352,7 +352,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def _static_map(self):
         if self.MODE == "kiosco":
-            return {"/": "kiosco.html", "/kiosco": "kiosco.html", "/kiosco.apk": "kiosco.apk"}
+            return {"/": "kiosco/dist/index.html", "/kiosco": "kiosco/dist/index.html", "/kiosco.apk": "kiosco.apk"}
         if self.MODE == "master":
             return {"/": "master.html", "/master": "master.html"}
         return {
@@ -486,6 +486,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._serve_upload(path)
             elif path.startswith("/img/"):
                 self._serve_img(path)
+            elif path.startswith("/kiosco/"):
+                self._serve_react_spa(path)
             elif path in self._static_map():
                 self._serve_static(path)
             else:
@@ -2986,6 +2988,42 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.send_header("Pragma", "no-cache")
         self.send_header("Expires", "0")
+        self.end_headers()
+        self.wfile.write(body)
+
+    def _serve_react_spa(self, path):
+        """Sirve archivos del React SPA en kiosco/dist/."""
+        base = WEB_DIR
+        # Remover /kiosco/ prefix y buscar en kiosco/dist/
+        rel = path[len("/kiosco/"):]
+        if not rel:
+            rel = "index.html"
+        target = os.path.join(base, "kiosco", "dist", rel)
+        if not os.path.isfile(target):
+            # SPA fallback: servir index.html para rutas de React Router
+            target = os.path.join(base, "kiosco", "dist", "index.html")
+        if not os.path.isfile(target):
+            self._error(404, "React SPA no construida todavía")
+            return
+        ext = os.path.splitext(target)[1]
+        ctype = {
+            ".html": "text/html", ".js": "application/javascript",
+            ".css": "text/css", ".json": "application/json",
+            ".svg": "image/svg+xml", ".png": "image/png",
+            ".jpg": "image/jpeg", ".jpeg": "image/jpeg",
+            ".ico": "image/x-icon", ".woff2": "font/woff2",
+            ".woff": "font/woff", ".ttf": "font/ttf",
+        }.get(ext, "application/octet-stream")
+        with open(target, "rb") as f:
+            body = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", ctype)
+        self.send_header("Content-Length", str(len(body)))
+        # Assets con hash pueden cache agresivo; HTML no
+        if ext != ".html":
+            self.send_header("Cache-Control", "public, max-age=31536000, immutable")
+        else:
+            self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
         self.end_headers()
         self.wfile.write(body)
 

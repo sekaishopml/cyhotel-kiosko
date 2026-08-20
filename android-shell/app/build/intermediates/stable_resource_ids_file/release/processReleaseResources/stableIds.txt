@@ -1,0 +1,2 @@
+com.hoteldelvalle.kiosco:style/Theme.Kiosko = 0x7f020000
+com.hoteldelvalle.kiosco:string/app_name = 0x7f010000
