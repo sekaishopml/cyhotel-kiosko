@@ -19,8 +19,36 @@ import CheckinScreen from './src/screens/CheckinScreen';
 type Screen = 'plan' | 'room' | 'checkin';
 
 const UPDATE_API = 'https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest';
-const APP_VERSION = '6.0.0';
+const APP_VERSION = '6.0.1';
 const ADMIN_PIN = '12345';
+
+function reportCrash(error: unknown, isFatal: boolean) {
+  try {
+    getServerBase().then(base => {
+      fetch(`${base}/api/kiosco-crash`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          app: 'rn',
+          version: APP_VERSION,
+          error: String(error instanceof Error ? error.message : error),
+          stack: String(error instanceof Error ? error.stack : ''),
+          isFatal,
+          time: new Date().toISOString(),
+        }),
+      }).catch(() => {});
+    });
+  } catch {}
+}
+
+function installCrashReporter() {
+  if (__DEV__) return;
+  const prev = ErrorUtils.getGlobalHandler();
+  ErrorUtils.setGlobalHandler((error: unknown, isFatal?: boolean) => {
+    reportCrash(error, !!isFatal);
+    prev(error, isFatal);
+  });
+}
 
 function App() {
   const [screen, setScreen] = useState<Screen>('plan');
@@ -38,6 +66,7 @@ function App() {
 
   useEffect(() => {
     getServerBase().then(setServerBaseState);
+    installCrashReporter();
   }, []);
 
   const goHome = useCallback(() => {
