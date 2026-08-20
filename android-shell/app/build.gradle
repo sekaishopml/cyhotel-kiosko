@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.hoteldelvalle.kiosco"
-        minSdk 26
+        minSdk 23
         targetSdk 34
         versionCode 1
         versionName "1.0.0"
@@ -23,6 +23,9 @@ android {
             storePassword props['KS_PASS']
             keyAlias props['KEY_ALIAS']
             keyPassword props['KEY_PASS']
+            enableV1Signing true
+            enableV2Signing true
+            enableV3Signing true
         }
     }
 
