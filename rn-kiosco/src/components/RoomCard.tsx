@@ -1,6 +1,6 @@
 import React from 'react';
 import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, fonts, sizes, radii } from '../theme';
+import { colors, sizes, radii, typography } from '../theme';
 import type { RoomType } from '../api';
 import { scaleOnPress } from '../lib/anims';
 
@@ -63,17 +63,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   selected: {
-    backgroundColor: colors.verde900,
-    borderColor: colors.verde900,
+    backgroundColor: colors.brandPrimary,
+    borderColor: colors.brandPrimary,
   },
   unselected: {
-    backgroundColor: colors.crema,
+    backgroundColor: colors.surface,
     borderColor: 'rgba(20,58,42,0.1)',
   },
   photo: {
     width: sizes.roomPhoto,
     height: '100%',
-    backgroundColor: colors.verde600,
+    backgroundColor: colors.brandPrimaryLight,
   },
   body: {
     flex: 1,
@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   name: {
-    fontFamily: fonts.serif,
+    fontFamily: typography.serif,
     fontSize: 20,
     fontWeight: '600',
     color: colors.ink,
@@ -98,13 +98,13 @@ const styles = StyleSheet.create({
   price: {
     fontSize: 18,
     fontWeight: '700',
-    color: colors.verde700,
+    color: colors.brandPrimaryLight,
   },
   priceSelected: {
     color: colors.white,
   },
   freeBadge: {
-    backgroundColor: colors.verde500,
+    backgroundColor: colors.brandAccent,
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 3,

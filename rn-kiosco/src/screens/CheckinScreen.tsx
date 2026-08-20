@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Animated, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
-import { colors, fonts, radii, spacing } from '../theme';
+import { colors, radii, spacing, typography } from '../theme';
 import { createOrder, PLAN_META, type Order } from '../api';
 import SuccessModal from '../components/SuccessModal';
 import { fadeInDown } from '../lib/anims';
@@ -137,6 +137,7 @@ function SummaryRow({ label, value, last }: { label: string; value: string; last
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: colors.surface,
   },
   titleRow: {
     flexDirection: 'row',
@@ -155,14 +156,14 @@ const styles = StyleSheet.create({
   backIcon: {
     fontSize: 40,
     lineHeight: 42,
-    color: colors.verde600,
+    color: colors.brandPrimaryLight,
     marginTop: -4,
   },
   title: {
-    fontFamily: fonts.serif,
+    fontFamily: typography.serif,
     fontSize: 24,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
   },
   body: {
     flex: 1,
@@ -170,7 +171,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   summaryCard: {
-    backgroundColor: colors.crema,
+    backgroundColor: colors.surface,
     borderRadius: radii.roomCard,
     padding: 20,
     marginBottom: 24,
@@ -187,7 +188,7 @@ const styles = StyleSheet.create({
   summaryLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
   },
   summaryValue: {
     fontSize: 14,
@@ -197,7 +198,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '500',
-    color: colors.verde900,
+    color: colors.brandPrimary,
     marginBottom: 8,
   },
   labelGap: {
@@ -227,7 +228,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   cta: {
-    backgroundColor: colors.verde900,
+    backgroundColor: colors.brandPrimary,
     borderRadius: radii.cta,
     paddingVertical: 16,
     alignItems: 'center',

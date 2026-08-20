@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Modal as RNModal, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, fonts, radii } from '../theme';
+import { colors, radii, typography } from '../theme';
 import type { Order } from '../api';
 import { zoomIn } from '../lib/anims';
 
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 999,
-    backgroundColor: colors.verde500,
+    backgroundColor: colors.brandAccent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 12,
@@ -98,10 +98,10 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   title: {
-    fontFamily: fonts.serif,
+    fontFamily: typography.serif,
     fontSize: 24,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
     marginBottom: 4,
   },
   subtitle: {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   infoCard: {
-    backgroundColor: colors.crema,
+    backgroundColor: colors.surface,
     borderRadius: 16,
     padding: 16,
     width: '100%',
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   infoLabel: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
   },
   infoValue: {
     fontSize: 14,
@@ -136,7 +136,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   closeBtn: {
-    backgroundColor: colors.verde900,
+    backgroundColor: colors.brandPrimary,
     borderRadius: radii.cta,
     paddingVertical: 14,
     paddingHorizontal: 48,

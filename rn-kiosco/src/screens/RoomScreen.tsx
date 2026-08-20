@@ -1,10 +1,10 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
-import { colors, fonts, radii, spacing } from '../theme';
+import { colors, radii, spacing, typography } from '../theme';
 import { getServerBase, getTypes, PLAN_META, type RoomType, type TypesResponse } from '../api';
 import RoomCard from '../components/RoomCard';
 import ChipRow from '../components/ChipRow';
-import LoadingShimmer from '../components/LoadingShimmer';
+import Shimmer from '../components/Shimmer';
 import { fadeIn, fadeInDown, slideUp } from '../lib/anims';
 
 type Props = {
@@ -89,7 +89,7 @@ function RoomScreen({
 
       <Animated.View style={[styles.body, bodyAnim]}>
         {loading ? (
-          <LoadingShimmer />
+          <Shimmer />
         ) : error ? (
           <View style={styles.errorBox}>
             <Text style={styles.errorText}>No se pudieron cargar las habitaciones.</Text>
@@ -151,6 +151,7 @@ function RoomScreen({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+    backgroundColor: colors.surface,
   },
   titleRow: {
     flexDirection: 'row',
@@ -169,14 +170,14 @@ const styles = StyleSheet.create({
   backIcon: {
     fontSize: 40,
     lineHeight: 42,
-    color: colors.verde600,
+    color: colors.brandPrimaryLight,
     marginTop: -4,
   },
   title: {
-    fontFamily: fonts.serif,
+    fontFamily: typography.serif,
     fontSize: 24,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
   },
   body: {
     flex: 1,
@@ -201,7 +202,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   retryText: {
-    color: colors.verde600,
+    color: colors.brandPrimaryLight,
     fontSize: 16,
     fontWeight: '600',
     textDecorationLine: 'underline',
@@ -226,13 +227,13 @@ const styles = StyleSheet.create({
     color: 'rgba(27,74,53,0.6)',
   },
   totalValue: {
-    fontFamily: fonts.serif,
+    fontFamily: typography.serif,
     fontSize: 24,
     fontWeight: '700',
-    color: colors.verde900,
+    color: colors.brandPrimary,
   },
   cta: {
-    backgroundColor: colors.verde900,
+    backgroundColor: colors.brandPrimary,
     borderRadius: radii.cta,
     paddingHorizontal: 36,
     paddingVertical: 14,

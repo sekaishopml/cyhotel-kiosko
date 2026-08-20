@@ -1,7 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
-  Animated,
   Modal as RNModal,
   StyleSheet,
   Text,
@@ -9,17 +8,20 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { colors, fonts } from './src/theme';
-import { getServerBase, setServerBase, PLAN_META } from './src/api';
-import Header from './src/components/Header';
-import PlanScreen from './src/screens/PlanScreen';
+import { colors, sizes, spacing, radii, typography } from './src/theme';
+import { getServerBase, setServerBase } from './src/api';
+import KioskHeader from './src/components/KioskHeader';
+import HomeScreen from './src/screens/HomeScreen';
 import RoomScreen from './src/screens/RoomScreen';
 import CheckinScreen from './src/screens/CheckinScreen';
+import ScreenTransition from './src/components/ScreenTransition';
+import IdleScreen from './src/components/IdleScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.0.6';
+const APP_VERSION = '6.1.0';
 const ADMIN_PIN = '12345';
+const IDLE_MS = 90000;
 
 function reportCrash(error: unknown, isFatal: boolean) {
   try {
@@ -59,9 +61,11 @@ function App() {
   const [roomLabel, setRoomLabel] = useState('');
   const [total, setTotal] = useState(0);
   const [serverBase, setServerBaseState] = useState<string | null>(null);
-  const [serverModal, setServerModal] = useState(false);
+  const [adminModal, setAdminModal] = useState(false);
+  const [adminView, setAdminView] = useState<'pin' | 'panel' | 'server'>('pin');
   const [serverInput, setServerInput] = useState('');
   const [pinInput, setPinInput] = useState('');
+  const [idle, setIdle] = useState(false);
 
   useEffect(() => {
     getServerBase().then(setServerBaseState);
@@ -97,6 +101,28 @@ function App() {
     setTotal(amount);
     setScreen('checkin');
   }, []);
+
+  const wakeUp = useCallback(() => {
+    if (idle) {
+      setIdle(false);
+      goHome();
+    }
+  }, [idle, goHome]);
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    const reset = () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => {
+        setIdle(true);
+        goHome();
+      }, IDLE_MS);
+    };
+    reset();
+    return () => {
+      if (timer) clearTimeout(timer);
+    };
+  }, [screen, goHome, idle]);
 
   const checkForUpdate = useCallback(() => {
     if (checking) return;
@@ -155,10 +181,25 @@ function App() {
     })();
   }, [checking]);
 
-  const openServerModal = useCallback(() => {
-    setServerInput(serverBase ?? '');
+  const openAdmin = useCallback(() => {
     setPinInput('');
-    setServerModal(true);
+    setAdminView('pin');
+    setAdminModal(true);
+  }, []);
+
+  const tryAdmin = useCallback(() => {
+    if (pinInput === ADMIN_PIN) {
+      setPinInput('');
+      setAdminView('panel');
+    } else {
+      Alert.alert('PIN incorrecto', 'Ingresá el PIN de administración.');
+      setPinInput('');
+    }
+  }, [pinInput]);
+
+  const openServerInput = useCallback(() => {
+    setServerInput(serverBase ?? '');
+    setAdminView('server');
   }, [serverBase]);
 
   const saveServer = useCallback(() => {
@@ -170,8 +211,8 @@ function App() {
     setServerBase(url)
       .then(() => {
         setServerBaseState(url);
-        setServerModal(false);
-        Alert.alert('Servidor actualizado', `Conectando a:\n${url}`);
+        setAdminModal(false);
+        Alert.alert('Servidor actualizado', 'Listo. La app se reconectará.');
         goHome();
       })
       .catch(() => {
@@ -179,53 +220,12 @@ function App() {
       });
   }, [serverInput, goHome]);
 
-  const tryAdmin = useCallback(() => {
-    if (pinInput === ADMIN_PIN) {
-      setPinInput('');
-      openServerModal();
-    } else {
-      Alert.alert('PIN incorrecto', 'Ingresá el PIN de administración.');
-      setPinInput('');
-    }
-  }, [pinInput, openServerModal]);
-
-  useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
-    const reset = () => {
-      if (timer) clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (screen !== 'plan') goHome();
-      }, 90000);
-    };
-    reset();
-    return () => {
-      if (timer) clearTimeout(timer);
-    };
-  }, [screen, goHome]);
-
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    Animated.timing(fadeAnim, {
-      toValue: 1,
-      duration: 350,
-      useNativeDriver: true,
-    }).start();
-  }, [screen, fadeAnim]);
-
   return (
-    <View style={styles.app}>
-      <Header
-        onUpdate={checkForUpdate}
-        checking={checking}
-        appVersion={APP_VERSION}
-        onServerPress={openServerModal}
-      />
+    <View style={styles.app} onTouchStart={wakeUp}>
+      <KioskHeader onAdminLongPress={openAdmin} />
       <View style={styles.stage}>
-        <Animated.View style={[styles.stage, { opacity: fadeAnim }]}>
-          {screen === 'plan' && (
-            <PlanScreen onSelectPlan={selectPlan} />
-          )}
+        <ScreenTransition screenKey={screen}>
+          {screen === 'plan' && <HomeScreen onSelectPlan={selectPlan} />}
           {screen === 'room' && selectedPlan && (
             <RoomScreen
               planKey={selectedPlan}
@@ -251,40 +251,89 @@ function App() {
               onSuccess={goHome}
             />
           )}
-        </Animated.View>
+        </ScreenTransition>
       </View>
 
-      <RNModal visible={serverModal} transparent animationType="fade" onRequestClose={() => setServerModal(false)}>
+      {idle && <IdleScreen />}
+
+      <RNModal visible={adminModal} transparent animationType="fade" onRequestClose={() => setAdminModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={styles.modalCard}>
-            <Text style={styles.modalTitle}>Servidor</Text>
-            <Text style={styles.modalSub}>IP o dominio del servidor (local o VPS)</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={serverInput}
-              onChangeText={setServerInput}
-              placeholder="http://IP:8000"
-              placeholderTextColor="rgba(16,40,29,0.3)"
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-            />
-            <Text style={styles.modalLabel}>PIN de administrador</Text>
-            <TextInput
-              style={styles.modalInput}
-              value={pinInput}
-              onChangeText={setPinInput}
-              placeholder="12345"
-              placeholderTextColor="rgba(16,40,29,0.3)"
-              secureTextEntry
-              keyboardType="number-pad"
-            />
-            <TouchableOpacity onPress={tryAdmin} style={styles.modalBtn} accessibilityLabel="Ingresar PIN">
-              <Text style={styles.modalBtnText}>Ingresar</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => setServerModal(false)} style={styles.modalCancel}>
-              <Text style={styles.modalCancelText}>Cancelar</Text>
-            </TouchableOpacity>
+            {adminView === 'panel' && (
+              <>
+                <Text style={styles.modalTitle}>Administración</Text>
+                <Text style={styles.modalSub}>Versión {APP_VERSION}</Text>
+
+                <TouchableOpacity
+                  onPress={checkForUpdate}
+                  disabled={checking}
+                  style={[styles.modalBtn, checking && styles.modalBtnDisabled]}
+                  accessibilityLabel="Buscar actualización"
+                >
+                  <Text style={styles.modalBtnText}>
+                    {checking ? 'Buscando…' : 'Buscar actualización'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={openServerInput}
+                  style={[styles.modalBtn, styles.modalBtnOutline]}
+                  accessibilityLabel="Configurar servidor"
+                >
+                  <Text style={styles.modalBtnOutlineText}>Configurar servidor</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity onPress={() => setAdminModal(false)} style={styles.modalCancel}>
+                  <Text style={styles.modalCancelText}>Cerrar</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {adminView === 'server' && (
+              <>
+                <Text style={styles.modalTitle}>Servidor</Text>
+                <Text style={styles.modalSub}>Dirección del servidor local o VPS</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={serverInput}
+                  onChangeText={setServerInput}
+                  placeholder="http://IP:8000"
+                  placeholderTextColor="rgba(31,59,44,0.35)"
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                  keyboardType="url"
+                />
+                <TouchableOpacity onPress={saveServer} style={styles.modalBtn} accessibilityLabel="Guardar servidor">
+                  <Text style={styles.modalBtnText}>Guardar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setAdminView('panel')} style={styles.modalCancel}>
+                  <Text style={styles.modalCancelText}>Volver</Text>
+                </TouchableOpacity>
+              </>
+            )}
+
+            {adminView === 'pin' && (
+              <>
+                <Text style={styles.modalTitle}>Acceso restringido</Text>
+                <Text style={styles.modalSub}>Ingresá el PIN de administración</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={pinInput}
+                  onChangeText={setPinInput}
+                  placeholder="•••••"
+                  placeholderTextColor="rgba(31,59,44,0.35)"
+                  secureTextEntry
+                  keyboardType="number-pad"
+                  autoFocus
+                />
+                <TouchableOpacity onPress={tryAdmin} style={styles.modalBtn} accessibilityLabel="Ingresar PIN">
+                  <Text style={styles.modalBtnText}>Ingresar</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setAdminModal(false)} style={styles.modalCancel}>
+                  <Text style={styles.modalCancelText}>Cancelar</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       </RNModal>
@@ -295,75 +344,90 @@ function App() {
 const styles = StyleSheet.create({
   app: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.brandPrimaryDeep,
   },
   stage: {
     flex: 1,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(16,40,29,0.5)',
+    backgroundColor: 'rgba(10,18,14,0.6)',
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 32,
+    padding: spacing.xl,
   },
   modalCard: {
-    backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 28,
+    backgroundColor: colors.surface,
+    borderRadius: radii.card,
+    padding: spacing.xl,
     width: '100%',
-    maxWidth: 460,
+    maxWidth: 480,
   },
   modalTitle: {
-    fontFamily: fonts.serif,
-    fontSize: 24,
+    fontFamily: typography.serif,
+    fontSize: sizes.cardTitle,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
   },
   modalSub: {
-    fontSize: 14,
-    color: 'rgba(27,74,53,0.6)',
-    marginTop: 4,
-    marginBottom: 20,
-  },
-  modalLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.verde900,
-    marginTop: 16,
-    marginBottom: 8,
+    fontFamily: typography.sans,
+    fontSize: sizes.cardSubtitle,
+    color: colors.textInk,
+    opacity: 0.65,
+    marginTop: spacing.xs,
+    marginBottom: spacing.lg,
   },
   modalInput: {
     borderWidth: 1.5,
-    borderColor: 'rgba(20,58,42,0.2)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: colors.ink,
-    backgroundColor: colors.white,
+    borderColor: colors.border,
+    borderRadius: radii.button,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 14,
+    fontSize: sizes.cta,
+    color: colors.textInk,
+    backgroundColor: colors.elevated,
+    textAlign: 'center',
+    letterSpacing: 6,
   },
   modalBtn: {
-    backgroundColor: colors.verde900,
-    borderRadius: 16,
-    paddingVertical: 14,
+    backgroundColor: colors.brandPrimary,
+    borderRadius: radii.button,
+    paddingVertical: 18,
     alignItems: 'center',
-    marginTop: 24,
+    marginTop: spacing.md,
+    minHeight: 60,
+    justifyContent: 'center',
+  },
+  modalBtnDisabled: {
+    opacity: 0.5,
   },
   modalBtnText: {
-    color: colors.white,
-    fontSize: 16,
+    color: colors.textPrimary,
+    fontSize: sizes.cta,
     fontWeight: '600',
+    fontFamily: typography.sans,
+  },
+  modalBtnOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 1.5,
+    borderColor: colors.brandPrimary,
+  },
+  modalBtnOutlineText: {
+    color: colors.brandPrimary,
+    fontSize: sizes.cta,
+    fontWeight: '600',
+    fontFamily: typography.sans,
   },
   modalCancel: {
-    paddingVertical: 12,
+    paddingVertical: 16,
     alignItems: 'center',
-    marginTop: 4,
+    marginTop: spacing.xs,
   },
   modalCancelText: {
-    color: colors.verde600,
-    fontSize: 15,
+    color: colors.brandPrimary,
+    fontSize: sizes.cardSubtitle,
     fontWeight: '500',
+    fontFamily: typography.sans,
   },
 });
 

@@ -1,90 +1,113 @@
 export const colors = {
-  primary: '#143A2A',
-  onPrimary: '#FFFFFF',
-  surface: '#F3ECDD',
-  elevated: '#FEFFFF',
-  ink: '#10281D',
-  inkMuted: '#6B736B',
-  accent: '#9B3B2E',
-  accentEmphasis: '#7A2F24',
+  // Paleta boutique: verde profundo (bosque) + dorado (cobre cálido) + crema
+  brandPrimary: '#1F3B2C',
+  brandPrimaryDeep: '#162D20',
+  brandPrimaryLight: '#2E5240',
+  brandAccent: '#C9A15A',
+  brandAccentDeep: '#A8854A',
+  brandCream: '#F4EEE2',
+  overlayDark: 'rgba(10,18,14,0.55)',
+  textPrimary: '#F4EEE2',
+  textMuted: 'rgba(244,238,226,0.7)',
+  textInk: '#10281D',
   border: '#E0D8CC',
-  verde900: '#143A2A',
-  verde700: '#1B4A35',
-  verde600: '#2C6B4A',
+  surface: '#F6F1E7',
+  elevated: '#FEFFFF',
+  success: '#3E9A63',
+  error: '#C05A4A',
+  // Aliases de la paleta anterior (migración)
+  verde900: '#1F3B2C',
+  verde700: '#2E5240',
+  verde600: '#3A6450',
   verde500: '#3E9A63',
-  crema: '#F3ECDD',
-  negro: '#000000',
-  terracota: '#9B3B2E',
-  terracota700: '#7E2E23',
-  overlay: 'rgba(16, 40, 29, 0.5)',
+  crema: '#F4EEE2',
+  ink: '#10281D',
   white: '#FFFFFF',
+  negro: '#000000',
+  terracota: '#C9A15A',
+  terracota700: '#A8854A',
 };
 
-export const fonts = {
-  serif: 'serif',
-  sans: 'sans-serif',
-};
-
-export const sizes = {
-  planName: 20,
-  screenTitle: 18,
-  subtitle: 14,
-  label: 16,
-  micro: 12,
-  planIcon: 56,
-  ring: 60,
-  arrow: 40,
-  badge: 12,
-  cta: 18,
-  roomName: 20,
-  roomSubtitle: 14,
-  dockTotal: 24,
-  roomPhoto: 116,
-  roomCardHeight: 116,
-  formLabel: 14,
-  chip: 14,
-};
-
-export const radii = {
-  planCard: 20,
-  roomCard: 16,
-  cta: 16,
-  modal: 24,
-  chip: 999,
-  circle: 28,
-  badge: 12,
+export const typography = {
+  serif: 'PlayfairDisplay',
+  sans: 'Inter',
 };
 
 export const spacing = {
   xs: 4,
   sm: 8,
-  card: 12,
   md: 16,
-  screen: 24,
-  lg: 32,
+  lg: 24,
+  xl: 32,
+  // alias migración
   gap: 16,
+  screen: 24,
 };
 
-export const spring = {
-  stiffness: 400,
-  damping: 17,
-  mass: 1,
+export const radii = {
+  card: 20,
+  pill: 999,
+  button: 14,
+  // alias migración
+  roomCard: 16,
+  modal: 20,
+  cta: 14,
+  chip: 999,
+  circle: 999,
+  badge: 12,
+  planCard: 20,
 };
 
-export const springSoft = {
-  stiffness: 300,
-  damping: 20,
-  mass: 1,
+export const sizes = {
+  heroTitle: 34,
+  cardTitle: 24,
+  cardSubtitle: 15,
+  microLabel: 11,
+  planName: 24,
+  planSubtitle: 15,
+  label: 14,
+  cta: 20,
+  icon: 28,
+  clock: 18,
+  wordmark: 26,
+  roomTitle: 22,
+  roomSubtitle: 14,
+  dockTotal: 24,
+  formLabel: 14,
+  chip: 14,
+  // alias migración
+  roomPhoto: 116,
+  roomCardHeight: 116,
+  planIcon: 56,
+  arrow: 40,
+  badgeSize: 12,
 };
 
-export const ease = [0.22, 1, 0.36, 1] as const;
+export const fonts = {
+  serif: typography.serif,
+  sans: typography.sans,
+  sansMedium: typography.sans,
+};
 
 export const shadows = {
   card: {
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
   },
+};
+
+export const springs = {
+  press: { stiffness: 420, damping: 20, mass: 1 },
+};
+
+export const overlayGradient = {
+  // gradiente inferior simulado sin dependencias (3 capas de opacidad)
+  layers: [
+    { heightPct: 0.42, color: 'rgba(10,18,14,0.18)' },
+    { heightPct: 0.3, color: 'rgba(10,18,14,0.32)' },
+    { heightPct: 0.28, color: 'rgba(10,18,14,0.62)' },
+  ],
 };

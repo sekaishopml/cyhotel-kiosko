@@ -1,6 +1,6 @@
 import React from 'react';
 import { Animated, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, fonts, radii } from '../theme';
+import { colors, radii, typography } from '../theme';
 import type { RoomType } from '../api';
 import { scaleOnPress } from '../lib/anims';
 
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
   label: {
     fontSize: 14,
     fontWeight: '600',
-    color: colors.verde900,
+    color: colors.brandPrimary,
     marginBottom: 10,
   },
   row: {
@@ -94,13 +94,13 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: 'rgba(20,58,42,0.2)',
     backgroundColor: colors.white,
-    borderRadius: radii.chip,
+    borderRadius: radii.pill,
     paddingHorizontal: 18,
     paddingVertical: 12,
   },
   chipSelected: {
-    backgroundColor: colors.verde900,
-    borderColor: colors.verde900,
+    backgroundColor: colors.brandPrimary,
+    borderColor: colors.brandPrimary,
   },
   chipText: {
     fontSize: 14,
