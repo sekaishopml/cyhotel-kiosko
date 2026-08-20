@@ -3,19 +3,15 @@ package com.hoteldelvalle.kiosco
 import android.app.Activity
 import android.app.AlertDialog
 import android.content.Context
+import android.content.pm.PackageManager
 import android.graphics.Color
-import android.graphics.Typeface
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.text.InputType
 import android.util.Log
-import android.util.TypedValue
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
-import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
@@ -25,7 +21,6 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.FrameLayout
-import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
@@ -40,8 +35,6 @@ class MainActivity : Activity() {
     private val handler = Handler(Looper.getMainLooper())
     private var tapCount = 0
     private var lastTapTime = 0L
-    private val tapTimeout = 2000L
-    private val tapsRequired = 5
     private var updateUrl: String? = null
 
     companion object {
@@ -52,61 +45,84 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "2.1.0"
+        const val APP_VERSION = "2.2.0"
+        private const val TAPS_REQUIRED = 5
+        private const val TAP_TIMEOUT_MS = 2000L
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        // CRÍTICO: setContentView ANTES de tocar insetsController.
+        // En API 30+ window.insetsController lanza NPE si el decor aún no existe.
+        setContentView(createLoadingScreen())
+
         installCrashReporter()
-        logStep("onCreate")
-        applyKioskMode()
+        logBoot("onCreate")
 
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val savedUrl = prefs.getString(KEY_URL, null)
-
         if (savedUrl == null) {
-            logStep("no saved url -> prompt")
-            promptServerUrl()
+            logBoot("no hay URL guardada -> prompt")
+            handler.post { promptServerUrl() }
         } else {
-            logStep("saved url -> load $savedUrl")
-            loadWebView(savedUrl)
+            logBoot("URL guardada -> cargando $savedUrl")
+            handler.post { loadWebView(savedUrl) }
         }
     }
 
-    // ============ DIAGNÓSTICO REMOTO ============
-
-    private var logBuffer = StringBuilder()
-
-    private fun logStep(msg: String) {
-        val line = "[${System.currentTimeMillis()}] $msg\n"
-        logBuffer.append(line)
-        try {
-            val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            prefs.edit().putString("boot_log", logBuffer.toString()).apply()
-        } catch (_: Exception) {}
-        Log.i(TAG, msg)
-        sendServerLog("boot", msg)
+    private fun createLoadingScreen(): View {
+        val tv = TextView(this).apply {
+            text = "Hotel del Valle\n\nCargando kiosco..."
+            textSize = 24f
+            gravity = android.view.Gravity.CENTER
+            setTextColor(Color.WHITE)
+            setPadding(32, 32, 32, 32)
+        }
+        val root = FrameLayout(this)
+        root.setBackgroundColor(Color.parseColor("#143A2A"))
+        root.addView(tv, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        ))
+        return root
     }
 
-    private fun sendServerLog(type: String, msg: String) {
+    // ================= DIAGNÓSTICO REMOTO =================
+
+    private var bootLog = StringBuilder()
+
+    private fun logBoot(msg: String) {
+        bootLog.append("[${System.currentTimeMillis()}] $msg\n")
+        Log.i(TAG, msg)
+        try {
+            getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+                .edit().putString("boot_log", bootLog.toString()).apply()
+        } catch (_: Exception) {}
+        sendServerLog(msg)
+    }
+
+    private fun serverBase(): String {
+        val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+        val url = prefs.getString(KEY_URL, DEFAULT_URL) ?: DEFAULT_URL
+        return url.substringBefore("/kiosco").trimEnd('/').ifEmpty { DEFAULT_URL.substringBefore("/kiosco").trimEnd('/') }
+    }
+
+    private fun sendServerLog(msg: String) {
         thread {
             try {
-                val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-                val serverUrl = prefs.getString(KEY_URL, DEFAULT_URL) ?: DEFAULT_URL
-                val base = serverUrl.substringBefore("/kiosco").trimEnd('/')
-                if (base.isEmpty()) return@thread
-                val connection = URL("$base/api/kiosco-crash").openConnection() as HttpURLConnection
-                connection.requestMethod = "POST"
-                connection.doOutput = true
-                connection.connectTimeout = 6000
-                connection.readTimeout = 6000
-                connection.setRequestProperty("Content-Type", "application/json")
-                val json = "{\"type\":\"${jsonEscape(type)}\",\"msg\":${jsonEscape(msg)}," +
-                        "\"sdk\":${Build.VERSION.SDK_INT},\"model\":${jsonEscape(Build.MODEL)}," +
-                        "\"version\":\"$APP_VERSION\"}"
-                OutputStreamWriter(connection.outputStream).use { it.write(json) }
-                connection.inputStream.close()
-                connection.disconnect()
+                val base = serverBase()
+                val c = URL("$base/api/kiosco-crash").openConnection() as HttpURLConnection
+                c.requestMethod = "POST"
+                c.doOutput = true
+                c.connectTimeout = 5000
+                c.readTimeout = 5000
+                c.setRequestProperty("Content-Type", "application/json")
+                val json = "{\"type\":\"boot\",\"msg\":${jsonEscape(msg)}," +
+                        "\"sdk\":${Build.VERSION.SDK_INT},\"model\":${jsonEscape(Build.MODEL)},\"version\":\"$APP_VERSION\"}"
+                OutputStreamWriter(c.outputStream).use { it.write(json) }
+                c.inputStream.close()
+                c.disconnect()
             } catch (_: Exception) {}
         }
     }
@@ -116,105 +132,97 @@ class MainActivity : Activity() {
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             try {
                 val stack = Log.getStackTraceString(throwable)
-                val report = "Thread: ${thread.name}\n${throwable.javaClass.name}: ${throwable.message}\n$stack"
-                sendCrashReport(report)
+                sendCrashReport("Thread: ${thread.name}\n${throwable.javaClass.name}: ${throwable.message}\n$stack")
             } catch (_: Exception) {
             } finally {
-                previous?.uncaughtException(thread, throwable) ?: run {
-                    android.os.Process.killProcess(android.os.Process.myPid())
-                }
+                previous?.uncaughtException(thread, throwable) ?: android.os.Process.killProcess(android.os.Process.myPid())
             }
         }
     }
 
     private fun sendCrashReport(report: String) {
-        try {
-            val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-            val serverUrl = prefs.getString(KEY_URL, DEFAULT_URL) ?: DEFAULT_URL
-            val base = serverUrl.substringBefore("/kiosco").trimEnd('/')
-            if (base.isEmpty()) return
-            val connection = URL("$base/api/kiosco-crash").openConnection() as HttpURLConnection
-            connection.requestMethod = "POST"
-            connection.doOutput = true
-            connection.connectTimeout = 8000
-            connection.readTimeout = 8000
-            connection.setRequestProperty("Content-Type", "application/json")
-            val json = "{\"type\":\"crash\",\"crash\":${jsonEscape(report)}," +
-                    "\"sdk\":${Build.VERSION.SDK_INT},\"model\":${jsonEscape(Build.MODEL)}," +
-                    "\"version\":\"$APP_VERSION\",\"log\":${jsonEscape(logBuffer.toString())}}"
-            OutputStreamWriter(connection.outputStream).use { it.write(json) }
-            connection.inputStream.close()
-            connection.disconnect()
-        } catch (_: Exception) {
+        thread {
+            try {
+                val base = serverBase()
+                val c = URL("$base/api/kiosco-crash").openConnection() as HttpURLConnection
+                c.requestMethod = "POST"
+                c.doOutput = true
+                c.connectTimeout = 6000
+                c.readTimeout = 6000
+                c.setRequestProperty("Content-Type", "application/json")
+                val json = "{\"type\":\"crash\",\"crash\":${jsonEscape(report)}," +
+                        "\"sdk\":${Build.VERSION.SDK_INT},\"model\":${jsonEscape(Build.MODEL)},\"version\":\"$APP_VERSION\"," +
+                        "\"log\":${jsonEscape(bootLog.toString())}}"
+                OutputStreamWriter(c.outputStream).use { it.write(json) }
+                c.inputStream.close()
+                c.disconnect()
+            } catch (_: Exception) {}
         }
     }
 
     private fun jsonEscape(s: String): String =
         "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\""
 
-    // ============ UI / KIOSK ============
+    // ================= KIOSK MODE =================
 
     private fun applyKioskMode() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (Build.VERSION.SDK_INT >= 30) {
-            window.insetsController?.let { ctrl ->
-                ctrl.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
-                ctrl.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                val ctrl = window.insetsController
+                ctrl?.hide(WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars())
+                ctrl?.systemBarsBehavior = WindowInsetsController.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+            } else {
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = (
+                    View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                        or View.SYSTEM_UI_FLAG_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                        or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                        or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                        or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                    )
             }
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = (
-                View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                    or View.SYSTEM_UI_FLAG_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+        } catch (e: Throwable) {
+            Log.w(TAG, "applyKioskMode fallo: ${e.message}")
+        }
+    }
+
+    private fun exitKioskMode() {
+        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                window.insetsController?.show(
+                    WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars()
                 )
+            } else {
+                @Suppress("DEPRECATION")
+                window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "exitKioskMode fallo: ${e.message}")
         }
     }
 
-    private fun restoreKioskMode() {
-        applyKioskMode()
-    }
-
-    private fun showFatalError(title: String, detail: String) {
-        logStep("FATAL: $title - $detail")
-        sendCrashReport("$title\n$detail")
-        val scroll = ScrollView(this)
-        val tv = TextView(this).apply {
-            text = "$title\n\n$detail"
-            textSize = 18f
-            setPadding(48, 48, 48, 48)
-            setTextColor(Color.WHITE)
-        }
-        scroll.addView(tv)
-        scroll.setBackgroundColor(Color.parseColor("#143A2A"))
-        setContentView(scroll)
-    }
+    // ================= WEBVIEW =================
 
     private fun loadWebView(url: String) {
-        logStep("loadWebView: $url")
+        logBoot("loadWebView: $url")
         try {
-            logStep("verificando WebView del sistema...")
-            val wvPackage = WebView.getCurrentWebViewPackage()
-            logStep("WebView package: ${wvPackage?.packageName} v${wvPackage?.longVersionCode}")
-            if (wvPackage == null) {
-                logStep("WebView NO disponible")
-                showFatalError(
-                    "WebView no disponible",
+            logBoot("Verificando WebView del sistema...")
+            val pkg = getWebViewPackage()
+            logBoot("WebView: ${pkg ?: "NO DISPONIBLE"}")
+            if (pkg == null) {
+                showFatal("WebView no disponible",
                     "Android System WebView no está instalado o está deshabilitado.\n\n" +
-                            "1. Abre Ajustes → Apps\n" +
-                            "2. Busca 'Android System WebView' o 'WebView'\n" +
-                            "3. Habilítalo o actualízalo desde Play Store\n\n" +
-                            "Modelo: ${Build.MODEL}\nAndroid ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})"
-                )
+                    "1. Ajustes → Apps\n2. Busca 'Android System WebView'\n3. Habilítalo o actualízalo\n\n" +
+                    "Modelo: ${Build.MODEL}\nAndroid ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
                 return
             }
-            logStep("creando WebView...")
+
+            logBoot("Creando WebView...")
             val wv = WebView(this)
             webView = wv
-            logStep("WebView creado OK")
             wv.settings.javaScriptEnabled = true
             wv.settings.domStorageEnabled = true
             wv.settings.databaseEnabled = true
@@ -224,32 +232,69 @@ class MainActivity : Activity() {
             wv.settings.allowContentAccess = false
 
             wv.webViewClient = object : WebViewClient() {
-                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
-                    return false
-                }
+                override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
             }
-            logStep("configurando WebView OK, cargando URL...")
+
+            logBoot("Cargando URL...")
             wv.loadUrl(url)
-            logStep("URL cargada: $url")
 
             val container = FrameLayout(this)
             container.addView(wv, FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.MATCH_PARENT
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT
             ))
             setContentView(container)
-            logStep("setContentView OK")
+            logBoot("WebView mostrado OK")
         } catch (e: Throwable) {
-            logStep("WebView FAIL: ${e.javaClass.name}: ${e.message}")
-            showFatalError(
-                "Error de WebView",
-                "No se pudo inicializar WebView:\n${e.javaClass.name}: ${e.message}\n\n" +
-                        "Android ${Build.VERSION.RELEASE} (SDK ${Build.VERSION.SDK_INT})\nModelo: ${Build.MODEL}\n\n" +
-                        "Verifica en Ajustes → Apps que 'Android System WebView' esté habilitado y actualizado.\n\n" +
-                        "Detalle técnico:\n${Log.getStackTraceString(e)}"
-            )
+            logBoot("WebView FAIL: ${e.javaClass.name}: ${e.message}")
+            showFatal("Error de WebView",
+                "${e.javaClass.name}: ${e.message}\n\n" +
+                "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\nModelo: ${Build.MODEL}\n\n" +
+                "Verifica que 'Android System WebView' esté habilitado y actualizado.\n\nDetalle:\n${Log.getStackTraceString(e)}")
         }
     }
+
+    private fun getWebViewPackage(): String? {
+        return try {
+            if (Build.VERSION.SDK_INT >= 26) {
+                val p = WebView.getCurrentWebViewPackage()
+                if (p == null) null else {
+                    val v = if (Build.VERSION.SDK_INT >= 28) p.longVersionCode else p.versionCode.toLong()
+                    "${p.packageName} v$v"
+                }
+            } else {
+                // API 23-25: verificar manualmente por nombre de paquete conocido
+                val pm = packageManager
+                val names = listOf("com.google.android.webview", "com.android.webview", "org.chromium.webview")
+                names.firstOrNull { n ->
+                    try { pm.getPackageInfo(n, 0); true } catch (e: PackageManager.NameNotFoundException) { false }
+                }
+            }
+        } catch (e: Throwable) {
+            null
+        }
+    }
+
+    private fun showFatal(title: String, detail: String) {
+        logBoot("FATAL: $title")
+        sendCrashReport("$title\n$detail")
+        handler.post {
+            val tv = TextView(this).apply {
+                text = "$title\n\n$detail"
+                textSize = 18f
+                setPadding(48, 48, 48, 48)
+                setTextColor(Color.WHITE)
+                setBackgroundColor(Color.TRANSPARENT)
+            }
+            val scroll = ScrollView(this).apply {
+                setBackgroundColor(Color.parseColor("#143A2A"))
+                addView(tv)
+            }
+            setContentView(scroll)
+        }
+    }
+
+    // ================= GESTOS / PIN =================
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
         if (ev != null && ev.action == MotionEvent.ACTION_DOWN) {
@@ -264,12 +309,10 @@ class MainActivity : Activity() {
 
     private fun handleTap() {
         val now = System.currentTimeMillis()
-        if (now - lastTapTime > tapTimeout) {
-            tapCount = 0
-        }
+        if (now - lastTapTime > TAP_TIMEOUT_MS) tapCount = 0
         lastTapTime = now
         tapCount++
-        if (tapCount >= tapsRequired) {
+        if (tapCount >= TAPS_REQUIRED) {
             tapCount = 0
             promptPin()
         }
@@ -280,7 +323,6 @@ class MainActivity : Activity() {
             hint = "http://IP:8000/kiosco"
             setText(DEFAULT_URL)
             setPadding(48, 32, 48, 32)
-            inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_URI
         }
         AlertDialog.Builder(this)
             .setTitle("Configurar servidor")
@@ -291,7 +333,7 @@ class MainActivity : Activity() {
                 if (url.isNotEmpty()) {
                     getSharedPreferences(PREFS, Context.MODE_PRIVATE)
                         .edit().putString(KEY_URL, url).apply()
-                    logStep("URL guardada: $url")
+                    logBoot("URL guardada: $url")
                     loadWebView(url)
                 } else {
                     Toast.makeText(this, "URL no puede estar vacía", Toast.LENGTH_SHORT).show()
@@ -303,10 +345,11 @@ class MainActivity : Activity() {
     }
 
     private fun promptPin() {
+        if (isFinishing || isDestroyed) return
         val input = EditText(this).apply {
             hint = "PIN"
-            inputType = InputType.TYPE_CLASS_NUMBER or
-                    InputType.TYPE_NUMBER_VARIATION_PASSWORD
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or
+                    android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
             setPadding(48, 32, 48, 32)
         }
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -316,17 +359,15 @@ class MainActivity : Activity() {
             .setTitle("PIN de administrador")
             .setView(input)
             .setPositiveButton("Aceptar") { _, _ ->
-                if (input.text.toString() == expectedPin) {
-                    showAdminMenu()
-                } else {
-                    Toast.makeText(this, "PIN incorrecto", Toast.LENGTH_SHORT).show()
-                }
+                if (input.text.toString() == expectedPin) showAdminMenu()
+                else Toast.makeText(this, "PIN incorrecto", Toast.LENGTH_SHORT).show()
             }
             .setNegativeButton("Cancelar", null)
             .show()
     }
 
     private fun showAdminMenu() {
+        if (isFinishing || isDestroyed) return
         val items = arrayOf("Configurar servidor", "Buscar actualización", "Salir del quiosco")
         AlertDialog.Builder(this)
             .setTitle("Administración")
@@ -334,62 +375,43 @@ class MainActivity : Activity() {
                 when (which) {
                     0 -> promptServerUrl()
                     1 -> checkForUpdate()
-                    2 -> {
-                        exitKioskMode()
-                        finish()
-                    }
+                    2 -> { exitKioskMode(); finish() }
                 }
             }
             .show()
-    }
-
-    private fun exitKioskMode() {
-        window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
-        if (Build.VERSION.SDK_INT >= 30) {
-            window.insetsController?.show(
-                WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars()
-            )
-        } else {
-            @Suppress("DEPRECATION")
-            window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_VISIBLE
-        }
     }
 
     private fun checkForUpdate() {
         Toast.makeText(this, "Buscando actualización...", Toast.LENGTH_SHORT).show()
         thread {
             try {
-                val connection = URL(UPDATE_API).openConnection() as HttpURLConnection
-                connection.setRequestProperty("Accept", "application/vnd.github.v3+json")
-                connection.connectTimeout = 10000
-                connection.readTimeout = 10000
-                val responseCode = connection.responseCode
-                val body = if (responseCode == 200) {
-                    connection.inputStream.bufferedReader().readText()
-                } else {
-                    null
-                }
-                connection.disconnect()
+                val c = URL(UPDATE_API).openConnection() as HttpURLConnection
+                c.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                c.connectTimeout = 10000
+                c.readTimeout = 10000
+                val code = c.responseCode
+                val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
+                c.disconnect()
 
                 val tagName = body?.let { json ->
                     val idx = json.indexOf("\"tag_name\"")
                     if (idx >= 0) {
-                        val start = json.indexOf("\"", idx + 11) + 1
-                        val end = json.indexOf("\"", start)
-                        json.substring(start, end)
+                        val s = json.indexOf("\"", idx + 11) + 1
+                        val e = json.indexOf("\"", s)
+                        if (s > 0 && e > s) json.substring(s, e) else null
                     } else null
                 }
-
                 val htmlUrl = body?.let { json ->
                     val idx = json.indexOf("\"html_url\"")
                     if (idx >= 0) {
-                        val start = json.indexOf("\"", idx + 10) + 1
-                        val end = json.indexOf("\"", start)
-                        json.substring(start, end)
+                        val s = json.indexOf("\"", idx + 10) + 1
+                        val e = json.indexOf("\"", s)
+                        if (s > 0 && e > s) json.substring(s, e) else null
                     } else null
                 }
 
                 handler.post {
+                    if (isFinishing || isDestroyed) return@post
                     if (tagName != null) {
                         val msg = if (tagName != "v$APP_VERSION") {
                             updateUrl = htmlUrl
@@ -397,32 +419,28 @@ class MainActivity : Activity() {
                         } else {
                             "Ya tienes la última versión: v$APP_VERSION"
                         }
-                        AlertDialog.Builder(this)
-                            .setTitle("Actualización")
-                            .setMessage(msg)
-                            .setPositiveButton("OK", null)
-                            .show()
+                        AlertDialog.Builder(this).setTitle("Actualización").setMessage(msg)
+                            .setPositiveButton("OK", null).show()
                     } else {
                         Toast.makeText(this, "No se pudo verificar actualización", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
                 handler.post {
-                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                    if (!isFinishing && !isDestroyed)
+                        Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }
     }
 
     override fun onBackPressed() {
-        // Blocked in kiosk mode
+        // Bloqueado en modo kiosco
     }
 
     override fun onWindowFocusChanged(hasFocus: Boolean) {
         super.onWindowFocusChanged(hasFocus)
-        if (hasFocus) {
-            applyKioskMode()
-        }
+        if (hasFocus) applyKioskMode()
     }
 
     override fun onResume() {
@@ -433,9 +451,14 @@ class MainActivity : Activity() {
     override fun onDestroy() {
         super.onDestroy()
         try {
-            webView?.stopLoading()
-            webView?.destroy()
+            webView?.let { wv ->
+                val parent = wv.parent
+                if (parent is android.view.ViewGroup) parent.removeView(wv)
+                wv.stopLoading()
+                wv.destroy()
+            }
         } catch (_: Exception) {
         }
+        webView = null
     }
 }
