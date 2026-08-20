@@ -19,7 +19,7 @@ import CheckinScreen from './src/screens/CheckinScreen';
 type Screen = 'plan' | 'room' | 'checkin';
 
 const UPDATE_API = 'https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest';
-const APP_VERSION = '6.0.3';
+const APP_VERSION = '6.0.4';
 const ADMIN_PIN = '12345';
 
 function reportCrash(error: unknown, isFatal: boolean) {
@@ -190,11 +190,7 @@ function App() {
       <View style={styles.stage}>
         <Animated.View style={[styles.stage, { opacity: fadeAnim }]}>
           {screen === 'plan' && (
-            <PlanScreen
-              onSelectPlan={selectPlan}
-              serverLabel={serverBase ? serverBase.replace(/^https?:\/\//, '').split('/')[0] : '…'}
-              onServerPress={openServerModal}
-            />
+            <PlanScreen onSelectPlan={selectPlan} />
           )}
           {screen === 'room' && selectedPlan && (
             <RoomScreen
