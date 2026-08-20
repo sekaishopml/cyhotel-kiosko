@@ -19,7 +19,7 @@ import CheckinScreen from './src/screens/CheckinScreen';
 type Screen = 'plan' | 'room' | 'checkin';
 
 const UPDATE_API = 'https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest';
-const APP_VERSION = '6.0.2';
+const APP_VERSION = '6.0.3';
 const ADMIN_PIN = '12345';
 
 function reportCrash(error: unknown, isFatal: boolean) {
@@ -192,7 +192,7 @@ function App() {
           {screen === 'plan' && (
             <PlanScreen
               onSelectPlan={selectPlan}
-              serverLabel={serverBase ? new URL(serverBase).host : '…'}
+              serverLabel={serverBase ? serverBase.replace(/^https?:\/\//, '').split('/')[0] : '…'}
               onServerPress={openServerModal}
             />
           )}
