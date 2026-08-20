@@ -18,8 +18,7 @@ import CheckinScreen from './src/screens/CheckinScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const UPDATE_API = 'https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest';
-const APP_VERSION = '6.0.4';
+const APP_VERSION = '6.0.5';
 const ADMIN_PIN = '12345';
 
 function reportCrash(error: unknown, isFatal: boolean) {
@@ -102,23 +101,58 @@ function App() {
   const checkForUpdate = useCallback(() => {
     if (checking) return;
     setChecking(true);
-    fetch(UPDATE_API)
-      .then(res => {
+    (async () => {
+      try {
+        const base = await getServerBase();
+        const res = await fetch(`${base}/api/kiosco-version`);
         if (!res.ok) throw new Error('not-ok');
-        return res.json();
-      })
-      .then(data => {
-        const tag = data?.tag_name as string | undefined;
+        const data = await res.json();
+        const remoteVersion = String(data?.version ?? '');
+        if (!remoteVersion || remoteVersion === APP_VERSION) {
+          Alert.alert('Sin actualizaciones', 'Ya estás en la última versión.');
+          return;
+        }
+        const apkPath = String(data?.apk ?? '/kiosco.apk');
         Alert.alert(
           'Actualización disponible',
-          `Nueva versión: ${tag ?? 'desconocida'}\n${data?.body ?? 'Sin descripción'}`,
-          [{ text: 'Entendido' }],
+          `Hay una versión nueva (${remoteVersion}).\n¿Descargarla e instalar ahora?`,
+          [
+            { text: 'Ahora no', style: 'cancel' },
+            {
+              text: 'Descargar e instalar',
+              onPress: async () => {
+                try {
+                  const updater = (await import('react-native')).NativeModules.ApkUpdater;
+                  const can = await updater.canInstall();
+                  if (can === false) {
+                    Alert.alert(
+                      'Permiso de instalación',
+                      'Habilitá "Instalar apps desconocidas" para esta app.',
+                      [
+                        { text: 'Cancelar', style: 'cancel' },
+                        { text: 'Configurar', onPress: () => updater.openInstallSettings() },
+                      ],
+                    );
+                    return;
+                  }
+                  Alert.alert('Descargando…', 'La actualización se está descargando e instalará automáticamente.');
+                  await updater.downloadAndInstall(`${base}${apkPath}`);
+                } catch (e) {
+                  Alert.alert(
+                    'No se pudo actualizar',
+                    e instanceof Error ? e.message : 'Error al descargar. Revisá tu conexión.',
+                  );
+                }
+              },
+            },
+          ],
         );
-      })
-      .catch(() => {
-        Alert.alert('Sin actualizaciones', 'Ya estás en la última versión.');
-      })
-      .finally(() => setChecking(false));
+      } catch {
+        Alert.alert('Sin actualizaciones', 'No se pudo consultar el servidor.');
+      } finally {
+        setChecking(false);
+      }
+    })();
   }, [checking]);
 
   const openServerModal = useCallback(() => {

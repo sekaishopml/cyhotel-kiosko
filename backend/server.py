@@ -405,6 +405,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.get_catalog()
             elif path == "/api/types" and self.MODE in ("kiosco", "admin"):
                 self.get_types()
+            elif path == "/api/kiosco-version":
+                self.kiosco_version()
             elif path == "/api/admin/me":
                 sess = self._require_auth()
                 if sess:
@@ -2615,6 +2617,20 @@ class Handler(BaseHTTPRequestHandler):
         cfg.setdefault("assign_ttl_minutes", 30)
         cfg.setdefault("cleaning_sla_minutes", 60)
         self._send(200, {"config": cfg})
+
+    def kiosco_version(self):
+        """Versión actual del APK del kiosco, para el auto-update de la app."""
+        try:
+            p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "web", "kiosco-version.json")
+            if os.path.exists(p):
+                with open(p, "r") as f:
+                    payload = json.load(f)
+            else:
+                payload = {"version": None, "apk": "/kiosco.apk"}
+            payload.setdefault("apk", "/kiosco.apk")
+            self._send(200, payload)
+        except Exception:
+            self._error(500, "No se pudo leer la versión")
 
     def kiosco_crash(self, data):
         """Registra crashes de la app Android para diagnóstico remoto."""

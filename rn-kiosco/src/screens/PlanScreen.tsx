@@ -14,7 +14,7 @@ type Props = {
 function PlanScreen({ onSelectPlan }: Props) {
   return (
     <View style={styles.screen}>
-      <View style={styles.grid}>
+      <View style={styles.column}>
         {PLAN_ORDER.map((key, i) => {
           const anim = fadeInDown(i * 80, 24);
           return (
@@ -33,16 +33,11 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: spacing.screen,
   },
-  grid: {
+  column: {
     flex: 1,
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    alignContent: 'stretch',
-    marginHorizontal: -spacing.gap / 2,
   },
   cell: {
-    width: '50%',
-    paddingHorizontal: spacing.gap / 2,
+    flex: 1,
     paddingVertical: spacing.gap / 2,
   },
 });
