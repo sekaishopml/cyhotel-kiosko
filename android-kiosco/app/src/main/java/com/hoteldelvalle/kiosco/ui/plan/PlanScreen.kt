@@ -15,9 +15,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.itemsIndexed
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -57,30 +56,29 @@ fun PlanScreen(
         modifier = modifier
             .fillMaxSize()
             .background(White)
-            .padding(horizontal = 24.dp, vertical = 16.dp)
     ) {
         Stepper(
             steps = listOf("Plan", "Habitación", "Check-in"),
             currentStep = 0,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         )
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        LazyVerticalGrid(
-            columns = GridCells.Fixed(2),
-            modifier = Modifier.weight(1f),
-            contentPadding = PaddingValues(bottom = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+        LazyColumn(
+            modifier = Modifier
+                .weight(1f)
+                .padding(horizontal = 20.dp),
+            contentPadding = PaddingValues(bottom = 16.dp, top = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             itemsIndexed(Plan.PLANS) { index, plan ->
                 AnimatedVisibility(
                     visible = visible,
-                    enter = fadeIn(tween(400, delayMillis = index * 70)) +
+                    enter = fadeIn(tween(400, delayMillis = index * 80)) +
                             slideInVertically(
-                                tween(400, delayMillis = index * 70)
-                            ) { it / 2 }
+                                tween(400, delayMillis = index * 80)
+                            ) { it / 3 }
                 ) {
                     PlanCard(
                         plan = plan,
@@ -92,27 +90,33 @@ fun PlanScreen(
             }
         }
 
-        FooterInfo()
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = onContinue,
-            enabled = selectedPlan != null,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(52.dp),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Verde900,
-                disabledContainerColor = Verde900.copy(alpha = 0.3f)
-            ),
-            shape = RoundedCornerShape(6.dp)
+                .padding(horizontal = 24.dp, vertical = 16.dp)
         ) {
-            Text(
-                text = "Continuar",
-                color = White,
-                style = MaterialTheme.typography.titleMedium
-            )
+            FooterInfo()
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Button(
+                onClick = onContinue,
+                enabled = selectedPlan != null,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Verde900,
+                    disabledContainerColor = Verde900.copy(alpha = 0.3f)
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    text = "Continuar",
+                    color = White,
+                    style = MaterialTheme.typography.titleMedium
+                )
+            }
         }
     }
 }
