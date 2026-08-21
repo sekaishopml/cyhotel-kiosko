@@ -20,9 +20,9 @@ export default function IdleScreen({ onWake }: Props) {
     <Animated.View style={[s.root, { opacity: fade }]} onTouchStart={touch}>
       <View style={s.content}>
         <Text style={s.label}>BIENVENIDO</Text>
-        <Text style={s.wordmark}>Hotel del Valle</Text>
+        <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
         <View style={s.divider} />
-        <Text style={s.hint}>Toca en cualquier lugar para comenzar</Text>
+        <Text style={s.hint}>TOCA EN CUALQUIER LUGAR PARA COMENZAR</Text>
       </View>
     </Animated.View>
   );
@@ -43,16 +43,17 @@ const s = StyleSheet.create({
     fontFamily: typography.sansMedium,
     fontSize: sizes.label,
     color: colors.brandAccent,
-    letterSpacing: 3,
+    letterSpacing: 4,
     textTransform: 'uppercase',
     marginBottom: spacing.lg,
   },
   wordmark: {
-    fontFamily: typography.serif,
+    fontFamily: typography.serifBold,
     fontSize: sizes.idleTitle,
     color: colors.brandCream,
-    letterSpacing: 0.5,
+    letterSpacing: 2,
     textAlign: 'center',
+    textTransform: 'uppercase',
     marginBottom: spacing.lg,
   },
   divider: {
@@ -62,10 +63,11 @@ const s = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   hint: {
-    fontFamily: typography.sans,
+    fontFamily: typography.sansMedium,
     fontSize: sizes.idleHint,
-    color: colors.textMuted,
-    letterSpacing: 0.3,
+    color: 'rgba(244,238,226,0.5)',
+    letterSpacing: 1.5,
     textAlign: 'center',
+    textTransform: 'uppercase',
   },
 });

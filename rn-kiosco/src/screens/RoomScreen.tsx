@@ -69,7 +69,7 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
         <Pressable onPress={onBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
           <Text style={s.backIcon}>‹</Text>
         </Pressable>
-        <Text style={s.title}>{PLAN_META[planKey]?.name ?? planKey}</Text>
+        <Text style={s.title}>{(PLAN_META[planKey]?.name ?? planKey).toUpperCase()}</Text>
       </View>
       <Animated.View style={[s.body, bodyAnim]}>
         {loading ? <Shimmer /> : error ? (
@@ -97,11 +97,11 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
       {selectedRoom && currentRoom && (
         <Animated.View style={[s.dock, dockAnim]}>
           <View style={s.totalBox}>
-            <Text style={s.totalLabel}>Total</Text>
+            <Text style={s.totalLabel}>TOTAL</Text>
             <Text style={s.totalValue}>${total}</Text>
           </View>
           <TouchableOpacity onPress={() => onContinue(currentRoom.label, total)} style={s.cta} accessibilityLabel="Continuar">
-            <Text style={s.ctaText}>Continuar</Text>
+            <Text style={s.ctaText}>CONTINUAR</Text>
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -110,21 +110,21 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.brandPrimary },
+  screen: { flex: 1, backgroundColor: colors.screen },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: sizes.back, lineHeight: 40, color: colors.brandCream, marginTop: -4 },
-  title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream },
+  backIcon: { fontSize: sizes.back, lineHeight: 38, color: colors.brandPrimary, marginTop: -2 },
+  title: { fontFamily: typography.sansMedium, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
   body: { flex: 1 },
   grid: { gap: spacing.gap, paddingHorizontal: spacing.screen },
   errorBox: { padding: spacing.screen, alignItems: 'center' },
   errorText: { color: colors.error, fontSize: sizes.cardSubtitle, marginBottom: spacing.md },
   retryBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
   retryText: { color: colors.brandAccent, fontSize: sizes.cardSubtitle, fontWeight: '600', textDecorationLine: 'underline' },
-  dock: { backgroundColor: 'rgba(244,238,226,0.06)', borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.screen, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dock: { backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.screen, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   totalBox: { alignItems: 'flex-start' },
-  totalLabel: { fontSize: sizes.label, textTransform: 'uppercase', letterSpacing: 1, color: colors.textMuted },
-  totalValue: { fontFamily: typography.serifBold, fontSize: sizes.totalValue, color: colors.brandCream },
-  cta: { backgroundColor: colors.brandAccent, borderRadius: radii.button, paddingHorizontal: 36, paddingVertical: 14 },
-  ctaText: { color: colors.brandPrimary, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium },
+  totalLabel: { fontSize: sizes.label, textTransform: 'uppercase', letterSpacing: 1.5, color: colors.textMuted },
+  totalValue: { fontFamily: typography.serifBold, fontSize: sizes.totalValue, color: colors.brandPrimary },
+  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingHorizontal: 36, paddingVertical: 14 },
+  ctaText: { color: colors.brandCream, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium, letterSpacing: 1 },
 });

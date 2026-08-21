@@ -19,7 +19,7 @@ type Props = {
 function SummaryRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
     <View style={[s.sumRow, !last && s.sumRowBorder]}>
-      <Text style={s.sumLabel}>{label}</Text>
+      <Text style={s.sumLabel}>{label.toUpperCase()}</Text>
       <Text style={s.sumValue}>{value}</Text>
     </View>
   );
@@ -54,7 +54,7 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
       setOrder(result);
       setShowModal(true);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'No se pudo completar la reserva. Intentá de nuevo.');
+      setError(e instanceof Error ? e.message : 'No se pudo completar la reserva.');
     } finally {
       setLoading(false);
     }
@@ -68,7 +68,7 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
         <Pressable onPress={onBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
           <Text style={s.backIcon}>‹</Text>
         </Pressable>
-        <Text style={s.title}>Confirmación</Text>
+        <Text style={s.title}>CONFIRMACIÓN</Text>
       </View>
       <Animated.View style={[s.body, bodyAnim]}>
         <View style={s.summary}>
@@ -79,16 +79,16 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
           <SummaryRow label="Total" value={`$${total}`} last />
         </View>
         <View style={s.form}>
-          <Text style={s.label}>Nombre completo *</Text>
+          <Text style={s.label}>NOMBRE COMPLETO *</Text>
           <TextInput style={s.input} placeholder="Tu nombre" placeholderTextColor={colors.textMuted} value={name} onChangeText={setName} autoCapitalize="words" />
-          <Text style={[s.label, { marginTop: spacing.lg }]}>Documento (opcional)</Text>
+          <Text style={[s.label, { marginTop: spacing.lg }]}>DOCUMENTO (OPCIONAL)</Text>
           <TextInput style={s.input} placeholder="DNI o pasaporte" placeholderTextColor={colors.textMuted} value={document} onChangeText={setDocument} />
           {error && <Text style={s.error}>{error}</Text>}
         </View>
       </Animated.View>
       <View style={s.bar}>
         <TouchableOpacity onPress={submit} disabled={!canSubmit} style={[s.cta, !canSubmit && s.ctaDis]} accessibilityLabel="Confirmar reserva">
-          <Text style={s.ctaText}>{loading ? 'Confirmando…' : 'Confirmar Reserva'}</Text>
+          <Text style={s.ctaText}>{loading ? 'CONFIRMANDO…' : 'CONFIRMAR RESERVA'}</Text>
         </TouchableOpacity>
       </View>
       <SuccessModal visible={showModal} order={order} onClose={closeModal} />
@@ -97,23 +97,23 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
 }
 
 const s = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.brandPrimary },
+  screen: { flex: 1, backgroundColor: colors.screen },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: sizes.back, lineHeight: 40, color: colors.brandCream, marginTop: -4 },
-  title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream },
+  backIcon: { fontSize: sizes.back, lineHeight: 38, color: colors.brandPrimary, marginTop: -2 },
+  title: { fontFamily: typography.sansMedium, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
   body: { flex: 1, paddingHorizontal: spacing.screen, paddingBottom: spacing.md },
-  summary: { backgroundColor: 'rgba(244,238,226,0.06)', borderRadius: radii.card, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
-  sumRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7 },
+  summary: { backgroundColor: colors.white, borderRadius: radii.card, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
+  sumRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
   sumRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
-  sumLabel: { fontSize: sizes.cardSubtitle, fontWeight: '600', color: colors.brandCream },
-  sumValue: { fontSize: sizes.cardSubtitle, color: colors.textMuted },
+  sumLabel: { fontSize: sizes.label, fontWeight: '600', color: colors.textMuted, letterSpacing: 1 },
+  sumValue: { fontSize: sizes.cardSubtitle, color: colors.brandPrimary, fontFamily: typography.sansMedium },
   form: {},
-  label: { fontSize: sizes.cardSubtitle, fontWeight: '600', color: colors.brandCream, marginBottom: spacing.sm },
-  input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.button, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: sizes.input, color: colors.brandCream, backgroundColor: 'rgba(244,238,226,0.06)' },
+  label: { fontSize: sizes.label, fontWeight: '600', color: colors.brandPrimary, marginBottom: spacing.sm, letterSpacing: 1 },
+  input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.button, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: sizes.input, color: colors.brandPrimary, backgroundColor: colors.white },
   error: { color: colors.error, fontSize: sizes.cardSubtitle, marginTop: spacing.md, textAlign: 'center' },
-  bar: { paddingHorizontal: spacing.screen, paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: 'rgba(244,238,226,0.03)' },
-  cta: { backgroundColor: colors.brandAccent, borderRadius: radii.button, paddingVertical: 16, alignItems: 'center' },
+  bar: { paddingHorizontal: spacing.screen, paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.white },
+  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingVertical: 16, alignItems: 'center' },
   ctaDis: { opacity: 0.4 },
-  ctaText: { color: colors.brandPrimary, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium },
+  ctaText: { color: colors.brandCream, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium, letterSpacing: 1 },
 });

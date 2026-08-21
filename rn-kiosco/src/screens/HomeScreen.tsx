@@ -29,7 +29,7 @@ export default function HomeScreen({ onSelectPlan }: Props) {
 const s = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: colors.brandPrimary,
+    backgroundColor: colors.screen,
     paddingHorizontal: spacing.screen,
     paddingVertical: spacing.md,
   },
