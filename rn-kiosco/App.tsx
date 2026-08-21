@@ -8,11 +8,11 @@ import RoomScreen from './src/screens/RoomScreen';
 import CheckinScreen from './src/screens/CheckinScreen';
 import ScreenTransition from './src/components/ScreenTransition';
 import IdleScreen from './src/components/IdleScreen';
-import Shimmer from './src/components/Shimmer';
+import SplashScreen from './src/components/SplashScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '8.1.0';
+const APP_VERSION = '9.0.0';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
@@ -49,6 +49,7 @@ export default function App() {
   const [serverInput, setServerInput] = useState('');
   const [pinInput, setPinInput] = useState('');
   const [idle, setIdle] = useState(false);
+  const [splashDone, setSplashDone] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -122,7 +123,21 @@ export default function App() {
     setServerBase(url).then(() => { setServerBaseState(url); setAdminModal(false); Alert.alert('Servidor actualizado', 'Listo.'); goHome(); }).catch(() => { Alert.alert('Error', 'No se pudo guardar'); });
   }, [serverInput, goHome]);
 
-  if (loading) return <View style={s.loading}><Shimmer /></View>;
+  if (!splashDone) {
+    return <SplashScreen onFinish={() => setSplashDone(true)} />;
+  }
+
+  if (loading) {
+    return (
+      <View style={s.loading}>
+        <View style={s.loadingContent}>
+          <View style={s.loadingLogo}>
+            <Text style={s.loadingLogoTxt}>HV</Text>
+          </View>
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={s.app} onTouchStart={wakeUp}>
@@ -167,18 +182,41 @@ export default function App() {
 }
 
 const s = StyleSheet.create({
-  loading: { flex: 1, backgroundColor: colors.brandPrimary },
+  loading: { flex: 1, backgroundColor: colors.brandPrimary, alignItems: 'center', justifyContent: 'center' },
+  loadingContent: { alignItems: 'center' },
+  loadingLogo: {
+    width: 64,
+    height: 64,
+    borderRadius: 16,
+    backgroundColor: colors.brandAccent,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingLogoTxt: {
+    fontFamily: typography.serifBold,
+    fontSize: 22,
+    color: colors.brandPrimary,
+    fontWeight: '700',
+  },
   app: { flex: 1, backgroundColor: colors.brandPrimary },
   stage: { flex: 1 },
   mOverlay: { flex: 1, backgroundColor: colors.overlayDark, alignItems: 'center', justifyContent: 'center', padding: spacing.xl },
-  mCard: { backgroundColor: colors.brandPrimary, borderRadius: radii.card, padding: spacing.xl, width: '100%', maxWidth: 440, borderWidth: 1, borderColor: colors.border },
+  mCard: {
+    backgroundColor: colors.brandPrimary,
+    borderRadius: radii.card,
+    padding: spacing.xl,
+    width: '100%',
+    maxWidth: 440,
+    borderWidth: 1,
+    borderColor: 'rgba(244,238,226,0.08)',
+  },
   mTitle: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream, marginBottom: 4 },
-  mSub: { fontFamily: typography.sans, fontSize: sizes.cardSubtitle, color: colors.textMuted, marginBottom: spacing.lg },
-  mInput: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.button, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: sizes.input, color: colors.brandCream, backgroundColor: 'rgba(244,238,226,0.06)', textAlign: 'center', letterSpacing: 6 },
+  mSub: { fontFamily: typography.sans, fontSize: sizes.cardSubtitle, color: colors.textLight, marginBottom: spacing.lg },
+  mInput: { borderWidth: 1.5, borderColor: 'rgba(244,238,226,0.15)', borderRadius: radii.button, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: sizes.input, color: colors.brandCream, backgroundColor: 'rgba(244,238,226,0.05)', textAlign: 'center', letterSpacing: 6 },
   mBtn: { backgroundColor: colors.brandAccent, borderRadius: radii.button, paddingVertical: 16, alignItems: 'center', marginTop: spacing.md },
   mBtnTxt: { color: colors.brandPrimary, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium },
   mBtnOutline: { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.brandAccent },
   mBtnOutlineTxt: { color: colors.brandAccent, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium },
   mCancel: { paddingVertical: spacing.md, alignItems: 'center', marginTop: spacing.xs },
-  mCancelTxt: { color: colors.textMuted, fontSize: sizes.cardSubtitle, fontFamily: typography.sans },
+  mCancelTxt: { color: colors.textLight, fontSize: sizes.cardSubtitle, fontFamily: typography.sans },
 });

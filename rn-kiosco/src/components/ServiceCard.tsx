@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { colors, radii, spacing, typography } from '../theme';
 
 type Props = {
@@ -17,54 +18,74 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
   const press = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.timing(enter, { toValue: 1, duration: 400, delay, useNativeDriver: true }).start();
+    Animated.timing(enter, { toValue: 1, duration: 450, delay, useNativeDriver: true }).start();
   }, [enter, delay]);
 
-  const onIn = () => Animated.spring(press, { toValue: 0.96, stiffness: 350, damping: 16, useNativeDriver: true }).start();
-  const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 350, damping: 16, useNativeDriver: true }).start();
+  const onIn = () => Animated.spring(press, { toValue: 0.97, stiffness: 300, damping: 18, useNativeDriver: true }).start();
+  const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 300, damping: 18, useNativeDriver: true }).start();
 
-  const bgColor = accent ? colors.brandAccent : dark ? '#111111' : colors.brandPrimary;
-  const txtColor = accent ? colors.brandPrimary : colors.brandCream;
+  const isAccent = accent;
+  const isDark = dark;
+
+  const gradientColors = isAccent
+    ? [colors.brandAccent, '#B8923F']
+    : isDark
+    ? ['#1A1A1A', '#0D0D0D']
+    : ['#1F3A2C', colors.brandPrimary];
+
+  const txtColor = isAccent ? colors.brandPrimary : colors.brandCream;
+  const subTxtColor = isAccent ? 'rgba(27,46,34,0.5)' : 'rgba(244,238,226,0.5)';
 
   return (
-    <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }, { scale: press }] }, s.wrap, { backgroundColor: bgColor }, featured && s.featured]}>
+    <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { scale: press }] }, featured && s.featured]}>
       <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={`${title}: ${subtitle}`}>
-        <Text style={[s.title, { color: txtColor }]} numberOfLines={1}>{title.toUpperCase()}</Text>
-        <Text style={[s.subtitle, { color: accent ? 'rgba(27,46,34,0.5)' : 'rgba(244,238,226,0.55)' }]} numberOfLines={1}>{subtitle}</Text>
+        <LinearGradient
+          colors={gradientColors}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={s.gradient}
+        >
+          <Text style={[s.title, { color: txtColor }]} numberOfLines={1}>{title.toUpperCase()}</Text>
+          <Text style={[s.subtitle, { color: subTxtColor }]} numberOfLines={1}>{subtitle}</Text>
+        </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
 const s = StyleSheet.create({
-  wrap: {
-    borderRadius: radii.card,
-    ...Platform.select({
-      android: { elevation: 4 },
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.12, shadowRadius: 8 },
-    }),
-  },
   featured: {
     borderWidth: 2,
     borderColor: colors.brandAccent,
+    borderRadius: radii.card,
+    overflow: 'hidden',
   },
   touch: {
+    borderRadius: radii.card,
+    overflow: 'hidden',
+    ...Platform.select({
+      android: { elevation: 6 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10 },
+    }),
+  },
+  gradient: {
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 32,
+    paddingVertical: 34,
+    borderRadius: radii.card,
   },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: 32,
+    fontSize: 30,
     letterSpacing: 2,
     fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: typography.sansMedium,
-    fontSize: 15,
-    marginTop: 4,
+    fontSize: 14,
+    marginTop: 5,
     textAlign: 'center',
     letterSpacing: 0.5,
   },

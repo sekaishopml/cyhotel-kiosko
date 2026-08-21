@@ -11,7 +11,7 @@ function Block({ h }: { h: number }) {
   }, [x]);
   return (
     <View style={[s.block, { height: h }]}>
-      <Animated.View style={[s.mask, { transform: [{ translateX: x.interpolate({ inputRange: [0, 1], outputRange: [-320, 320] }) }] }]} />
+      <Animated.View style={[s.mask, { transform: [{ translateX: x.interpolate({ inputRange: [0, 1], outputRange: [-200, 200] }) }] }]} />
     </View>
   );
 }
@@ -19,16 +19,24 @@ function Block({ h }: { h: number }) {
 export default function Shimmer() {
   return (
     <View style={s.root}>
-      <Block h={96} />
-      <Block h={96} />
-      <Block h={96} />
-      <Block h={96} />
+      <Block h={88} />
+      <Block h={88} />
+      <Block h={88} />
+      <Block h={88} />
     </View>
   );
 }
 
 const s = StyleSheet.create({
   root: { paddingHorizontal: spacing.screen, paddingVertical: spacing.md, gap: spacing.gap },
-  block: { borderRadius: radii.card, backgroundColor: colors.border, overflow: 'hidden' },
-  mask: { width: 140, height: '100%', backgroundColor: 'rgba(201,161,90,0.15)' },
+  block: {
+    borderRadius: radii.card,
+    backgroundColor: 'rgba(27,46,34,0.06)',
+    overflow: 'hidden',
+  },
+  mask: {
+    width: 120,
+    height: '100%',
+    backgroundColor: 'rgba(201,161,90,0.12)',
+  },
 });

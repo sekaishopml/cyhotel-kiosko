@@ -20,7 +20,10 @@ export default function KioskHeader({ onAdminLongPress }: Props) {
 
   return (
     <View style={s.root}>
-      <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
+      <View style={s.left}>
+        <View style={s.logoDot} />
+        <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
+      </View>
       <Text style={s.clock}>{hh}:{mm}</Text>
       <TouchableOpacity
         onLongPress={onAdminLongPress}
@@ -37,13 +40,24 @@ export default function KioskHeader({ onAdminLongPress }: Props) {
 
 const s = StyleSheet.create({
   root: {
-    height: 52,
+    height: 50,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.screen,
     backgroundColor: colors.screen,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    borderBottomWidth: 2,
+    borderBottomColor: colors.brandAccent,
+  },
+  left: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.brandAccent,
   },
   wordmark: {
     fontFamily: typography.serifBold,
@@ -67,8 +81,8 @@ const s = StyleSheet.create({
     justifyContent: 'center',
   },
   gear: {
-    fontSize: 20,
+    fontSize: 18,
     color: colors.brandPrimary,
-    opacity: 0.4,
+    opacity: 0.3,
   },
 });

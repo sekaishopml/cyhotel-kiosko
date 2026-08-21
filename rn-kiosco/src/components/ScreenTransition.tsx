@@ -4,27 +4,31 @@ import { Animated, StyleSheet } from 'react-native';
 type Props = {
   screenKey: string;
   children: React.ReactNode;
+  direction?: 'left' | 'right';
 };
 
-function ScreenTransition({ screenKey, children }: Props) {
+export default function ScreenTransition({ screenKey, children, direction = 'left' }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
+  const slide = useRef(new Animated.Value(direction === 'left' ? 40 : -40)).current;
 
   useEffect(() => {
     fade.setValue(0);
-    Animated.timing(fade, {
-      toValue: 1,
-      duration: 320,
-      useNativeDriver: true,
-    }).start();
-  }, [screenKey, fade]);
+    slide.setValue(direction === 'left' ? 40 : -40);
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 1, duration: 300, useNativeDriver: true }),
+      Animated.timing(slide, { toValue: 0, duration: 300, useNativeDriver: true }),
+    ]).start();
+  }, [screenKey, fade, slide, direction]);
 
-  return <Animated.View style={[styles.stage, { opacity: fade }]}>{children}</Animated.View>;
+  return (
+    <Animated.View style={[s.stage, { opacity: fade, transform: [{ translateX: slide }] }]}>
+      {children}
+    </Animated.View>
+  );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   stage: {
     flex: 1,
   },
 });
-
-export default ScreenTransition;

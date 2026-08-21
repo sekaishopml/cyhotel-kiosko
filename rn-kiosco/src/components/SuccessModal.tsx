@@ -19,7 +19,7 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
   useEffect(() => {
     if (visible) {
       zoom.setValue(0);
-      Animated.timing(zoom, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+      Animated.spring(zoom, { toValue: 1, stiffness: 120, damping: 14, useNativeDriver: true }).start();
     }
   }, [visible, zoom]);
 
@@ -30,7 +30,7 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
           <View style={s.checkCircle}>
             <Text style={s.check}>✓</Text>
           </View>
-          <Text style={s.title}>¡Reserva confirmada!</Text>
+          <Text style={s.title}>¡RESERVA CONFIRMADA!</Text>
           <Text style={s.subtitle}>Tu habitación está lista</Text>
           {order && (
             <View style={s.info}>
@@ -60,21 +60,59 @@ const s = StyleSheet.create({
     maxWidth: 440,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.border,
+    borderColor: 'rgba(244,238,226,0.08)',
     ...Platform.select({
-      android: { elevation: 12 },
-      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12 },
+      android: { elevation: 16 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16 },
     }),
   },
-  checkCircle: { width: 64, height: 64, borderRadius: 999, backgroundColor: colors.brandAccent, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
-  check: { color: colors.brandPrimary, fontSize: 34, fontWeight: '700' },
-  title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream, marginBottom: 4, letterSpacing: 1 },
-  subtitle: { fontSize: sizes.cardSubtitle, color: 'rgba(244,238,226,0.55)', marginBottom: spacing.lg, fontFamily: typography.sansMedium },
-  info: { backgroundColor: 'rgba(244,238,226,0.06)', borderRadius: radii.card, padding: spacing.md, width: '100%', marginBottom: spacing.lg },
+  checkCircle: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    backgroundColor: colors.brandAccent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.md,
+  },
+  check: { color: colors.brandPrimary, fontSize: 30, fontWeight: '700' },
+  title: {
+    fontFamily: typography.serifBold,
+    fontSize: sizes.title,
+    color: colors.brandCream,
+    marginBottom: 4,
+    letterSpacing: 1,
+  },
+  subtitle: {
+    fontSize: sizes.cardSubtitle,
+    color: colors.textLight,
+    marginBottom: spacing.lg,
+    fontFamily: typography.sansMedium,
+  },
+  info: {
+    backgroundColor: 'rgba(244,238,226,0.05)',
+    borderRadius: radii.card,
+    padding: spacing.md,
+    width: '100%',
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(244,238,226,0.06)',
+  },
   row: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6 },
-  rowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  rowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(244,238,226,0.06)' },
   rowLabel: { fontSize: sizes.cardSubtitle, fontWeight: '600', color: colors.brandCream, fontFamily: typography.sansMedium },
-  rowValue: { fontSize: sizes.cardSubtitle, color: 'rgba(244,238,226,0.55)', fontFamily: typography.sansMedium },
-  closeBtn: { backgroundColor: colors.brandAccent, borderRadius: radii.button, paddingVertical: 14, paddingHorizontal: 48 },
-  closeTxt: { color: colors.brandPrimary, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium, letterSpacing: 1 },
+  rowValue: { fontSize: sizes.cardSubtitle, color: colors.textLight, fontFamily: typography.sansMedium },
+  closeBtn: {
+    backgroundColor: colors.brandAccent,
+    borderRadius: radii.button,
+    paddingVertical: 14,
+    paddingHorizontal: 48,
+  },
+  closeTxt: {
+    color: colors.brandPrimary,
+    fontSize: sizes.cta,
+    fontWeight: '600',
+    fontFamily: typography.sansMedium,
+    letterSpacing: 1,
+  },
 });

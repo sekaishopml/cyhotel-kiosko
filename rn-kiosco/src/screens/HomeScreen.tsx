@@ -24,7 +24,7 @@ export default function HomeScreen({ onSelectPlan }: Props) {
       </View>
       <View style={s.grid}>
         {PLANS.map((p, i) => (
-          <ServiceCard key={p.key} title={p.title} subtitle={p.subtitle} featured={p.featured} accent={p.accent} dark={p.dark} delay={i * 80} onPress={() => onSelectPlan(p.key)} />
+          <ServiceCard key={p.key} title={p.title} subtitle={p.subtitle} featured={p.featured} accent={p.accent} dark={p.dark} delay={i * 100} onPress={() => onSelectPlan(p.key)} />
         ))}
       </View>
     </View>
@@ -42,7 +42,7 @@ const s = StyleSheet.create({
     position: 'absolute',
     bottom: 40,
     right: -10,
-    opacity: 0.04,
+    opacity: 0.03,
     pointerEvents: 'none',
   },
   watermarkTxt: {
@@ -66,13 +66,13 @@ const s = StyleSheet.create({
   },
   heading: {
     fontFamily: typography.serifBold,
-    fontSize: 28,
+    fontSize: 26,
     color: colors.brandPrimary,
     textAlign: 'center',
     letterSpacing: 1,
   },
   grid: {
     flex: 1,
-    gap: 10,
+    gap: spacing.gap,
   },
 });
