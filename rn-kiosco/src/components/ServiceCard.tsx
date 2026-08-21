@@ -44,11 +44,11 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 30,
+    paddingVertical: 34,
   },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: 30,
+    fontSize: 34,
     color: colors.brandCream,
     letterSpacing: 2,
     fontWeight: '700',
@@ -56,7 +56,7 @@ const s = StyleSheet.create({
   },
   subtitle: {
     fontFamily: typography.sansMedium,
-    fontSize: 16,
+    fontSize: 17,
     color: 'rgba(244,238,226,0.6)',
     marginTop: 6,
     textAlign: 'center',
