@@ -68,13 +68,13 @@ const s = StyleSheet.create({
   },
   heading: {
     fontFamily: typography.serifBold,
-    fontSize: 26,
+    fontSize: 28,
     color: colors.brandPrimary,
     textAlign: 'center',
     letterSpacing: 1,
   },
   grid: {
-    gap: spacing.md,
+    gap: 10,
     flex: 1,
   },
   cell: {

@@ -36,7 +36,7 @@ export default function ServiceCard({ title, subtitle, onPress, featured, delay 
 
 const styles = StyleSheet.create({
   chevron: {
-    fontSize: 28,
+    fontSize: 34,
     color: 'rgba(244,238,226,0.35)',
     fontFamily: typography.serif,
   },
@@ -47,7 +47,6 @@ const s = StyleSheet.create({
     borderRadius: radii.card,
     backgroundColor: colors.brandPrimary,
     overflow: 'hidden',
-    minHeight: 88,
   },
   featured: {
     backgroundColor: colors.brandPrimary,
@@ -60,7 +59,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 22,
+    paddingVertical: 28,
   },
   content: {
     flex: 1,
@@ -68,19 +67,19 @@ const s = StyleSheet.create({
   },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: 22,
+    fontSize: 28,
     color: colors.brandCream,
     letterSpacing: 2,
     fontWeight: '700',
   },
   titleFeatured: {
-    fontSize: 23,
+    fontSize: 29,
   },
   subtitle: {
     fontFamily: typography.sansMedium,
-    fontSize: sizes.cardSubtitle,
+    fontSize: 15,
     color: 'rgba(244,238,226,0.55)',
-    marginTop: 4,
+    marginTop: 5,
     letterSpacing: 0.5,
   },
 });
