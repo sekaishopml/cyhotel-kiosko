@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Animated, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
-import { colors, radii, spacing, typography } from '../theme';
+import { colors, radii, spacing, typography, sizes } from '../theme';
 import { createOrder, PLAN_META, type Order } from '../api';
 import SuccessModal from '../components/SuccessModal';
 import { fadeInDown } from '../lib/anims';
@@ -16,16 +16,16 @@ type Props = {
   onSuccess: () => void;
 };
 
-function CheckinScreen({
-  planKey,
-  roomLabel,
-  roomKey,
-  durationLabel,
-  days,
-  total,
-  onBack,
-  onSuccess,
-}: Props) {
+function SummaryRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
+  return (
+    <View style={[s.sumRow, !last && s.sumRowBorder]}>
+      <Text style={s.sumLabel}>{label}</Text>
+      <Text style={s.sumValue}>{value}</Text>
+    </View>
+  );
+}
+
+export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLabel, days, total, onBack, onSuccess }: Props) {
   const [name, setName] = useState('');
   const [document, setDocument] = useState('');
   const [loading, setLoading] = useState(false);
@@ -50,7 +50,6 @@ function CheckinScreen({
       if (document.trim()) payload.id_document = document.trim();
       if (durationLabel && planKey !== 'hospedaje') payload.extra = durationLabel;
       if (planKey === 'hospedaje') payload.days = days ?? 1;
-
       const result = await createOrder(payload as never);
       setOrder(result);
       setShowModal(true);
@@ -61,186 +60,60 @@ function CheckinScreen({
     }
   };
 
-  const closeModal = () => {
-    setShowModal(false);
-    setOrder(null);
-    onSuccess();
-  };
+  const closeModal = () => { setShowModal(false); setOrder(null); onSuccess(); };
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.titleRow}>
-        <Pressable onPress={onBack} style={styles.backBtn} hitSlop={12} accessibilityLabel="Volver">
-          <Text style={styles.backIcon}>‹</Text>
+    <View style={s.screen}>
+      <View style={s.titleRow}>
+        <Pressable onPress={onBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
+          <Text style={s.backIcon}>‹</Text>
         </Pressable>
-        <Text style={styles.title}>Confirmación</Text>
+        <Text style={s.title}>Confirmación</Text>
       </View>
-
-      <Animated.View style={[styles.body, bodyAnim]}>
-        <View style={styles.summaryCard}>
+      <Animated.View style={[s.body, bodyAnim]}>
+        <View style={s.summary}>
           <SummaryRow label="Plan" value={PLAN_META[planKey]?.name ?? planKey} />
           <SummaryRow label="Habitación" value={roomLabel} />
           {durationLabel && planKey !== 'hospedaje' && <SummaryRow label="Duración" value={durationLabel} />}
           {planKey === 'hospedaje' && <SummaryRow label="Noches" value={`${days ?? 1}`} />}
           <SummaryRow label="Total" value={`$${total}`} last />
         </View>
-
-        <View style={styles.form}>
-          <Text style={styles.label}>Nombre completo *</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Tu nombre"
-            placeholderTextColor="rgba(16,40,29,0.3)"
-            value={name}
-            onChangeText={setName}
-            autoCapitalize="words"
-          />
-
-          <Text style={[styles.label, styles.labelGap]}>Documento (opcional)</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="DNI o pasaporte"
-            placeholderTextColor="rgba(16,40,29,0.3)"
-            value={document}
-            onChangeText={setDocument}
-          />
-
-          {error && <Text style={styles.error}>{error}</Text>}
+        <View style={s.form}>
+          <Text style={s.label}>Nombre completo *</Text>
+          <TextInput style={s.input} placeholder="Tu nombre" placeholderTextColor={colors.textMuted} value={name} onChangeText={setName} autoCapitalize="words" />
+          <Text style={[s.label, { marginTop: spacing.lg }]}>Documento (opcional)</Text>
+          <TextInput style={s.input} placeholder="DNI o pasaporte" placeholderTextColor={colors.textMuted} value={document} onChangeText={setDocument} />
+          {error && <Text style={s.error}>{error}</Text>}
         </View>
       </Animated.View>
-
-      <View style={styles.bottomBar}>
-        <TouchableOpacity
-          onPress={submit}
-          disabled={!canSubmit}
-          style={[styles.cta, !canSubmit && styles.ctaDisabled]}
-          accessibilityLabel="Confirmar reserva"
-        >
-          <Text style={styles.ctaText}>{loading ? 'Confirmando…' : 'Confirmar Reserva'}</Text>
+      <View style={s.bar}>
+        <TouchableOpacity onPress={submit} disabled={!canSubmit} style={[s.cta, !canSubmit && s.ctaDis]} accessibilityLabel="Confirmar reserva">
+          <Text style={s.ctaText}>{loading ? 'Confirmando…' : 'Confirmar Reserva'}</Text>
         </TouchableOpacity>
       </View>
-
       <SuccessModal visible={showModal} order={order} onClose={closeModal} />
     </View>
   );
 }
 
-function SummaryRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
-  return (
-    <View style={[styles.summaryRow, !last && styles.summaryRowBorder]}>
-      <Text style={styles.summaryLabel}>{label}</Text>
-      <Text style={styles.summaryValue}>{value}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 40,
-    lineHeight: 42,
-    color: colors.brandPrimaryLight,
-    marginTop: -4,
-  },
-  title: {
-    fontFamily: typography.serif,
-    fontSize: 24,
-    fontWeight: '600',
-    color: colors.brandPrimary,
-  },
-  body: {
-    flex: 1,
-    paddingHorizontal: spacing.screen,
-    paddingBottom: 16,
-  },
-  summaryCard: {
-    backgroundColor: colors.surface,
-    borderRadius: radii.roomCard,
-    padding: 20,
-    marginBottom: 24,
-  },
-  summaryRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 7,
-  },
-  summaryRowBorder: {
-    borderBottomWidth: 1,
-    borderBottomColor: 'rgba(20,58,42,0.08)',
-  },
-  summaryLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: colors.brandPrimary,
-  },
-  summaryValue: {
-    fontSize: 14,
-    color: colors.ink,
-  },
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.brandPrimary },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: sizes.back, lineHeight: 40, color: colors.brandCream, marginTop: -4 },
+  title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream },
+  body: { flex: 1, paddingHorizontal: spacing.screen, paddingBottom: spacing.md },
+  summary: { backgroundColor: 'rgba(244,238,226,0.06)', borderRadius: radii.card, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
+  sumRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 7 },
+  sumRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
+  sumLabel: { fontSize: sizes.cardSubtitle, fontWeight: '600', color: colors.brandCream },
+  sumValue: { fontSize: sizes.cardSubtitle, color: colors.textMuted },
   form: {},
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: colors.brandPrimary,
-    marginBottom: 8,
-  },
-  labelGap: {
-    marginTop: 20,
-  },
-  input: {
-    borderWidth: 1.5,
-    borderColor: 'rgba(20,58,42,0.2)',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    fontSize: 16,
-    color: colors.ink,
-    backgroundColor: colors.white,
-  },
-  error: {
-    color: '#DC2626',
-    fontSize: 14,
-    marginTop: 16,
-    textAlign: 'center',
-  },
-  bottomBar: {
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(20,58,42,0.1)',
-    backgroundColor: colors.white,
-  },
-  cta: {
-    backgroundColor: colors.brandPrimary,
-    borderRadius: radii.cta,
-    paddingVertical: 16,
-    alignItems: 'center',
-  },
-  ctaDisabled: {
-    opacity: 0.4,
-  },
-  ctaText: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: '600',
-  },
+  label: { fontSize: sizes.cardSubtitle, fontWeight: '600', color: colors.brandCream, marginBottom: spacing.sm },
+  input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.button, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: sizes.input, color: colors.brandCream, backgroundColor: 'rgba(244,238,226,0.06)' },
+  error: { color: colors.error, fontSize: sizes.cardSubtitle, marginTop: spacing.md, textAlign: 'center' },
+  bar: { paddingHorizontal: spacing.screen, paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: 'rgba(244,238,226,0.03)' },
+  cta: { backgroundColor: colors.brandAccent, borderRadius: radii.button, paddingVertical: 16, alignItems: 'center' },
+  ctaDis: { opacity: 0.4 },
+  ctaText: { color: colors.brandPrimary, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium },
 });
-
-export default CheckinScreen;

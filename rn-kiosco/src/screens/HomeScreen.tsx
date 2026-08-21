@@ -3,50 +3,22 @@ import { StyleSheet, View } from 'react-native';
 import { colors, spacing } from '../theme';
 import ServiceCard from '../components/ServiceCard';
 
-type Props = {
-  onSelectPlan: (planKey: string) => void;
-};
+type Props = { onSelectPlan: (key: string) => void };
 
 const PLANS = [
-  {
-    key: 'momento',
-    title: 'Momento',
-    subtitle: 'Por horas, sin complicaciones',
-    featured: true,
-  },
-  {
-    key: 'amanecida',
-    title: 'Amanecida',
-    subtitle: 'Desde la tarde hasta la mañana',
-    featured: false,
-  },
-  {
-    key: 'hospedaje',
-    title: 'Hospedaje',
-    subtitle: 'Estadía por noches',
-    featured: false,
-  },
-  {
-    key: 'suite',
-    title: 'Suite Jacuzzi',
-    subtitle: 'Noche de lujo',
-    featured: false,
-  },
+  { key: 'momento', title: 'Momento', subtitle: 'Por horas, sin complicaciones', featured: true },
+  { key: 'amanecida', title: 'Amanecida', subtitle: 'Desde la tarde hasta la mañana' },
+  { key: 'hospedaje', title: 'Hospedaje', subtitle: 'Estadía por noches' },
+  { key: 'suite', title: 'Suite Jacuzzi', subtitle: 'Noche de lujo' },
 ];
 
-function HomeScreen({ onSelectPlan }: Props) {
+export default function HomeScreen({ onSelectPlan }: Props) {
   return (
-    <View style={styles.screen}>
-      <View style={styles.column}>
+    <View style={s.root}>
+      <View style={s.col}>
         {PLANS.map((p, i) => (
-          <View key={p.key} style={styles.cell}>
-            <ServiceCard
-              title={p.title}
-              subtitle={p.subtitle}
-              featured={p.featured}
-              delay={i * 80}
-              onPress={() => onSelectPlan(p.key)}
-            />
+          <View key={p.key} style={s.cell}>
+            <ServiceCard title={p.title} subtitle={p.subtitle} featured={p.featured} delay={i * 80} onPress={() => onSelectPlan(p.key)} />
           </View>
         ))}
       </View>
@@ -54,20 +26,13 @@ function HomeScreen({ onSelectPlan }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
+const s = StyleSheet.create({
+  root: {
     flex: 1,
     backgroundColor: colors.brandPrimary,
     paddingHorizontal: spacing.screen,
     paddingVertical: spacing.md,
   },
-  column: {
-    flex: 1,
-    gap: spacing.gap,
-  },
-  cell: {
-    flex: 1,
-  },
+  col: { flex: 1, gap: spacing.gap },
+  cell: { flex: 1 },
 });
-
-export default HomeScreen;

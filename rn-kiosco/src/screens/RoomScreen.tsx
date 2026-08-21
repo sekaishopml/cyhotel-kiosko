@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { Animated, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
-import { colors, radii, spacing, typography } from '../theme';
+import { colors, radii, spacing, typography, sizes } from '../theme';
 import { getServerBase, getTypes, PLAN_META, type RoomType, type TypesResponse } from '../api';
 import RoomCard from '../components/RoomCard';
 import ChipRow from '../components/ChipRow';
@@ -19,17 +19,7 @@ type Props = {
   onBack: () => void;
 };
 
-function RoomScreen({
-  planKey,
-  selectedRoom,
-  selectedExtra,
-  selectedDays,
-  onSelectRoom,
-  onSelectExtra,
-  onSelectDays,
-  onContinue,
-  onBack,
-}: Props) {
+export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selectedDays, onSelectRoom, onSelectExtra, onSelectDays, onContinue, onBack }: Props) {
   const [data, setData] = useState<TypesResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -50,9 +40,7 @@ function RoomScreen({
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [planKey, reloadKey]);
 
   const currentRoom: RoomType | undefined = data?.types.find(t => t.key === selectedRoom);
@@ -72,75 +60,48 @@ function RoomScreen({
 
   const total = computeTotal();
   const retry = () => setReloadKey(k => k + 1);
-
   const bodyAnim = fadeIn(0);
   const dockAnim = slideUp(0, 80, 350);
 
   return (
-    <View style={styles.screen}>
-      <View style={styles.titleRow}>
-        <Pressable onPress={onBack} style={styles.backBtn} hitSlop={12} accessibilityLabel="Volver">
-          <Text style={styles.backIcon}>‹</Text>
+    <View style={s.screen}>
+      <View style={s.titleRow}>
+        <Pressable onPress={onBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
+          <Text style={s.backIcon}>‹</Text>
         </Pressable>
-        <Text style={styles.title}>
-          {PLAN_META[planKey]?.name ?? planKey}
-        </Text>
+        <Text style={s.title}>{PLAN_META[planKey]?.name ?? planKey}</Text>
       </View>
-
-      <Animated.View style={[styles.body, bodyAnim]}>
-        {loading ? (
-          <Shimmer />
-        ) : error ? (
-          <View style={styles.errorBox}>
-            <Text style={styles.errorText}>No se pudieron cargar las habitaciones.</Text>
-            <Pressable onPress={retry} style={styles.retryBtn}>
-              <Text style={styles.retryText}>Reintentar</Text>
-            </Pressable>
+      <Animated.View style={[s.body, bodyAnim]}>
+        {loading ? <Shimmer /> : error ? (
+          <View style={s.errorBox}>
+            <Text style={s.errorText}>No se pudieron cargar las habitaciones.</Text>
+            <Pressable onPress={retry} style={s.retryBtn}><Text style={s.retryText}>Reintentar</Text></Pressable>
           </View>
         ) : data ? (
           <>
-            <View style={styles.grid}>
-              {data.types.map((room, i) => {
-                const anim = fadeInDown(i * 70, 16);
-                return (
-                  <Animated.View key={room.key} style={anim}>
-                    <RoomCard
-                      room={room}
-                      selected={selectedRoom === room.key}
-                      onPress={() => onSelectRoom(selectedRoom === room.key ? null : room.key)}
-                    />
-                  </Animated.View>
-                );
-              })}
+            <View style={s.grid}>
+              {data.types.map((room, i) => (
+                <Animated.View key={room.key} style={fadeInDown(i * 70, 16)}>
+                  <RoomCard room={room} selected={selectedRoom === room.key} onPress={() => onSelectRoom(selectedRoom === room.key ? null : room.key)} />
+                </Animated.View>
+              ))}
             </View>
             {currentRoom && (
               <Animated.View style={fadeInDown(0, 16)}>
-                <ChipRow
-                  planKey={planKey}
-                  room={currentRoom}
-                  selectedExtra={selectedExtra}
-                  selectedDays={selectedDays}
-                  onSelectExtra={onSelectExtra}
-                  onSelectDays={onSelectDays}
-                />
+                <ChipRow planKey={planKey} room={currentRoom} selectedExtra={selectedExtra} selectedDays={selectedDays} onSelectExtra={onSelectExtra} onSelectDays={onSelectDays} />
               </Animated.View>
             )}
           </>
         ) : null}
       </Animated.View>
-
       {selectedRoom && currentRoom && (
-        <Animated.View style={[styles.dock, dockAnim]}>
-          <View style={styles.totalBox}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalValue}>${total}</Text>
+        <Animated.View style={[s.dock, dockAnim]}>
+          <View style={s.totalBox}>
+            <Text style={s.totalLabel}>Total</Text>
+            <Text style={s.totalValue}>${total}</Text>
           </View>
-          <TouchableOpacity
-            onPress={() => onContinue(currentRoom.label, total)}
-            style={styles.cta}
-            accessibilityLabel="Continuar"
-          >
-            <Text style={styles.ctaText}>Continuar</Text>
+          <TouchableOpacity onPress={() => onContinue(currentRoom.label, total)} style={s.cta} accessibilityLabel="Continuar">
+            <Text style={s.ctaText}>Continuar</Text>
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -148,101 +109,22 @@ function RoomScreen({
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: colors.surface,
-  },
-  titleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 24,
-    paddingTop: 16,
-    paddingBottom: 12,
-  },
-  backBtn: {
-    width: 40,
-    height: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backIcon: {
-    fontSize: 40,
-    lineHeight: 42,
-    color: colors.brandPrimaryLight,
-    marginTop: -4,
-  },
-  title: {
-    fontFamily: typography.serif,
-    fontSize: 24,
-    fontWeight: '600',
-    color: colors.brandPrimary,
-  },
-  body: {
-    flex: 1,
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.gap,
-    paddingHorizontal: spacing.screen,
-  },
-  errorBox: {
-    padding: spacing.screen,
-    alignItems: 'center',
-  },
-  errorText: {
-    color: '#DC2626',
-    fontSize: 16,
-    marginBottom: 16,
-  },
-  retryBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 20,
-  },
-  retryText: {
-    color: colors.brandPrimaryLight,
-    fontSize: 16,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
-  dock: {
-    backgroundColor: colors.white,
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(20,58,42,0.1)',
-    paddingHorizontal: 24,
-    paddingVertical: 16,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  totalBox: {
-    alignItems: 'flex-start',
-  },
-  totalLabel: {
-    fontSize: 12,
-    textTransform: 'uppercase',
-    letterSpacing: 1,
-    color: 'rgba(27,74,53,0.6)',
-  },
-  totalValue: {
-    fontFamily: typography.serif,
-    fontSize: 24,
-    fontWeight: '700',
-    color: colors.brandPrimary,
-  },
-  cta: {
-    backgroundColor: colors.brandPrimary,
-    borderRadius: radii.cta,
-    paddingHorizontal: 36,
-    paddingVertical: 14,
-  },
-  ctaText: {
-    color: colors.white,
-    fontSize: 18,
-    fontWeight: '600',
-  },
+const s = StyleSheet.create({
+  screen: { flex: 1, backgroundColor: colors.brandPrimary },
+  titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: sizes.back, lineHeight: 40, color: colors.brandCream, marginTop: -4 },
+  title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream },
+  body: { flex: 1 },
+  grid: { gap: spacing.gap, paddingHorizontal: spacing.screen },
+  errorBox: { padding: spacing.screen, alignItems: 'center' },
+  errorText: { color: colors.error, fontSize: sizes.cardSubtitle, marginBottom: spacing.md },
+  retryBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
+  retryText: { color: colors.brandAccent, fontSize: sizes.cardSubtitle, fontWeight: '600', textDecorationLine: 'underline' },
+  dock: { backgroundColor: 'rgba(244,238,226,0.06)', borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.screen, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  totalBox: { alignItems: 'flex-start' },
+  totalLabel: { fontSize: sizes.label, textTransform: 'uppercase', letterSpacing: 1, color: colors.textMuted },
+  totalValue: { fontFamily: typography.serifBold, fontSize: sizes.totalValue, color: colors.brandCream },
+  cta: { backgroundColor: colors.brandAccent, borderRadius: radii.button, paddingHorizontal: 36, paddingVertical: 14 },
+  ctaText: { color: colors.brandPrimary, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium },
 });
-
-export default RoomScreen;

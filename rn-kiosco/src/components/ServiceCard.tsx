@@ -10,77 +10,34 @@ type Props = {
   delay?: number;
 };
 
-function ServiceCard({ title, subtitle, onPress, featured = false, delay = 0 }: Props) {
+export default function ServiceCard({ title, subtitle, onPress, featured, delay = 0 }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     Animated.timing(enter, {
       toValue: 1,
-      duration: 420,
+      duration: 400,
       delay,
       useNativeDriver: true,
     }).start();
   }, [enter, delay]);
 
-  const pressIn = () => {
-    Animated.spring(press, {
-      toValue: 0.97,
-      stiffness: 420,
-      damping: 20,
-      useNativeDriver: true,
-    }).start();
-  };
-  const pressOut = () => {
-    Animated.spring(press, {
-      toValue: 1,
-      stiffness: 420,
-      damping: 20,
-      useNativeDriver: true,
-    }).start();
-  };
+  const onIn = () => Animated.spring(press, { toValue: 0.97, stiffness: 400, damping: 17, useNativeDriver: true }).start();
+  const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 400, damping: 17, useNativeDriver: true }).start();
 
   return (
-    <Animated.View
-      style={[
-        {
-          opacity: enter,
-          transform: [
-            { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
-            { scale: press },
-          ],
-        },
-        styles.wrap,
-        featured && styles.featured,
-      ]}
-    >
-      <TouchableOpacity
-        activeOpacity={1}
-        onPress={onPress}
-        onPressIn={pressIn}
-        onPressOut={pressOut}
-        accessibilityRole="button"
-        accessibilityLabel={`${title}: ${subtitle}`}
-        style={styles.touch}
-      >
-        <View style={styles.content}>
-          <Text style={styles.title} numberOfLines={1}>
-            {title}
-          </Text>
-          <Text style={styles.subtitle} numberOfLines={2}>
-            {subtitle}
-          </Text>
-        </View>
-
-        {featured ? (
-          <Text style={styles.featuredLabel}>Lo más pedido</Text>
-        ) : null}
+    <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }) }, { scale: press }] }, s.wrap, featured && s.featured]}>
+      <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={`${title}: ${subtitle}`}>
+        <Text style={s.title} numberOfLines={1}>{title}</Text>
+        <Text style={s.subtitle} numberOfLines={2}>{subtitle}</Text>
+        {featured ? <Text style={s.badge}>Lo más pedido</Text> : null}
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
+const s = StyleSheet.create({
   wrap: {
     flex: 1,
     borderRadius: radii.card,
@@ -96,15 +53,11 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.cardVertical,
-  },
-  content: {
-    justifyContent: 'center',
+    paddingVertical: spacing.lg,
   },
   title: {
-    fontFamily: typography.serif,
+    fontFamily: typography.serifBold,
     fontSize: sizes.cardTitle,
-    fontWeight: '400',
     color: colors.brandCream,
     letterSpacing: 0.2,
   },
@@ -112,21 +65,17 @@ const styles = StyleSheet.create({
     fontFamily: typography.sans,
     fontSize: sizes.cardSubtitle,
     color: colors.textMuted,
-    marginTop: 2,
-    letterSpacing: 0.2,
-    lineHeight: 18,
+    marginTop: 3,
+    lineHeight: 19,
   },
-  featuredLabel: {
+  badge: {
     position: 'absolute',
     top: spacing.md,
     right: spacing.md,
     fontFamily: typography.sansMedium,
-    fontSize: sizes.microLabel,
+    fontSize: sizes.label,
     color: colors.brandAccent,
-    letterSpacing: 1.5,
+    letterSpacing: 1.2,
     textTransform: 'uppercase',
-    fontWeight: '500',
   },
 });
-
-export default ServiceCard;

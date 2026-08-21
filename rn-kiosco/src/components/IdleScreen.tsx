@@ -2,55 +2,34 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { colors, sizes, spacing, typography } from '../theme';
 
-type Props = {
-  onWake?: () => void;
-};
+type Props = { onWake?: () => void };
 
-function IdleScreen({ onWake }: Props) {
+export default function IdleScreen({ onWake }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(fade, {
-      toValue: 1,
-      duration: 350,
-      useNativeDriver: true,
-    }).start();
-    return () => {
-      fade.setValue(0);
-    };
+    Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+    return () => { fade.setValue(0); };
   }, [fade]);
 
-  const handleTouch = () => {
-    Animated.timing(fade, {
-      toValue: 0,
-      duration: 250,
-      useNativeDriver: true,
-    }).start(() => {
-      onWake?.();
-    });
+  const touch = () => {
+    Animated.timing(fade, { toValue: 0, duration: 250, useNativeDriver: true }).start(() => onWake?.());
   };
 
   return (
-    <Animated.View
-      style={[
-        styles.screen,
-        { opacity: fade },
-      ]}
-      onTouchStart={handleTouch}
-      pointerEvents="box-none"
-    >
-      <View style={styles.content}>
-        <Text style={styles.welcomeLabel}>BIENVENIDO</Text>
-        <Text style={styles.wordmark}>Hotel del Valle</Text>
-        <View style={styles.divider} />
-        <Text style={styles.hint}>Toca en cualquier lugar para comenzar</Text>
+    <Animated.View style={[s.root, { opacity: fade }]} onTouchStart={touch}>
+      <View style={s.content}>
+        <Text style={s.label}>BIENVENIDO</Text>
+        <Text style={s.wordmark}>Hotel del Valle</Text>
+        <View style={s.divider} />
+        <Text style={s.hint}>Toca en cualquier lugar para comenzar</Text>
       </View>
     </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
+const s = StyleSheet.create({
+  root: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: colors.brandPrimary,
     alignItems: 'center',
@@ -60,7 +39,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
   },
-  welcomeLabel: {
+  label: {
     fontFamily: typography.sansMedium,
     fontSize: sizes.label,
     color: colors.brandAccent,
@@ -71,7 +50,6 @@ const styles = StyleSheet.create({
   wordmark: {
     fontFamily: typography.serif,
     fontSize: sizes.idleTitle,
-    fontWeight: '400',
     color: colors.brandCream,
     letterSpacing: 0.5,
     textAlign: 'center',
@@ -91,5 +69,3 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
 });
-
-export default IdleScreen;

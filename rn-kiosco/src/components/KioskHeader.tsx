@@ -2,9 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, sizes, spacing, typography } from '../theme';
 
-type Props = {
-  onAdminLongPress: () => void;
-};
+type Props = { onAdminLongPress: () => void };
 
 function useClock() {
   const [now, setNow] = useState(() => new Date());
@@ -15,61 +13,53 @@ function useClock() {
   return now;
 }
 
-function KioskHeader({ onAdminLongPress }: Props) {
+export default function KioskHeader({ onAdminLongPress }: Props) {
   const now = useClock();
   const hh = String(now.getHours()).padStart(2, '0');
   const mm = String(now.getMinutes()).padStart(2, '0');
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.wordmark}>Hotel del Valle</Text>
-      <Text style={styles.clock}>{hh}:{mm}</Text>
+    <View style={s.root}>
+      <Text style={s.wordmark}>Hotel del Valle</Text>
+      <Text style={s.clock}>{hh}:{mm}</Text>
       <TouchableOpacity
         onLongPress={onAdminLongPress}
         delayLongPress={600}
         hitSlop={{ top: 24, bottom: 24, left: 24, right: 24 }}
-        accessibilityRole="button"
         accessibilityLabel="Ajustes"
       >
-        <Text style={styles.gear}>⚙</Text>
+        <Text style={s.gear}>⚙</Text>
       </TouchableOpacity>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
+const s = StyleSheet.create({
+  root: {
     height: 56,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     paddingHorizontal: spacing.screen,
     backgroundColor: colors.brandPrimary,
   },
   wordmark: {
     fontFamily: typography.serif,
     fontSize: sizes.wordmark,
-    fontWeight: '400',
     color: colors.brandCream,
-    letterSpacing: 0.3,
     flexShrink: 1,
   },
   clock: {
     fontFamily: typography.sansMedium,
     fontSize: sizes.clock,
     color: colors.brandCream,
-    opacity: 0.7,
-    letterSpacing: 0.5,
-    textAlign: 'center',
+    opacity: 0.6,
     flex: 1,
-    marginHorizontal: spacing.md,
+    textAlign: 'center',
   },
   gear: {
     fontSize: 22,
     color: colors.brandCream,
-    opacity: 0.6,
+    opacity: 0.5,
     flexShrink: 0,
   },
 });
-
-export default KioskHeader;
