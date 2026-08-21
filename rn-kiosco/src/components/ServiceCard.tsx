@@ -15,18 +15,17 @@ export default function ServiceCard({ title, subtitle, onPress, featured, delay 
   const press = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.timing(enter, { toValue: 1, duration: 400, delay, useNativeDriver: true }).start();
+    Animated.timing(enter, { toValue: 1, duration: 350, delay, useNativeDriver: true }).start();
   }, [enter, delay]);
 
-  const onIn = () => Animated.spring(press, { toValue: 0.97, stiffness: 400, damping: 17, useNativeDriver: true }).start();
-  const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 400, damping: 17, useNativeDriver: true }).start();
+  const onIn = () => Animated.spring(press, { toValue: 0.96, stiffness: 350, damping: 16, useNativeDriver: true }).start();
+  const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 350, damping: 16, useNativeDriver: true }).start();
 
   return (
-    <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }, { scale: press }] }, s.wrap, featured && s.featured]}>
+    <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }, { scale: press }] }, s.wrap, featured && s.featured]}>
       <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={`${title}: ${subtitle}`}>
-        <Text style={s.title} numberOfLines={1}>{title.toUpperCase()}</Text>
-        <Text style={s.subtitle} numberOfLines={2}>{subtitle}</Text>
-        {featured ? <Text style={s.badge}>LO MÁS PEDIDO</Text> : null}
+        <Text style={[s.title, featured && s.titleFeatured]} numberOfLines={1}>{title.toUpperCase()}</Text>
+        <Text style={s.subtitle} numberOfLines={1}>{subtitle}</Text>
       </TouchableOpacity>
     </Animated.View>
   );
@@ -34,13 +33,13 @@ export default function ServiceCard({ title, subtitle, onPress, featured, delay 
 
 const s = StyleSheet.create({
   wrap: {
-    flex: 1,
-    borderRadius: radii.card,
+    borderRadius: radii.button,
     backgroundColor: colors.brandPrimary,
     overflow: 'hidden',
-    minHeight: 92,
+    minHeight: 72,
   },
   featured: {
+    backgroundColor: colors.brandPrimary,
     borderWidth: 2,
     borderColor: colors.brandAccent,
   },
@@ -49,30 +48,25 @@ const s = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.lg,
+    paddingVertical: 20,
   },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: sizes.cardTitle,
+    fontSize: 22,
     color: colors.brandCream,
-    letterSpacing: 1,
+    letterSpacing: 2,
     textAlign: 'center',
+    fontWeight: '700',
+  },
+  titleFeatured: {
+    fontSize: 23,
   },
   subtitle: {
-    fontFamily: typography.sans,
+    fontFamily: typography.sansMedium,
     fontSize: sizes.cardSubtitle,
-    color: 'rgba(244,238,226,0.6)',
+    color: 'rgba(244,238,226,0.55)',
     marginTop: 4,
     textAlign: 'center',
-    lineHeight: 18,
-  },
-  badge: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-    fontFamily: typography.sansMedium,
-    fontSize: sizes.label,
-    color: colors.brandAccent,
-    letterSpacing: 1.5,
+    letterSpacing: 0.5,
   },
 });

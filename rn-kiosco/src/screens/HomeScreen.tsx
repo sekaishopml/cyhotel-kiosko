@@ -1,6 +1,6 @@
 import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { colors, spacing } from '../theme';
+import { StyleSheet, Text, View } from 'react-native';
+import { colors, sizes, spacing, typography } from '../theme';
 import ServiceCard from '../components/ServiceCard';
 
 type Props = { onSelectPlan: (key: string) => void };
@@ -15,7 +15,11 @@ const PLANS = [
 export default function HomeScreen({ onSelectPlan }: Props) {
   return (
     <View style={s.root}>
-      <View style={s.col}>
+      <View style={s.top}>
+        <Text style={s.label}>ELEGÍ TU PLAN</Text>
+        <Text style={s.heading}>¿Qué necesitás hoy?</Text>
+      </View>
+      <View style={s.grid}>
         {PLANS.map((p, i) => (
           <View key={p.key} style={s.cell}>
             <ServiceCard title={p.title} subtitle={p.subtitle} featured={p.featured} delay={i * 80} onPress={() => onSelectPlan(p.key)} />
@@ -31,8 +35,32 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screen,
     paddingHorizontal: spacing.screen,
-    paddingVertical: spacing.md,
+    paddingVertical: spacing.lg,
   },
-  col: { flex: 1, gap: spacing.gap },
-  cell: { flex: 1 },
+  top: {
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  label: {
+    fontFamily: typography.sansMedium,
+    fontSize: sizes.label,
+    color: colors.brandAccent,
+    letterSpacing: 3,
+    textTransform: 'uppercase',
+    marginBottom: spacing.xs,
+  },
+  heading: {
+    fontFamily: typography.serifBold,
+    fontSize: 26,
+    color: colors.brandPrimary,
+    textAlign: 'center',
+    letterSpacing: 1,
+  },
+  grid: {
+    gap: spacing.md,
+    flex: 1,
+  },
+  cell: {
+    flex: 1,
+  },
 });
