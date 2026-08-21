@@ -24,7 +24,7 @@ export default function HomeScreen({ onSelectPlan }: Props) {
       </View>
       <View style={s.grid}>
         {PLANS.map((p, i) => (
-          <ServiceCard key={p.key} title={p.title} subtitle={p.subtitle} featured={p.featured} accent={p.accent} delay={i * 80} onPress={() => onSelectPlan(p.key)} />
+          <ServiceCard key={p.key} title={p.title} subtitle={p.subtitle} featured={p.featured} accent={p.accent} dark={p.dark} delay={i * 80} onPress={() => onSelectPlan(p.key)} />
         ))}
       </View>
     </View>
