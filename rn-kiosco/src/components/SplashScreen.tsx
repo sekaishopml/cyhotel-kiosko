@@ -1,37 +1,62 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../theme';
+import { EASE_OUT, EASE_SPRING } from '../lib/anims';
 
 type Props = { onFinish: () => void };
 
 export default function SplashScreen({ onFinish }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
-  const scale = useRef(new Animated.Value(0.9)).current;
+  const logoScale = useRef(new Animated.Value(0.5)).current;
+  const titleFade = useRef(new Animated.Value(0)).current;
+  const titleSlide = useRef(new Animated.Value(20)).current;
+  const dividerWidth = useRef(new Animated.Value(0)).current;
+  const subFade = useRef(new Animated.Value(0)).current;
   const barWidth = useRef(new Animated.Value(0)).current;
+  const exitFade = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
+    // Fase 1: Logo aparece con spring
     Animated.parallel([
-      Animated.timing(fade, { toValue: 1, duration: 600, useNativeDriver: true }),
-      Animated.spring(scale, { toValue: 1, stiffness: 120, damping: 14, useNativeDriver: true }),
+      Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }),
+      Animated.spring(logoScale, { toValue: 1, stiffness: 100, damping: 12, useNativeDriver: true }),
     ]).start();
 
-    Animated.timing(barWidth, { toValue: 1, duration: 1800, useNativeDriver: false }).start(() => {
-      Animated.timing(fade, { toValue: 0, duration: 300, useNativeDriver: true }).start(() => onFinish());
+    // Fase 2: Título aparece (después de 300ms)
+    Animated.parallel([
+      Animated.timing(titleFade, { toValue: 1, duration: 500, delay: 300, easing: EASE_OUT, useNativeDriver: true }),
+      Animated.timing(titleSlide, { toValue: 0, duration: 500, delay: 300, easing: EASE_OUT, useNativeDriver: true }),
+    ]).start();
+
+    // Fase 3: Divisor se expande (después de 600ms)
+    Animated.timing(dividerWidth, { toValue: 1, duration: 400, delay: 600, easing: EASE_OUT, useNativeDriver: false }).start();
+
+    // Fase 4: Subtítulo aparece (después de 800ms)
+    Animated.timing(subFade, { toValue: 1, duration: 400, delay: 800, easing: EASE_OUT, useNativeDriver: true }).start();
+
+    // Fase 5: Barra de progreso (después de 1000ms)
+    Animated.timing(barWidth, { toValue: 1, duration: 1500, delay: 1000, easing: EASE_OUT, useNativeDriver: false }).start(() => {
+      // Fase 6: Salida suave
+      Animated.timing(exitFade, { toValue: 0, duration: 400, easing: EASE_OUT, useNativeDriver: true }).start(() => onFinish());
     });
-  }, [fade, scale, barWidth, onFinish]);
+  }, [fade, logoScale, titleFade, titleSlide, dividerWidth, subFade, barWidth, exitFade, onFinish]);
 
   return (
-    <Animated.View style={[s.root, { opacity: fade }]}>
+    <Animated.View style={[s.root, { opacity: exitFade }]}>
       <View style={s.watermark}>
         <Text style={s.watermarkTxt}>HV</Text>
       </View>
-      <Animated.View style={[s.content, { transform: [{ scale }] }]}>
-        <View style={s.logoBox}>
+      <Animated.View style={[s.content, { opacity: fade }]}>
+        <Animated.View style={[s.logoBox, { transform: [{ scale: logoScale }] }]}>
           <Text style={s.logoTxt}>HV</Text>
-        </View>
-        <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
-        <View style={s.divider} />
-        <Text style={s.sub}>SISTEMA DE RESERVAS</Text>
+        </Animated.View>
+        <Animated.View style={{ opacity: titleFade, transform: [{ translateY: titleSlide }] }}>
+          <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
+        </Animated.View>
+        <Animated.View style={[s.divider, { width: dividerWidth.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) }]} />
+        <Animated.View style={{ opacity: subFade }}>
+          <Text style={s.sub}>SISTEMA DE RESERVAS</Text>
+        </Animated.View>
       </Animated.View>
       <View style={s.barWrap}>
         <Animated.View style={[s.bar, { width: barWidth.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }) }]} />
@@ -86,7 +111,6 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
   divider: {
-    width: 40,
     height: 2,
     backgroundColor: colors.brandAccent,
     marginVertical: spacing.lg,

@@ -1,27 +1,50 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 import { colors, sizes, spacing, typography } from '../theme';
+import { EASE_OUT } from '../lib/anims';
 
 type Props = { onWake?: () => void };
 
 export default function IdleScreen({ onWake }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
+  const logoScale = useRef(new Animated.Value(0.6)).current;
+  const titleFade = useRef(new Animated.Value(0)).current;
+  const titleSlide = useRef(new Animated.Value(16)).current;
+  const dividerWidth = useRef(new Animated.Value(0)).current;
+  const hintFade = useRef(new Animated.Value(0)).current;
   const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    Animated.timing(fade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulse, { toValue: 1.05, duration: 2000, useNativeDriver: true }),
-        Animated.timing(pulse, { toValue: 1, duration: 2000, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => { fade.setValue(0); loop.stop(); };
-  }, [fade, pulse]);
+    // Entrada secuencial elegante
+    Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }).start();
+
+    Animated.spring(logoScale, { toValue: 1, stiffness: 80, damping: 12, delay: 200, useNativeDriver: true }).start();
+
+    Animated.parallel([
+      Animated.timing(titleFade, { toValue: 1, duration: 500, delay: 400, easing: EASE_OUT, useNativeDriver: true }),
+      Animated.timing(titleSlide, { toValue: 0, duration: 500, delay: 400, easing: EASE_OUT, useNativeDriver: true }),
+    ]).start();
+
+    Animated.timing(dividerWidth, { toValue: 1, duration: 400, delay: 700, easing: EASE_OUT, useNativeDriver: false }).start();
+
+    Animated.timing(hintFade, { toValue: 1, duration: 400, delay: 900, easing: EASE_OUT, useNativeDriver: true }).start(() => {
+      // Pulso continuo después de la entrada
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulse, { toValue: 1.04, duration: 2500, useNativeDriver: true }),
+          Animated.timing(pulse, { toValue: 1, duration: 2500, useNativeDriver: true }),
+        ])
+      ).start();
+    });
+
+    return () => { fade.setValue(0); pulse.setValue(1); };
+  }, [fade, logoScale, titleFade, titleSlide, dividerWidth, hintFade, pulse]);
 
   const touch = () => {
-    Animated.timing(fade, { toValue: 0, duration: 250, useNativeDriver: true }).start(() => onWake?.());
+    Animated.parallel([
+      Animated.timing(fade, { toValue: 0, duration: 300, easing: EASE_OUT, useNativeDriver: true }),
+      Animated.timing(logoScale, { toValue: 0.9, duration: 300, easing: EASE_OUT, useNativeDriver: true }),
+    ]).start(() => onWake?.());
   };
 
   return (
@@ -29,14 +52,18 @@ export default function IdleScreen({ onWake }: Props) {
       <View style={s.watermark}>
         <Text style={s.watermarkTxt}>HV</Text>
       </View>
-      <Animated.View style={[s.content, { transform: [{ scale: pulse }] }]}>
+      <Animated.View style={[s.content, { transform: [{ scale: Animated.multiply(logoScale, pulse) }] }]}>
         <View style={s.logoBox}>
           <Text style={s.logoTxt}>HV</Text>
         </View>
-        <Text style={s.label}>BIENVENIDO</Text>
-        <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
-        <View style={s.divider} />
-        <Text style={s.hint}>TOCA PARA COMENZAR</Text>
+        <Animated.View style={{ opacity: titleFade, transform: [{ translateY: titleSlide }] }}>
+          <Text style={s.label}>BIENVENIDO</Text>
+          <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
+        </Animated.View>
+        <Animated.View style={[s.divider, { width: dividerWidth.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) }]} />
+        <Animated.View style={{ opacity: hintFade }}>
+          <Text style={s.hint}>TOCA PARA COMENZAR</Text>
+        </Animated.View>
       </Animated.View>
     </Animated.View>
   );
@@ -88,6 +115,7 @@ const s = StyleSheet.create({
     letterSpacing: 4,
     textTransform: 'uppercase',
     marginBottom: spacing.md,
+    textAlign: 'center',
   },
   wordmark: {
     fontFamily: typography.serifBold,
@@ -99,7 +127,6 @@ const s = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   divider: {
-    width: 40,
     height: 2,
     backgroundColor: colors.brandAccent,
     marginBottom: spacing.xl,

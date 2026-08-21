@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, radii, spacing, typography } from '../theme';
+import { EASE_OUT } from '../lib/anims';
 
 type Props = {
   title: string;
@@ -16,13 +17,20 @@ type Props = {
 export default function ServiceCard({ title, subtitle, onPress, featured, dark, accent, delay = 0 }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(1)).current;
+  const glow = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    Animated.timing(enter, { toValue: 1, duration: 450, delay, useNativeDriver: true }).start();
+    Animated.timing(enter, { toValue: 1, duration: 500, delay, easing: EASE_OUT, useNativeDriver: true }).start();
   }, [enter, delay]);
 
-  const onIn = () => Animated.spring(press, { toValue: 0.97, stiffness: 300, damping: 18, useNativeDriver: true }).start();
-  const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 300, damping: 18, useNativeDriver: true }).start();
+  const onIn = () => {
+    Animated.spring(press, { toValue: 0.96, stiffness: 350, damping: 20, useNativeDriver: true }).start();
+    Animated.timing(glow, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+  };
+  const onOut = () => {
+    Animated.spring(press, { toValue: 1, stiffness: 350, damping: 20, useNativeDriver: true }).start();
+    Animated.timing(glow, { toValue: 0, duration: 300, useNativeDriver: true }).start();
+  };
 
   const isAccent = accent;
   const isDark = dark;
@@ -33,11 +41,20 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
     ? ['#1A1A1A', '#0D0D0D']
     : ['#1F3A2C', colors.brandPrimary];
 
-  const txtColor = isAccent ? colors.brandCream : colors.brandCream;
+  const txtColor = colors.brandCream;
   const subTxtColor = isAccent ? 'rgba(244,238,226,0.7)' : 'rgba(244,238,226,0.5)';
 
   return (
-    <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { scale: press }] }, featured && s.featured]}>
+    <Animated.View style={[
+      {
+        opacity: enter,
+        transform: [
+          { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) },
+          { scale: press },
+        ],
+      },
+      featured && s.featured,
+    ]}>
       <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={`${title}: ${subtitle}`}>
         <LinearGradient
           colors={gradientColors}

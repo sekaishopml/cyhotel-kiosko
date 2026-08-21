@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Modal as RNModal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, radii, sizes, spacing, typography } from '../theme';
+import { EASE_OUT } from '../lib/anims';
 import type { Order } from '../api';
 
 type Props = { visible: boolean; order: Order | null; onClose: () => void };
@@ -15,21 +16,44 @@ function InfoRow({ label, value, last }: { label: string; value: string; last?: 
 }
 
 export default function SuccessModal({ visible, order, onClose }: Props) {
-  const zoom = useRef(new Animated.Value(0)).current;
+  const overlayFade = useRef(new Animated.Value(0)).current;
+  const cardScale = useRef(new Animated.Value(0.85)).current;
+  const cardFade = useRef(new Animated.Value(0)).current;
+  const checkScale = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     if (visible) {
-      zoom.setValue(0);
-      Animated.spring(zoom, { toValue: 1, stiffness: 120, damping: 14, useNativeDriver: true }).start();
+      overlayFade.setValue(0);
+      cardScale.setValue(0.85);
+      cardFade.setValue(0);
+      checkScale.setValue(0);
+
+      Animated.timing(overlayFade, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+
+      Animated.parallel([
+        Animated.spring(cardScale, { toValue: 1, stiffness: 100, damping: 14, delay: 100, useNativeDriver: true }),
+        Animated.timing(cardFade, { toValue: 1, duration: 350, delay: 100, easing: EASE_OUT, useNativeDriver: true }),
+      ]).start();
+
+      Animated.spring(checkScale, { toValue: 1, stiffness: 120, damping: 10, delay: 300, useNativeDriver: true }).start();
     }
-  }, [visible, zoom]);
+  }, [visible, overlayFade, cardScale, cardFade, checkScale]);
+
+  const handleClose = () => {
+    Animated.parallel([
+      Animated.timing(overlayFade, { toValue: 0, duration: 250, useNativeDriver: true }),
+      Animated.timing(cardFade, { toValue: 0, duration: 250, useNativeDriver: true }),
+      Animated.timing(cardScale, { toValue: 0.9, duration: 250, useNativeDriver: true }),
+    ]).start(() => onClose());
+  };
 
   return (
-    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={s.overlay}>
-        <Animated.View style={[s.card, { opacity: zoom, transform: [{ scale: zoom }] }]}>
-          <View style={s.checkCircle}>
+    <RNModal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+      <Animated.View style={[s.overlay, { opacity: overlayFade }]}>
+        <Animated.View style={[s.card, { opacity: cardFade, transform: [{ scale: cardScale }] }]}>
+          <Animated.View style={[s.checkCircle, { transform: [{ scale: checkScale }] }]}>
             <Text style={s.check}>✓</Text>
-          </View>
+          </Animated.View>
           <Text style={s.title}>¡RESERVA CONFIRMADA!</Text>
           <Text style={s.subtitle}>Tu habitación está lista</Text>
           {order && (
@@ -41,11 +65,11 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
               <InfoRow label="Total" value={`$${order.amount}`} last />
             </View>
           )}
-          <TouchableOpacity onPress={onClose} style={s.closeBtn} accessibilityLabel="Cerrar">
+          <TouchableOpacity onPress={handleClose} style={s.closeBtn} accessibilityLabel="Cerrar">
             <Text style={s.closeTxt}>CERRAR</Text>
           </TouchableOpacity>
         </Animated.View>
-      </View>
+      </Animated.View>
     </RNModal>
   );
 }
