@@ -21,7 +21,6 @@ const PLANS = [
     subtitle: 'Por horas, sin complicaciones',
     image: IMAGES.momento,
     badge: 'Lo más pedido',
-    hero: true,
   },
   {
     key: 'amanecida',
@@ -44,37 +43,21 @@ const PLANS = [
 ];
 
 function HomeScreen({ onSelectPlan }: Props) {
-  const hero = PLANS[0];
-  const rest = PLANS.slice(1);
-
   return (
     <View style={styles.screen}>
-      <View style={styles.row}>
-        <View style={styles.hero}>
-          <ServiceCard
-            image={hero.image}
-            title={hero.title}
-            subtitle={hero.subtitle}
-            badge={hero.badge}
-            hero
-            delay={0}
-            onPress={() => onSelectPlan(hero.key)}
-          />
-        </View>
-
-        <View style={styles.column}>
-          {rest.map((p, i) => (
-            <View key={p.key} style={styles.cell}>
-              <ServiceCard
-                image={p.image}
-                title={p.title}
-                subtitle={p.subtitle}
-                delay={80 * (i + 1)}
-                onPress={() => onSelectPlan(p.key)}
-              />
-            </View>
-          ))}
-        </View>
+      <View style={styles.column}>
+        {PLANS.map((p, i) => (
+          <View key={p.key} style={styles.cell}>
+            <ServiceCard
+              image={p.image}
+              title={p.title}
+              subtitle={p.subtitle}
+              badge={p.badge}
+              delay={i * 80}
+              onPress={() => onSelectPlan(p.key)}
+            />
+          </View>
+        ))}
       </View>
     </View>
   );
@@ -86,20 +69,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.brandPrimaryDeep,
     padding: spacing.md,
   },
-  row: {
-    flex: 1,
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  hero: {
-    flex: 1.35,
-  },
   column: {
     flex: 1,
-    gap: spacing.md,
   },
   cell: {
     flex: 1,
+    paddingVertical: spacing.xs,
   },
 });
 
