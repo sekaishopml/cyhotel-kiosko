@@ -61,7 +61,41 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
   const total = computeTotal();
   const retry = () => setReloadKey(k => k + 1);
   const bodyAnim = fadeIn(0);
-  const dockAnim = slideUp(0, 80, 350);
+  const dockAnim = slideUp(0, 60, 350);
+
+  const renderRooms = () => {
+    if (!data) return null;
+    const rooms = data.types;
+    if (rooms.length <= 2) {
+      return (
+        <View style={s.row}>
+          {rooms.map((room, i) => (
+            <Animated.View key={room.key} style={[fadeInDown(i * 100, 20), s.halfCell]}>
+              <RoomCard room={room} selected={selectedRoom === room.key} onPress={() => onSelectRoom(selectedRoom === room.key ? null : room.key)} />
+            </Animated.View>
+          ))}
+        </View>
+      );
+    }
+    const topRooms = rooms.slice(0, 2);
+    const bottomRooms = rooms.slice(2);
+    return (
+      <>
+        <View style={s.row}>
+          {topRooms.map((room, i) => (
+            <Animated.View key={room.key} style={[fadeInDown(i * 100, 20), s.halfCell]}>
+              <RoomCard room={room} selected={selectedRoom === room.key} onPress={() => onSelectRoom(selectedRoom === room.key ? null : room.key)} />
+            </Animated.View>
+          ))}
+        </View>
+        {bottomRooms.map((room, i) => (
+          <Animated.View key={room.key} style={fadeInDown((topRooms.length + i) * 100, 20)}>
+            <RoomCard room={room} selected={selectedRoom === room.key} onPress={() => onSelectRoom(selectedRoom === room.key ? null : room.key)} wide />
+          </Animated.View>
+        ))}
+      </>
+    );
+  };
 
   return (
     <View style={s.screen}>
@@ -80,11 +114,7 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
         ) : data ? (
           <>
             <View style={s.grid}>
-              {data.types.map((room, i) => (
-                <Animated.View key={room.key} style={fadeInDown(i * 70, 16)}>
-                  <RoomCard room={room} selected={selectedRoom === room.key} onPress={() => onSelectRoom(selectedRoom === room.key ? null : room.key)} />
-                </Animated.View>
-              ))}
+              {renderRooms()}
             </View>
             {currentRoom && (
               <Animated.View style={fadeInDown(0, 16)}>
@@ -116,7 +146,9 @@ const s = StyleSheet.create({
   backIcon: { fontSize: sizes.back, lineHeight: 38, color: colors.brandPrimary, marginTop: -2 },
   title: { fontFamily: typography.sansMedium, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
   body: { flex: 1 },
-  grid: { gap: spacing.gap, paddingHorizontal: spacing.screen },
+  grid: { paddingHorizontal: spacing.screen, gap: spacing.gap },
+  row: { flexDirection: 'row', gap: spacing.gap },
+  halfCell: { flex: 1 },
   errorBox: { padding: spacing.screen, alignItems: 'center' },
   errorText: { color: colors.error, fontSize: sizes.cardSubtitle, marginBottom: spacing.md },
   retryBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
