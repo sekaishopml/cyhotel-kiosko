@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, radii, sizes, spacing, typography } from '../theme';
 
 type Props = {
@@ -24,19 +24,30 @@ export default function ServiceCard({ title, subtitle, onPress, featured, delay 
   return (
     <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [18, 0] }) }, { scale: press }] }, s.wrap, featured && s.featured]}>
       <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={`${title}: ${subtitle}`}>
-        <Text style={[s.title, featured && s.titleFeatured]} numberOfLines={1}>{title.toUpperCase()}</Text>
-        <Text style={s.subtitle} numberOfLines={1}>{subtitle}</Text>
+        <View style={s.content}>
+          <Text style={[s.title, featured && s.titleFeatured]} numberOfLines={1}>{title.toUpperCase()}</Text>
+          <Text style={s.subtitle} numberOfLines={1}>{subtitle}</Text>
+        </View>
+        <Text style={[styles.chevron]} numberOfLines={1}>›</Text>
       </TouchableOpacity>
     </Animated.View>
   );
 }
 
+const styles = StyleSheet.create({
+  chevron: {
+    fontSize: 28,
+    color: 'rgba(244,238,226,0.35)',
+    fontFamily: typography.serif,
+  },
+});
+
 const s = StyleSheet.create({
   wrap: {
-    borderRadius: radii.button,
+    borderRadius: radii.card,
     backgroundColor: colors.brandPrimary,
     overflow: 'hidden',
-    minHeight: 72,
+    minHeight: 88,
   },
   featured: {
     backgroundColor: colors.brandPrimary,
@@ -45,17 +56,21 @@ const s = StyleSheet.create({
   },
   touch: {
     flex: 1,
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 20,
+    paddingVertical: 22,
+  },
+  content: {
+    flex: 1,
+    alignItems: 'flex-start',
   },
   title: {
     fontFamily: typography.serifBold,
     fontSize: 22,
     color: colors.brandCream,
     letterSpacing: 2,
-    textAlign: 'center',
     fontWeight: '700',
   },
   titleFeatured: {
@@ -66,7 +81,6 @@ const s = StyleSheet.create({
     fontSize: sizes.cardSubtitle,
     color: 'rgba(244,238,226,0.55)',
     marginTop: 4,
-    textAlign: 'center',
     letterSpacing: 0.5,
   },
 });

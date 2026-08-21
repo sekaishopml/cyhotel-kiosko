@@ -18,6 +18,9 @@ export default function IdleScreen({ onWake }: Props) {
 
   return (
     <Animated.View style={[s.root, { opacity: fade }]} onTouchStart={touch}>
+      <View style={s.watermark}>
+        <Text style={s.watermarkTxt}>HV</Text>
+      </View>
       <View style={s.content}>
         <Text style={s.label}>BIENVENIDO</Text>
         <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
@@ -34,6 +37,20 @@ const s = StyleSheet.create({
     backgroundColor: colors.brandPrimary,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  watermark: {
+    position: 'absolute',
+    bottom: 60,
+    right: -10,
+    opacity: 0.06,
+    pointerEvents: 'none',
+  },
+  watermarkTxt: {
+    fontFamily: typography.serifBold,
+    fontSize: 200,
+    color: colors.brandCream,
+    fontWeight: '700',
+    letterSpacing: -8,
   },
   content: {
     alignItems: 'center',
