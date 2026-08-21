@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
 import { colors, sizes, spacing, typography } from '../theme';
 
 type Props = { onAdminLongPress: () => void };
@@ -30,7 +29,7 @@ export default function KioskHeader({ onAdminLongPress }: Props) {
         accessibilityLabel="Ajustes"
         style={s.gearBtn}
       >
-        <Icon name="settings" size={20} color={colors.brandPrimary} style={{ opacity: 0.4 }} />
+        <Text style={s.gear}>⚙</Text>
       </TouchableOpacity>
     </View>
   );
@@ -66,5 +65,10 @@ const s = StyleSheet.create({
     height: 40,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  gear: {
+    fontSize: 20,
+    color: colors.brandPrimary,
+    opacity: 0.4,
   },
 });

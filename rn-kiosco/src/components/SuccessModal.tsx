@@ -1,13 +1,9 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Modal as RNModal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import Icon from 'react-native-vector-icons/Feather';
-import { ReactNativeHapticFeedback } from 'react-native-haptic-feedback';
 import { colors, radii, sizes, spacing, typography } from '../theme';
 import type { Order } from '../api';
 
 type Props = { visible: boolean; order: Order | null; onClose: () => void };
-
-const hapticOpts = { enableVibrateFallback: true, ignoreAndroidSystemSettings: false };
 
 function InfoRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
@@ -24,21 +20,15 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
     if (visible) {
       zoom.setValue(0);
       Animated.timing(zoom, { toValue: 1, duration: 300, useNativeDriver: true }).start();
-      ReactNativeHapticFeedback.trigger('notificationSuccess', hapticOpts);
     }
   }, [visible, zoom]);
 
-  const handleClose = () => {
-    ReactNativeHapticFeedback.trigger('impactLight', hapticOpts);
-    onClose();
-  };
-
   return (
-    <RNModal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
+    <RNModal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={s.overlay}>
         <Animated.View style={[s.card, { opacity: zoom, transform: [{ scale: zoom }] }]}>
           <View style={s.checkCircle}>
-            <Icon name="check" size={32} color={colors.brandPrimary} />
+            <Text style={s.check}>✓</Text>
           </View>
           <Text style={s.title}>¡Reserva confirmada!</Text>
           <Text style={s.subtitle}>Tu habitación está lista</Text>
@@ -51,7 +41,7 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
               <InfoRow label="Total" value={`$${order.amount}`} last />
             </View>
           )}
-          <TouchableOpacity onPress={handleClose} style={s.closeBtn} accessibilityLabel="Cerrar">
+          <TouchableOpacity onPress={onClose} style={s.closeBtn} accessibilityLabel="Cerrar">
             <Text style={s.closeTxt}>CERRAR</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -77,6 +67,7 @@ const s = StyleSheet.create({
     }),
   },
   checkCircle: { width: 64, height: 64, borderRadius: 999, backgroundColor: colors.brandAccent, alignItems: 'center', justifyContent: 'center', marginBottom: 12 },
+  check: { color: colors.brandPrimary, fontSize: 34, fontWeight: '700' },
   title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandCream, marginBottom: 4, letterSpacing: 1 },
   subtitle: { fontSize: sizes.cardSubtitle, color: 'rgba(244,238,226,0.55)', marginBottom: spacing.lg, fontFamily: typography.sansMedium },
   info: { backgroundColor: 'rgba(244,238,226,0.06)', borderRadius: radii.card, padding: spacing.md, width: '100%', marginBottom: spacing.lg },
