@@ -1,24 +1,23 @@
 export const colors = {
-  // Paleta boutique: verde profundo (bosque) + dorado (cobre cálido) + crema
-  brandPrimary: '#1F3B2C',
-  brandPrimaryDeep: '#162D20',
-  brandPrimaryLight: '#2E5240',
-  brandAccent: '#C9A15A',
-  brandAccentDeep: '#A8854A',
+  brandPrimary: '#1B2E22',
   brandCream: '#F4EEE2',
-  overlayDark: 'rgba(10,18,14,0.55)',
+  brandAccent: '#C9A15A',
+  textMuted: 'rgba(244,238,226,0.65)',
+  border: 'rgba(244,238,226,0.15)',
+  overlayDark: 'rgba(27,46,34,0.85)',
+  // Legacy aliases for migration
+  brandPrimaryDeep: '#1B2E22',
+  brandPrimaryLight: '#2A4A38',
+  brandAccentDeep: '#A8854A',
   textPrimary: '#F4EEE2',
-  textMuted: 'rgba(244,238,226,0.7)',
   textInk: '#10281D',
-  border: '#E0D8CC',
   surface: '#F6F1E7',
   elevated: '#FEFFFF',
   success: '#3E9A63',
   error: '#C05A4A',
-  // Aliases de la paleta anterior (migración)
-  verde900: '#1F3B2C',
-  verde700: '#2E5240',
-  verde600: '#3A6450',
+  verde900: '#1B2E22',
+  verde700: '#2A4A38',
+  verde600: '#35664A',
   verde500: '#3E9A63',
   crema: '#F4EEE2',
   ink: '#10281D',
@@ -29,8 +28,10 @@ export const colors = {
 };
 
 export const typography = {
-  serif: 'PlayfairDisplay',
-  sans: 'Inter',
+  serif: 'LibreBaskerville-Regular',
+  serifBold: 'LibreBaskerville-Bold',
+  sans: 'WorkSans-Regular',
+  sansMedium: 'WorkSans-Medium',
 };
 
 export const spacing = {
@@ -39,63 +40,66 @@ export const spacing = {
   md: 16,
   lg: 24,
   xl: 32,
-  // alias migración
-  gap: 16,
-  screen: 24,
+  gap: 14,
+  screen: 20,
+  cardVertical: 22,
 };
 
 export const radii = {
-  card: 20,
+  card: 16,
   pill: 999,
-  button: 14,
+  button: 12,
   // alias migración
   roomCard: 16,
   modal: 20,
-  cta: 14,
+  cta: 12,
   chip: 999,
   circle: 999,
   badge: 12,
-  planCard: 20,
+  planCard: 16,
 };
 
 export const sizes = {
-  heroTitle: 72,
-  cardTitle: 44,
-  cardSubtitle: 22,
-  microLabel: 18,
-  planName: 44,
-  planSubtitle: 22,
-  label: 28,
-  cta: 36,
-  icon: 40,
-  clock: 36,
-  wordmark: 48,
-  roomTitle: 36,
-  roomSubtitle: 22,
-  dockTotal: 36,
-  formLabel: 28,
-  chip: 24,
+  wordmark: 20,
+  cardTitle: 29,
+  cardSubtitle: 13,
+  idleTitle: 42,
+  idleHint: 14,
+  label: 11,
+  microLabel: 11,
+  clock: 18,
+  roomTitle: 24,
+  roomSubtitle: 13,
+  dockTotal: 28,
+  formLabel: 14,
+  chip: 13,
+  cta: 18,
+  icon: 24,
+  arrow: 36,
+  badgeSize: 11,
+  planName: 29,
+  planSubtitle: 13,
   // alias migración
   roomPhoto: 116,
   roomCardHeight: 116,
   planIcon: 56,
-  arrow: 40,
-  badgeSize: 18,
+  heroTitle: 42,
 };
 
 export const fonts = {
   serif: typography.serif,
+  serifBold: typography.serifBold,
   sans: typography.sans,
-  sansMedium: typography.sans,
+  sansMedium: typography.sansMedium,
 };
 
 export const shadows = {
   card: {
-    elevation: 4,
+    elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
   },
 };
 
@@ -105,8 +109,8 @@ export const springs = {
 
 export const overlayGradient = {
   layers: [
-    { heightPct: 0.42, color: 'rgba(10,18,14,0.18)' },
-    { heightPct: 0.3, color: 'rgba(10,18,14,0.32)' },
-    { heightPct: 0.28, color: 'rgba(10,18,14,0.62)' },
+    { heightPct: 0.42, color: 'rgba(27,46,34,0.18)' },
+    { heightPct: 0.3, color: 'rgba(27,46,34,0.32)' },
+    { heightPct: 0.28, color: 'rgba(27,46,34,0.62)' },
   ],
 };

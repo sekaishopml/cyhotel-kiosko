@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, radii, sizes, spacing, typography } from '../theme';
+import { colors, sizes, spacing, typography } from '../theme';
 
 type Props = {
   onAdminLongPress: () => void;
@@ -22,12 +22,8 @@ function KioskHeader({ onAdminLongPress }: Props) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.brand}>Hotel del Valle</Text>
-
-      <Text style={styles.clock}>
-        {hh}:{mm}
-      </Text>
-
+      <Text style={styles.wordmark}>Hotel del Valle</Text>
+      <Text style={styles.clock}>{hh}:{mm}</Text>
       <TouchableOpacity
         onLongPress={onAdminLongPress}
         delayLongPress={600}
@@ -43,33 +39,36 @@ function KioskHeader({ onAdminLongPress }: Props) {
 
 const styles = StyleSheet.create({
   container: {
-    height: 64,
+    height: 56,
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    backgroundColor: colors.surface,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.screen,
+    backgroundColor: colors.brandPrimary,
   },
-  brand: {
+  wordmark: {
     fontFamily: typography.serif,
     fontSize: sizes.wordmark,
-    fontWeight: '700',
-    color: colors.brandPrimary,
-    letterSpacing: 0.5,
+    fontWeight: '400',
+    color: colors.brandCream,
+    letterSpacing: 0.3,
+    flexShrink: 1,
   },
   clock: {
-    fontFamily: typography.sans,
+    fontFamily: typography.sansMedium,
     fontSize: sizes.clock,
-    fontWeight: '700',
-    color: colors.brandPrimary,
-    letterSpacing: 1,
-    marginHorizontal: spacing.sm,
+    color: colors.brandCream,
+    opacity: 0.7,
+    letterSpacing: 0.5,
+    textAlign: 'center',
+    flex: 1,
+    marginHorizontal: spacing.md,
   },
   gear: {
-    fontSize: 24,
-    color: colors.brandPrimary,
+    fontSize: 22,
+    color: colors.brandCream,
     opacity: 0.6,
+    flexShrink: 0,
   },
 });
 

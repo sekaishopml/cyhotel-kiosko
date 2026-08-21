@@ -18,16 +18,19 @@ const PLANS = [
     key: 'amanecida',
     title: 'Amanecida',
     subtitle: 'Desde la tarde hasta la mañana',
+    featured: false,
   },
   {
     key: 'hospedaje',
     title: 'Hospedaje',
     subtitle: 'Estadía por noches',
+    featured: false,
   },
   {
     key: 'suite',
     title: 'Suite Jacuzzi',
     subtitle: 'Noche de lujo',
+    featured: false,
   },
 ];
 
@@ -54,15 +57,16 @@ function HomeScreen({ onSelectPlan }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.surface,
-    padding: spacing.md,
+    backgroundColor: colors.brandPrimary,
+    paddingHorizontal: spacing.screen,
+    paddingVertical: spacing.md,
   },
   column: {
     flex: 1,
+    gap: spacing.gap,
   },
   cell: {
     flex: 1,
-    paddingVertical: spacing.xs,
   },
 });
 

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { colors, radii } from '../theme';
+import { colors, radii, spacing } from '../theme';
 
 function ShimmerBlock({ height }: { height: number }) {
   const x = useRef(new Animated.Value(0)).current;
@@ -42,27 +42,28 @@ function Shimmer() {
   return (
     <View style={styles.container}>
       <ShimmerBlock height={120} />
-      <ShimmerBlock height={88} />
-      <ShimmerBlock height={88} />
-      <ShimmerBlock height={88} />
+      <ShimmerBlock height={96} />
+      <ShimmerBlock height={96} />
+      <ShimmerBlock height={96} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    gap: 12,
+    paddingHorizontal: spacing.screen,
+    paddingVertical: spacing.md,
+    gap: spacing.gap,
   },
   block: {
     borderRadius: radii.card,
-    backgroundColor: 'rgba(244,238,226,0.12)',
+    backgroundColor: colors.border,
     overflow: 'hidden',
   },
   mask: {
     width: 140,
     height: '100%',
-    backgroundColor: 'rgba(244,238,226,0.16)',
+    backgroundColor: colors.brandAccent,
   },
 });
 

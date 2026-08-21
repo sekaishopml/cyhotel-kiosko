@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   DeviceEventEmitter,
@@ -12,17 +12,18 @@ import {
   View,
 } from 'react-native';
 import { colors, sizes, spacing, radii, typography } from './src/theme';
-import { getServerBase, setServerBase } from './src/api';
+import { getServerBase, getTypes, setServerBase } from './src/api';
 import KioskHeader from './src/components/KioskHeader';
 import HomeScreen from './src/screens/HomeScreen';
 import RoomScreen from './src/screens/RoomScreen';
 import CheckinScreen from './src/screens/CheckinScreen';
 import ScreenTransition from './src/components/ScreenTransition';
 import IdleScreen from './src/components/IdleScreen';
+import Shimmer from './src/components/Shimmer';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.1.7';
+const APP_VERSION = '6.2.0';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
@@ -69,17 +70,19 @@ function App() {
   const [serverInput, setServerInput] = useState('');
   const [pinInput, setPinInput] = useState('');
   const [idle, setIdle] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getServerBase().then(setServerBaseState);
     installCrashReporter();
-    // Hide status bar on app start for kiosk mode
     try {
       StatusBar.setHidden(true);
       StatusBar.setBarStyle('light-content');
     } catch (e) {
       // StatusBar not available in web mode, ignore
     }
+    // Load types on startup
+    getTypes().finally(() => setLoading(false));
   }, []);
 
   const goHome = useCallback(() => {
@@ -257,8 +260,18 @@ function App() {
       });
   }, [serverInput, goHome]);
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <StatusBar hidden={true} barStyle="light-content" />
+        <Shimmer />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.app} onTouchStart={wakeUp}>
+      <StatusBar hidden={true} barStyle="light-content" />
       <KioskHeader onAdminLongPress={openAdmin} />
       <View style={styles.stage}>
         <ScreenTransition screenKey={screen}>
@@ -291,7 +304,7 @@ function App() {
         </ScreenTransition>
       </View>
 
-      {idle && <IdleScreen />}
+      {idle && <IdleScreen onWake={wakeUp} />}
 
       <RNModal visible={adminModal} transparent animationType="fade" onRequestClose={() => setAdminModal(false)}>
         <View style={styles.modalOverlay}>
@@ -359,7 +372,7 @@ function App() {
                   value={serverInput}
                   onChangeText={setServerInput}
                   placeholder="http://IP:8000"
-                  placeholderTextColor="rgba(31,59,44,0.35)"
+                  placeholderTextColor="rgba(27,46,34,0.35)"
                   autoCapitalize="none"
                   autoCorrect={false}
                   keyboardType="url"
@@ -382,7 +395,7 @@ function App() {
                   value={pinInput}
                   onChangeText={setPinInput}
                   placeholder="•••••"
-                  placeholderTextColor="rgba(31,59,44,0.35)"
+                  placeholderTextColor="rgba(27,46,34,0.35)"
                   secureTextEntry
                   keyboardType="number-pad"
                   autoFocus
@@ -403,38 +416,44 @@ function App() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    backgroundColor: colors.brandPrimary,
+  },
   app: {
     flex: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: colors.brandPrimary,
   },
   stage: {
     flex: 1,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(31,59,44,0.5)',
+    backgroundColor: colors.overlayDark,
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,
   },
   modalCard: {
-    backgroundColor: colors.surface,
+    backgroundColor: colors.brandPrimary,
     borderRadius: radii.card,
     padding: spacing.xl,
     width: '100%',
     maxWidth: 480,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   modalTitle: {
     fontFamily: typography.serif,
     fontSize: sizes.cardTitle,
-    fontWeight: '600',
-    color: colors.brandPrimary,
+    fontWeight: '400',
+    color: colors.brandCream,
+    letterSpacing: 0.2,
   },
   modalSub: {
     fontFamily: typography.sans,
     fontSize: sizes.cardSubtitle,
-    color: colors.textInk,
-    opacity: 0.65,
+    color: colors.textMuted,
     marginTop: spacing.xs,
     marginBottom: spacing.lg,
   },
@@ -445,47 +464,47 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: 14,
     fontSize: sizes.cta,
-    color: colors.textInk,
-    backgroundColor: colors.elevated,
+    color: colors.brandCream,
+    backgroundColor: 'rgba(244,238,226,0.06)',
     textAlign: 'center',
     letterSpacing: 6,
   },
   modalBtn: {
-    backgroundColor: colors.brandPrimary,
+    backgroundColor: colors.brandAccent,
     borderRadius: radii.button,
-    paddingVertical: 18,
+    paddingVertical: 16,
     alignItems: 'center',
     marginTop: spacing.md,
-    minHeight: 60,
+    minHeight: 56,
     justifyContent: 'center',
   },
   modalBtnDisabled: {
     opacity: 0.5,
   },
   modalBtnText: {
-    color: colors.textPrimary,
+    color: colors.brandPrimary,
     fontSize: sizes.cta,
     fontWeight: '600',
-    fontFamily: typography.sans,
+    fontFamily: typography.sansMedium,
   },
   modalBtnOutline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: colors.brandPrimary,
+    borderColor: colors.brandAccent,
   },
   modalBtnOutlineText: {
-    color: colors.brandPrimary,
+    color: colors.brandAccent,
     fontSize: sizes.cta,
     fontWeight: '600',
-    fontFamily: typography.sans,
+    fontFamily: typography.sansMedium,
   },
   modalCancel: {
-    paddingVertical: 16,
+    paddingVertical: 14,
     alignItems: 'center',
     marginTop: spacing.xs,
   },
   modalCancelText: {
-    color: colors.brandPrimary,
+    color: colors.textMuted,
     fontSize: sizes.cardSubtitle,
     fontWeight: '500',
     fontFamily: typography.sans,
