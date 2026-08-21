@@ -28,13 +28,13 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
   const isDark = dark;
 
   const gradientColors = isAccent
-    ? [colors.brandAccent, '#B8923F']
+    ? ['#B89540', '#8C6F2A']
     : isDark
     ? ['#1A1A1A', '#0D0D0D']
     : ['#1F3A2C', colors.brandPrimary];
 
-  const txtColor = isAccent ? colors.brandPrimary : colors.brandCream;
-  const subTxtColor = isAccent ? 'rgba(27,46,34,0.5)' : 'rgba(244,238,226,0.5)';
+  const txtColor = isAccent ? colors.brandCream : colors.brandCream;
+  const subTxtColor = isAccent ? 'rgba(244,238,226,0.7)' : 'rgba(244,238,226,0.5)';
 
   return (
     <Animated.View style={[{ opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [24, 0] }) }, { scale: press }] }, featured && s.featured]}>
@@ -79,7 +79,6 @@ const s = StyleSheet.create({
     fontFamily: typography.serifBold,
     fontSize: 30,
     letterSpacing: 2,
-    fontWeight: '700',
     textAlign: 'center',
   },
   subtitle: {

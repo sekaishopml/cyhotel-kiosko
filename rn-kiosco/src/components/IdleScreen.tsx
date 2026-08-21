@@ -79,7 +79,6 @@ const s = StyleSheet.create({
     fontFamily: typography.serifBold,
     fontSize: 24,
     color: colors.brandPrimary,
-    fontWeight: '700',
     letterSpacing: 1,
   },
   label: {

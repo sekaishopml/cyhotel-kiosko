@@ -1,7 +1,7 @@
 export const colors = {
   brandPrimary: '#1B2E22',
   brandCream: '#F4EEE2',
-  brandAccent: '#C9A15A',
+  brandAccent: '#A07D3A',
   textMuted: 'rgba(27,46,34,0.55)',
   textLight: 'rgba(244,238,226,0.55)',
   border: 'rgba(27,46,34,0.12)',
@@ -14,8 +14,8 @@ export const colors = {
 };
 
 export const typography = {
-  serif: 'LibreBaskerville-Regular',
-  serifBold: 'LibreBaskerville-Bold',
+  serif: 'PlayfairDisplay',
+  serifBold: 'PlayfairDisplay',
   sans: 'WorkSans-Regular',
   sansMedium: 'WorkSans-Medium',
 };

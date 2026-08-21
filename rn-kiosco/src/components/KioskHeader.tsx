@@ -20,10 +20,7 @@ export default function KioskHeader({ onAdminLongPress }: Props) {
 
   return (
     <View style={s.root}>
-      <View style={s.left}>
-        <View style={s.logoDot} />
-        <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
-      </View>
+      <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
       <Text style={s.clock}>{hh}:{mm}</Text>
       <TouchableOpacity
         onLongPress={onAdminLongPress}
@@ -47,17 +44,6 @@ const s = StyleSheet.create({
     backgroundColor: colors.screen,
     borderBottomWidth: 2,
     borderBottomColor: colors.brandAccent,
-  },
-  left: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  logoDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: colors.brandAccent,
   },
   wordmark: {
     fontFamily: typography.serifBold,

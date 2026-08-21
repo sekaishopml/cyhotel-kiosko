@@ -37,6 +37,6 @@ const s = StyleSheet.create({
   mask: {
     width: 120,
     height: '100%',
-    backgroundColor: 'rgba(201,161,90,0.12)',
+    backgroundColor: 'rgba(160,125,58,0.15)',
   },
 });
