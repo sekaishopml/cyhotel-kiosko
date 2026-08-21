@@ -1,22 +1,16 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Image, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { colors, radii, sizes, spacing, typography, overlayGradient } from '../theme';
-import Badge from './Badge';
-
-export type ServiceImage = number;
+import { Animated, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { colors, radii, sizes, spacing, typography } from '../theme';
 
 type Props = {
-  image: ServiceImage;
   title: string;
   subtitle: string;
   onPress: () => void;
-  badge?: string;
-  hero?: boolean;
+  featured?: boolean;
   delay?: number;
-  targetHeight?: number;
 };
 
-function ServiceCard({ image, title, subtitle, onPress, badge, hero = false, delay = 0, targetHeight }: Props) {
+function ServiceCard({ title, subtitle, onPress, featured = false, delay = 0 }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(1)).current;
 
@@ -49,9 +43,15 @@ function ServiceCard({ image, title, subtitle, onPress, badge, hero = false, del
   return (
     <Animated.View
       style={[
-        { opacity: enter, transform: [{ translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) }, { scale: press }] },
-        hero ? styles.heroWrap : styles.wrap,
-        targetHeight ? { height: targetHeight } : null,
+        {
+          opacity: enter,
+          transform: [
+            { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [20, 0] }) },
+            { scale: press },
+          ],
+        },
+        styles.wrap,
+        featured && styles.featured,
       ]}
     >
       <TouchableOpacity
@@ -63,26 +63,18 @@ function ServiceCard({ image, title, subtitle, onPress, badge, hero = false, del
         accessibilityLabel={`${title}: ${subtitle}`}
         style={styles.touch}
       >
-        <Image source={image} style={styles.image} resizeMode="cover" />
-        <View style={styles.overlay}>
-          {overlayGradient.layers.map((l, i) => (
-            <View key={i} style={{ flex: l.heightPct, backgroundColor: l.color }} />
-          ))}
-        </View>
-        {badge ? (
-          <View style={styles.badgePos}>
-            <Badge label={badge} />
-          </View>
-        ) : null}
-        <View style={styles.texts}>
-          <Text style={[styles.title, hero && styles.titleHero]} numberOfLines={1}>
+        <View style={styles.content}>
+          <Text style={styles.title} numberOfLines={1}>
             {title}
           </Text>
-          <Text style={[styles.subtitle, hero && styles.subtitleHero]} numberOfLines={2}>
+          <Text style={styles.subtitle} numberOfLines={2}>
             {subtitle}
           </Text>
         </View>
-        <Text style={[styles.chevron, hero && styles.chevronHero]}>›</Text>
+
+        {featured ? (
+          <Text style={styles.featuredLabel}>Lo más pedido</Text>
+        ) : null}
       </TouchableOpacity>
     </Animated.View>
   );
@@ -92,36 +84,22 @@ const styles = StyleSheet.create({
   wrap: {
     flex: 1,
     borderRadius: radii.card,
+    backgroundColor: colors.brandPrimary,
     overflow: 'hidden',
     minHeight: 88,
   },
-  heroWrap: {
-    flex: 1,
-    borderRadius: radii.card,
-    overflow: 'hidden',
+  featured: {
+    borderWidth: 2,
+    borderColor: colors.brandAccent,
   },
   touch: {
     flex: 1,
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.lg + 4,
   },
-  image: {
-    ...StyleSheet.absoluteFillObject,
-    width: undefined,
-    height: undefined,
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'flex-end',
-  },
-  badgePos: {
-    position: 'absolute',
-    top: spacing.md,
-    right: spacing.md,
-  },
-  texts: {
-    position: 'absolute',
-    left: spacing.lg,
-    right: spacing.lg,
-    bottom: spacing.lg,
+  content: {
+    justifyContent: 'center',
   },
   title: {
     fontFamily: typography.serif,
@@ -130,9 +108,6 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     letterSpacing: 0.5,
   },
-  titleHero: {
-    fontSize: sizes.heroTitle,
-  },
   subtitle: {
     fontFamily: typography.sans,
     fontSize: sizes.cardSubtitle,
@@ -140,21 +115,16 @@ const styles = StyleSheet.create({
     marginTop: 4,
     letterSpacing: 0.3,
   },
-  subtitleHero: {
-    fontSize: sizes.cardSubtitle,
-  },
-  chevron: {
+  featuredLabel: {
     position: 'absolute',
-    right: spacing.lg,
-    top: '50%',
-    marginTop: -20,
-    fontSize: 40,
-    color: colors.textMuted,
-    fontWeight: '300',
-  },
-  chevronHero: {
-    fontSize: 52,
-    marginTop: -26,
+    top: spacing.md,
+    right: spacing.md,
+    fontFamily: typography.sans,
+    fontSize: sizes.microLabel,
+    color: colors.brandAccent,
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    fontWeight: '600',
   },
 });
 

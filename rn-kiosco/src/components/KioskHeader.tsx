@@ -22,21 +22,16 @@ function KioskHeader({ onAdminLongPress }: Props) {
 
   return (
     <View style={styles.header}>
-      <View style={styles.brand}>
-        <Text style={styles.wordmark}>Hotel del Valle</Text>
-      </View>
+      <Text style={styles.wordmark}>Hotel del Valle</Text>
 
-      <View style={styles.clock}>
-        <Text style={styles.clockText}>
-          {hh}:{mm}
-        </Text>
-      </View>
+      <Text style={styles.clock}>
+        {hh}:{mm}
+      </Text>
 
       <TouchableOpacity
         onLongPress={onAdminLongPress}
         delayLongPress={600}
         hitSlop={{ top: 24, bottom: 24, left: 24, right: 24 }}
-        style={styles.gearBtn}
         accessibilityRole="button"
         accessibilityLabel="Ajustes"
       >
@@ -50,13 +45,9 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-  },
-  brand: {
-    flexDirection: 'column',
   },
   wordmark: {
     fontFamily: typography.serif,
@@ -64,34 +55,21 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.brandPrimary,
     letterSpacing: 0.8,
-  },
-  tagline: {
-    fontFamily: typography.sans,
-    fontSize: 11,
-    letterSpacing: 2.4,
-    textTransform: 'uppercase',
-    color: colors.brandAccent,
-    marginTop: 2,
+    flexShrink: 1,
   },
   clock: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-  },
-  clockText: {
-    fontFamily: typography.serif,
+    fontFamily: typography.sans,
     fontSize: sizes.clock,
     color: colors.brandPrimary,
+    opacity: 0.5,
     letterSpacing: 2,
-  },
-  gearBtn: {
-    padding: spacing.sm,
-    borderRadius: radii.button,
+    marginLeft: 'auto',
+    marginRight: spacing.md,
   },
   gear: {
     fontSize: 22,
     color: colors.brandPrimary,
+    opacity: 0.4,
   },
 });
 

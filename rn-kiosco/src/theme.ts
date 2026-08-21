@@ -60,27 +60,27 @@ export const radii = {
 
 export const sizes = {
   heroTitle: 42,
-  cardTitle: 38,
-  cardSubtitle: 22,
-  microLabel: 14,
-  planName: 38,
-  planSubtitle: 22,
-  label: 20,
-  cta: 26,
+  cardTitle: 32,
+  cardSubtitle: 16,
+  microLabel: 12,
+  planName: 32,
+  planSubtitle: 16,
+  label: 18,
+  cta: 22,
   icon: 28,
-  clock: 22,
-  wordmark: 34,
-  roomTitle: 30,
-  roomSubtitle: 20,
-  dockTotal: 30,
-  formLabel: 20,
-  chip: 20,
+  clock: 16,
+  wordmark: 28,
+  roomTitle: 28,
+  roomSubtitle: 16,
+  dockTotal: 28,
+  formLabel: 18,
+  chip: 18,
   // alias migración
   roomPhoto: 116,
   roomCardHeight: 116,
   planIcon: 56,
   arrow: 40,
-  badgeSize: 14,
+  badgeSize: 12,
 };
 
 export const fonts = {
@@ -104,7 +104,6 @@ export const springs = {
 };
 
 export const overlayGradient = {
-  // gradiente inferior simulado sin dependencias (3 capas de opacidad)
   layers: [
     { heightPct: 0.42, color: 'rgba(10,18,14,0.18)' },
     { heightPct: 0.3, color: 'rgba(10,18,14,0.32)' },
