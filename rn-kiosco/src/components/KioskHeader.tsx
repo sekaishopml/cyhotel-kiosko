@@ -21,8 +21,8 @@ function KioskHeader({ onAdminLongPress }: Props) {
   const mm = String(now.getMinutes()).padStart(2, '0');
 
   return (
-    <View style={styles.header}>
-      <Text style={styles.wordmark}>Hotel del Valle</Text>
+    <View style={styles.container}>
+      <Text style={styles.brand}>Hotel del Valle</Text>
 
       <Text style={styles.clock}>
         {hh}:{mm}
@@ -42,37 +42,34 @@ function KioskHeader({ onAdminLongPress }: Props) {
 }
 
 const styles = StyleSheet.create({
-  header: {
-    flexDirection: 'row',
+  container: {
+    height: 64,
     alignItems: 'center',
-    backgroundColor: colors.surface,
+    justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md,
+    backgroundColor: colors.surface,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
   },
-  wordmark: {
+  brand: {
     fontFamily: typography.serif,
     fontSize: sizes.wordmark,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.brandPrimary,
-    letterSpacing: 0.8,
-    textAlign: 'center',
-    flexShrink: 1,
+    letterSpacing: 0.5,
   },
   clock: {
     fontFamily: typography.sans,
     fontSize: sizes.clock,
+    fontWeight: '700',
     color: colors.brandPrimary,
-    opacity: 1,
-    letterSpacing: 2,
-    textAlign: 'center',
-    marginLeft: 0,
-    marginRight: 0,
-    flex: 1,
+    letterSpacing: 1,
+    marginHorizontal: spacing.sm,
   },
   gear: {
-    fontSize: 22,
+    fontSize: 24,
     color: colors.brandPrimary,
-    opacity: 0.4,
+    opacity: 0.6,
   },
 });
 

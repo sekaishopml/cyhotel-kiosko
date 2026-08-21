@@ -59,28 +59,28 @@ export const radii = {
 };
 
 export const sizes = {
-  heroTitle: 60,
-  cardTitle: 40,
-  cardSubtitle: 20,
-  microLabel: 16,
-  planName: 40,
-  planSubtitle: 20,
-  label: 24,
-  cta: 32,
-  icon: 36,
-  clock: 28,
-  wordmark: 44,
+  heroTitle: 72,
+  cardTitle: 44,
+  cardSubtitle: 22,
+  microLabel: 18,
+  planName: 44,
+  planSubtitle: 22,
+  label: 28,
+  cta: 36,
+  icon: 40,
+  clock: 36,
+  wordmark: 48,
   roomTitle: 36,
-  roomSubtitle: 20,
+  roomSubtitle: 22,
   dockTotal: 36,
-  formLabel: 24,
+  formLabel: 28,
   chip: 24,
   // alias migración
   roomPhoto: 116,
   roomCardHeight: 116,
   planIcon: 56,
   arrow: 40,
-  badgeSize: 16,
+  badgeSize: 18,
 };
 
 export const fonts = {
