@@ -1,7 +1,9 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Alert,
+  DeviceEventEmitter,
   Modal as RNModal,
+  NativeModules,
   StyleSheet,
   Text,
   TextInput,
@@ -19,7 +21,7 @@ import IdleScreen from './src/components/IdleScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.1.2';
+const APP_VERSION = '6.1.3';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
@@ -131,7 +133,7 @@ function App() {
       try {
         const base = await getServerBase();
         const res = await fetch(`${base}/api/kiosco-version`);
-        if (!res.ok) throw new Error('not-ok');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const remoteVersion = String(data?.version ?? '');
         if (!remoteVersion || remoteVersion === APP_VERSION) {
@@ -141,35 +143,12 @@ function App() {
         const apkPath = String(data?.apk ?? '/kiosco.apk');
         Alert.alert(
           'Actualización disponible',
-          'Una nueva versión está lista para instalarse.',
+          `Versión ${remoteVersion} lista para instalarse.`,
           [
             { text: 'Ahora no', style: 'cancel' },
             {
               text: 'Actualizar ahora',
-              onPress: async () => {
-                try {
-                  const updater = (await import('react-native')).NativeModules.ApkUpdater;
-                  const can = await updater.canInstall();
-                  if (can === false) {
-                    Alert.alert(
-                      'Permiso de instalación',
-                      'Permanecé en esta pantalla y accedé a Ajustes para habilitar "Instalar apps desconocidas".',
-                      [
-                        { text: 'Cancelar', style: 'cancel' },
-                        { text: 'Configurar', onPress: () => updater.openInstallSettings() },
-                      ],
-                    );
-                    return;
-                  }
-                  Alert.alert('Actualizando…', 'La nueva versión se está descargando e instalando.');
-                  await updater.downloadAndInstall(`${base}${apkPath}`);
-                } catch (e) {
-                  Alert.alert(
-                    'No se pudo actualizar',
-                    'La app no pudo instalarse ahora. Probá de nuevo más tarde.',
-                  );
-                }
-              },
+              onPress: () => startUpdate(`${base}${apkPath}`, remoteVersion),
             },
           ],
         );
@@ -180,6 +159,56 @@ function App() {
       }
     })();
   }, [checking]);
+
+  const startUpdate = useCallback(async (apkUrl: string, newVersion: string) => {
+    const updater = NativeModules.ApkUpdater;
+    if (!updater) {
+      Alert.alert('Error', 'Módulo de actualización no disponible.');
+      return;
+    }
+    try {
+      const can = await updater.canInstall();
+      if (can === false) {
+        Alert.alert(
+          'Permiso de instalación',
+          'Habilitá "Instalar apps desconocidas" para continuar.',
+          [
+            { text: 'Cancelar', style: 'cancel' },
+            { text: 'Configurar', onPress: () => updater.openInstallSettings() },
+          ],
+        );
+        return;
+      }
+    } catch {
+      Alert.alert('Error', 'No se pudo verificar el permiso de instalación.');
+      return;
+    }
+
+    Alert.alert('Actualizando…', `Descargando versión ${newVersion}…`);
+
+    const sub = DeviceEventEmitter.addListener('apkDownloadProgress', (e: { loaded: number; total: number }) => {
+      if (e.total > 0) {
+        const pct = Math.round((e.loaded / e.total) * 100);
+        const mb = (e.loaded / (1024 * 1024)).toFixed(1);
+        const totalMb = (e.total / (1024 * 1024)).toFixed(0);
+      }
+    });
+
+    try {
+      await updater.downloadAndInstall(apkUrl);
+    } catch (e: any) {
+      const msg = e?.message || String(e);
+      if (msg.includes('download_failed')) {
+        Alert.alert('Error de descarga', 'No se pudo descargar el APK. Verificá la conexión y el servidor.');
+      } else if (msg.includes('no_installer')) {
+        Alert.alert('Error', 'No hay instalador de paquetes en el dispositivo.');
+      } else {
+        Alert.alert('Error de actualización', msg || 'No se pudo instalar la actualización.');
+      }
+    } finally {
+      sub.remove();
+    }
+  }, []);
 
   const openAdmin = useCallback(() => {
     setPinInput('');

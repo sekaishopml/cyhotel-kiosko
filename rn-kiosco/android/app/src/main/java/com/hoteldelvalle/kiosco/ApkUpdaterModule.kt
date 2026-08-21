@@ -7,11 +7,13 @@ import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import androidx.core.content.FileProvider
+import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.Promise
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.bridge.ReactContextBaseJavaModule
 import com.facebook.react.bridge.ReactMethod
 import com.facebook.react.bridge.UiThreadUtil
+import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.File
 import java.io.FileOutputStream
 import java.net.HttpURLConnection
@@ -21,6 +23,15 @@ class ApkUpdaterModule(reactContext: ReactApplicationContext) :
     ReactContextBaseJavaModule(reactContext) {
 
   override fun getName(): String = "ApkUpdater"
+
+  private fun emitProgress(loaded: Long, total: Long) {
+    val map = Arguments.createMap()
+    map.putDouble("loaded", loaded.toDouble())
+    map.putDouble("total", total.toDouble())
+    reactApplicationContext
+      .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+      .emit("apkDownloadProgress", map)
+  }
 
   @ReactMethod
   fun canInstall(promise: Promise) {
@@ -59,20 +70,42 @@ class ApkUpdaterModule(reactContext: ReactApplicationContext) :
       try {
         val ctx = reactApplicationContext
         val target = File(ctx.cacheDir, "kiosco-update.apk")
+
         conn = URL(url).openConnection() as HttpURLConnection
-        conn.connectTimeout = 15000
-        conn.readTimeout = 30000
+        conn.connectTimeout = 30000
+        conn.readTimeout = 120000
         conn.setRequestProperty("Accept", "application/vnd.android.package-archive")
         conn.connect()
+
         if (conn.responseCode !in 200..299) {
-          throw IllegalStateException("HTTP ${conn.responseCode}")
+          throw IllegalStateException("HTTP ${conn.responseCode} — No se pudo descargar el APK")
         }
+
+        val contentLength = conn.contentLength.toLong()
+        if (contentLength <= 0L) {
+          throw IllegalStateException("El servidor no informó el tamaño del archivo")
+        }
+
+        emitProgress(0, contentLength)
+
+        var downloaded = 0L
         FileOutputStream(target).use { out ->
-          conn.inputStream.use { inp -> inp.copyTo(out) }
+          conn.inputStream.use { inp ->
+            val buf = ByteArray(64 * 1024)
+            var read: Int
+            while (inp.read(buf).also { read = it } != -1) {
+              out.write(buf, 0, read)
+              downloaded += read
+              emitProgress(downloaded, contentLength)
+            }
+          }
         }
-        if (target.length() == 0L) {
-          throw IllegalStateException("APK vacío")
+
+        if (target.length() != contentLength) {
+          target.delete()
+          throw IllegalStateException("Descarga incompleta: se esperaban ${contentLength} bytes, se recibieron ${target.length()}")
         }
+
         val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", target)
         val intent = Intent(Intent.ACTION_VIEW)
         intent.setDataAndType(uri, "application/vnd.android.package-archive")
