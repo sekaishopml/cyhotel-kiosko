@@ -48,7 +48,7 @@ const s = StyleSheet.create({
   },
   left: { flexShrink: 1 },
   wordmark: {
-    fontFamily: typography.sansMedium,
+    fontFamily: typography.serifBold,
     fontSize: sizes.wordmark,
     color: colors.brandPrimary,
     letterSpacing: 2,
@@ -57,7 +57,7 @@ const s = StyleSheet.create({
     fontFamily: typography.sansMedium,
     fontSize: sizes.clock,
     color: colors.brandPrimary,
-    opacity: 0.45,
+    opacity: 0.4,
     flex: 1,
     textAlign: 'center',
     letterSpacing: 1,
@@ -65,7 +65,7 @@ const s = StyleSheet.create({
   gear: {
     fontSize: 20,
     color: colors.brandPrimary,
-    opacity: 0.35,
+    opacity: 0.3,
     flexShrink: 0,
   },
 });
