@@ -19,7 +19,7 @@ import IdleScreen from './src/components/IdleScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.1.1';
+const APP_VERSION = '6.1.2';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
@@ -344,14 +344,14 @@ function App() {
 const styles = StyleSheet.create({
   app: {
     flex: 1,
-    backgroundColor: colors.brandPrimaryDeep,
+    backgroundColor: colors.surface,
   },
   stage: {
     flex: 1,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(10,18,14,0.6)',
+    backgroundColor: 'rgba(31,59,44,0.5)',
     alignItems: 'center',
     justifyContent: 'center',
     padding: spacing.xl,

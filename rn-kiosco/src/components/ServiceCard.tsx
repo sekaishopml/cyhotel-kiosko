@@ -141,7 +141,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.3,
   },
   subtitleHero: {
-    fontSize: 17,
+    fontSize: sizes.cardSubtitle,
   },
   chevron: {
     position: 'absolute',

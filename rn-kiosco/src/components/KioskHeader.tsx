@@ -24,7 +24,6 @@ function KioskHeader({ onAdminLongPress }: Props) {
     <View style={styles.header}>
       <View style={styles.brand}>
         <Text style={styles.wordmark}>Hotel del Valle</Text>
-        <Text style={styles.tagline}>Estancia boutique</Text>
       </View>
 
       <View style={styles.clock}>
@@ -52,7 +51,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: colors.brandPrimary,
+    backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
   },
@@ -63,7 +62,7 @@ const styles = StyleSheet.create({
     fontFamily: typography.serif,
     fontSize: sizes.wordmark,
     fontWeight: '600',
-    color: colors.textPrimary,
+    color: colors.brandPrimary,
     letterSpacing: 0.8,
   },
   tagline: {
@@ -83,7 +82,7 @@ const styles = StyleSheet.create({
   clockText: {
     fontFamily: typography.serif,
     fontSize: sizes.clock,
-    color: colors.textMuted,
+    color: colors.brandPrimary,
     letterSpacing: 2,
   },
   gearBtn: {
@@ -92,7 +91,7 @@ const styles = StyleSheet.create({
   },
   gear: {
     fontSize: 22,
-    color: colors.textMuted,
+    color: colors.brandPrimary,
   },
 });
 

@@ -66,7 +66,7 @@ function HomeScreen({ onSelectPlan }: Props) {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: colors.brandPrimaryDeep,
+    backgroundColor: colors.surface,
     padding: spacing.md,
   },
   column: {
