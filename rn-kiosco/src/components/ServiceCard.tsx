@@ -77,14 +77,14 @@ const s = StyleSheet.create({
   },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: 30,
+    fontSize: 34,
     letterSpacing: 2,
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: typography.sansMedium,
-    fontSize: 14,
-    marginTop: 5,
+    fontSize: 16,
+    marginTop: 6,
     textAlign: 'center',
     letterSpacing: 0.5,
   },

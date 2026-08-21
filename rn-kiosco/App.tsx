@@ -12,7 +12,7 @@ import SplashScreen from './src/components/SplashScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '9.1.0';
+const APP_VERSION = '9.2.0';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
