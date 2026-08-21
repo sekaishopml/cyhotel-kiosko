@@ -23,7 +23,7 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
   const onIn = () => Animated.spring(press, { toValue: 0.96, stiffness: 350, damping: 16, useNativeDriver: true }).start();
   const onOut = () => Animated.spring(press, { toValue: 1, stiffness: 350, damping: 16, useNativeDriver: true }).start();
 
-  const bgColor = accent ? colors.brandAccent : colors.brandPrimary;
+  const bgColor = accent ? colors.brandAccent : dark ? '#111111' : colors.brandPrimary;
   const txtColor = accent ? colors.brandPrimary : colors.brandCream;
 
   return (

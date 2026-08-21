@@ -5,7 +5,7 @@ export const colors = {
   textMuted: 'rgba(27,46,34,0.55)',
   border: 'rgba(27,46,34,0.12)',
   overlayDark: 'rgba(27,46,34,0.85)',
-  screen: '#F0EAE0',
+  screen: '#F5F0E8',
   white: '#FFFFFF',
   error: '#DC2626',
 };
