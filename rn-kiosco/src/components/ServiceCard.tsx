@@ -17,30 +17,17 @@ type Props = {
 export default function ServiceCard({ title, subtitle, onPress, featured, dark, accent, delay = 0 }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(1)).current;
-  const pressY = useRef(new Animated.Value(0)).current;
-  const borderOpacity = useRef(new Animated.Value(0)).current;
-  const subtitleSlide = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.timing(enter, { toValue: 1, duration: 500, delay, easing: EASE_OUT, useNativeDriver: true }).start();
   }, [enter, delay]);
 
   const onIn = () => {
-    Animated.parallel([
-      Animated.spring(press, { toValue: 0.94, stiffness: 400, damping: 22, useNativeDriver: true }),
-      Animated.spring(pressY, { toValue: -3, stiffness: 400, damping: 22, useNativeDriver: true }),
-      Animated.timing(borderOpacity, { toValue: 1, duration: 150, useNativeDriver: true }),
-      Animated.timing(subtitleSlide, { toValue: 1, duration: 150, useNativeDriver: true }),
-    ]).start();
+    Animated.spring(press, { toValue: 0.94, stiffness: 400, damping: 22, useNativeDriver: true }).start();
   };
 
   const onOut = () => {
-    Animated.parallel([
-      Animated.spring(press, { toValue: 1, stiffness: 300, damping: 18, useNativeDriver: true }),
-      Animated.spring(pressY, { toValue: 0, stiffness: 300, damping: 18, useNativeDriver: true }),
-      Animated.timing(borderOpacity, { toValue: 0, duration: 250, useNativeDriver: true }),
-      Animated.timing(subtitleSlide, { toValue: 0, duration: 250, useNativeDriver: true }),
-    ]).start();
+    Animated.spring(press, { toValue: 1, stiffness: 300, damping: 18, useNativeDriver: true }).start();
   };
 
   const isAccent = accent;
@@ -60,7 +47,7 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
       {
         opacity: enter,
         transform: [
-          { translateY: Animated.add(enter.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }), pressY) },
+          { translateY: enter.interpolate({ inputRange: [0, 1], outputRange: [28, 0] }) },
           { scale: press },
         ],
       },
@@ -74,9 +61,7 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
           style={s.gradient}
         >
           <Text style={[s.title, { color: txtColor }]} numberOfLines={1}>{title.toUpperCase()}</Text>
-          <Animated.View style={{ opacity: borderOpacity.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) }}>
-            <Text style={[s.subtitle, { color: subTxtColor, transform: [{ translateY: subtitleSlide.interpolate({ inputRange: [0, 1], outputRange: [4, 0] }) }] }]} numberOfLines={1}>{subtitle}</Text>
-          </Animated.View>
+          <Text style={[s.subtitle, { color: subTxtColor }]} numberOfLines={1}>{subtitle}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>

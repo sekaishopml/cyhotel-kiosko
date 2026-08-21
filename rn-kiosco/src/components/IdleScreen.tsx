@@ -12,33 +12,18 @@ export default function IdleScreen({ onWake }: Props) {
   const titleSlide = useRef(new Animated.Value(16)).current;
   const dividerWidth = useRef(new Animated.Value(0)).current;
   const hintFade = useRef(new Animated.Value(0)).current;
-  const pulse = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    // Entrada secuencial elegante
     Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }).start();
-
     Animated.spring(logoScale, { toValue: 1, stiffness: 80, damping: 12, delay: 200, useNativeDriver: true }).start();
-
     Animated.parallel([
       Animated.timing(titleFade, { toValue: 1, duration: 500, delay: 400, easing: EASE_OUT, useNativeDriver: true }),
       Animated.timing(titleSlide, { toValue: 0, duration: 500, delay: 400, easing: EASE_OUT, useNativeDriver: true }),
     ]).start();
-
     Animated.timing(dividerWidth, { toValue: 1, duration: 400, delay: 700, easing: EASE_OUT, useNativeDriver: false }).start();
-
-    Animated.timing(hintFade, { toValue: 1, duration: 400, delay: 900, easing: EASE_OUT, useNativeDriver: true }).start(() => {
-      // Pulso continuo después de la entrada
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(pulse, { toValue: 1.04, duration: 2500, useNativeDriver: true }),
-          Animated.timing(pulse, { toValue: 1, duration: 2500, useNativeDriver: true }),
-        ])
-      ).start();
-    });
-
-    return () => { fade.setValue(0); pulse.setValue(1); };
-  }, [fade, logoScale, titleFade, titleSlide, dividerWidth, hintFade, pulse]);
+    Animated.timing(hintFade, { toValue: 1, duration: 400, delay: 900, easing: EASE_OUT, useNativeDriver: true }).start();
+    return () => { fade.setValue(0); };
+  }, [fade, logoScale, titleFade, titleSlide, dividerWidth, hintFade]);
 
   const touch = () => {
     Animated.parallel([
@@ -52,7 +37,7 @@ export default function IdleScreen({ onWake }: Props) {
       <View style={s.watermark}>
         <Text style={s.watermarkTxt}>HV</Text>
       </View>
-      <Animated.View style={[s.content, { transform: [{ scale: Animated.multiply(logoScale, pulse) }] }]}>
+      <Animated.View style={[s.content, { transform: [{ scale: logoScale }] }]}>
         <View style={s.logoBox}>
           <Text style={s.logoTxt}>HV</Text>
         </View>
