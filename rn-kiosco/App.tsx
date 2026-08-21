@@ -12,7 +12,7 @@ import Shimmer from './src/components/Shimmer';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.7.0';
+const APP_VERSION = '6.8.0';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
