@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Animated, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
+import { Animated, Platform, StyleSheet, Text, TextInput, TouchableOpacity, View, Pressable } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { ReactNativeHapticFeedback } from 'react-native-haptic-feedback';
 import { colors, radii, spacing, typography, sizes } from '../theme';
 import { createOrder, PLAN_META, type Order } from '../api';
 import SuccessModal from '../components/SuccessModal';
@@ -15,6 +17,8 @@ type Props = {
   onBack: () => void;
   onSuccess: () => void;
 };
+
+const hapticOpts = { enableVibrateFallback: true, ignoreAndroidSystemSettings: false };
 
 function SummaryRow({ label, value, last }: { label: string; value: string; last?: boolean }) {
   return (
@@ -36,8 +40,14 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
   const canSubmit = name.trim().length > 0 && !loading;
   const bodyAnim = fadeInDown(0);
 
+  const handleBack = () => {
+    ReactNativeHapticFeedback.trigger('impactLight', hapticOpts);
+    onBack();
+  };
+
   const submit = async () => {
     if (!canSubmit) return;
+    ReactNativeHapticFeedback.trigger('impactMedium', hapticOpts);
     setLoading(true);
     setError(null);
     try {
@@ -65,8 +75,8 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
   return (
     <View style={s.screen}>
       <View style={s.titleRow}>
-        <Pressable onPress={onBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
-          <Text style={s.backIcon}>‹</Text>
+        <Pressable onPress={handleBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
+          <Icon name="arrow-left" size={24} color={colors.brandPrimary} />
         </Pressable>
         <Text style={s.title}>CONFIRMACIÓN</Text>
       </View>
@@ -89,6 +99,7 @@ export default function CheckinScreen({ planKey, roomLabel, roomKey, durationLab
       <View style={s.bar}>
         <TouchableOpacity onPress={submit} disabled={!canSubmit} style={[s.cta, !canSubmit && s.ctaDis]} accessibilityLabel="Confirmar reserva">
           <Text style={s.ctaText}>{loading ? 'CONFIRMANDO…' : 'CONFIRMAR RESERVA'}</Text>
+          {!loading && <Icon name="check" size={18} color={colors.brandCream} style={{ marginLeft: 8 }} />}
         </TouchableOpacity>
       </View>
       <SuccessModal visible={showModal} order={order} onClose={closeModal} />
@@ -100,10 +111,20 @@ const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screen },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: sizes.back, lineHeight: 38, color: colors.brandPrimary, marginTop: -2 },
   title: { fontFamily: typography.sansMedium, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
   body: { flex: 1, paddingHorizontal: spacing.screen, paddingBottom: spacing.md },
-  summary: { backgroundColor: colors.white, borderRadius: radii.card, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1, borderColor: colors.border },
+  summary: {
+    backgroundColor: colors.white,
+    borderRadius: radii.card,
+    padding: spacing.lg,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    ...Platform.select({
+      android: { elevation: 2 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 4 },
+    }),
+  },
   sumRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 8 },
   sumRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   sumLabel: { fontSize: sizes.label, fontWeight: '600', color: colors.textMuted, letterSpacing: 1 },
@@ -112,8 +133,18 @@ const s = StyleSheet.create({
   label: { fontSize: sizes.label, fontWeight: '600', color: colors.brandPrimary, marginBottom: spacing.sm, letterSpacing: 1 },
   input: { borderWidth: 1.5, borderColor: colors.border, borderRadius: radii.button, paddingHorizontal: spacing.md, paddingVertical: 14, fontSize: sizes.input, color: colors.brandPrimary, backgroundColor: colors.white },
   error: { color: colors.error, fontSize: sizes.cardSubtitle, marginTop: spacing.md, textAlign: 'center' },
-  bar: { paddingHorizontal: spacing.screen, paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.white },
-  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingVertical: 16, alignItems: 'center' },
+  bar: {
+    paddingHorizontal: spacing.screen,
+    paddingVertical: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.white,
+    ...Platform.select({
+      android: { elevation: 8 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 6 },
+    }),
+  },
+  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingVertical: 16, alignItems: 'center', flexDirection: 'row', justifyContent: 'center' },
   ctaDis: { opacity: 0.4 },
   ctaText: { color: colors.brandCream, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium, letterSpacing: 1 },
 });

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
 import { colors, sizes, spacing, typography } from '../theme';
 
 type Props = { onAdminLongPress: () => void };
@@ -20,17 +21,16 @@ export default function KioskHeader({ onAdminLongPress }: Props) {
 
   return (
     <View style={s.root}>
-      <View style={s.left}>
-        <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
-      </View>
+      <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
       <Text style={s.clock}>{hh}:{mm}</Text>
       <TouchableOpacity
         onLongPress={onAdminLongPress}
         delayLongPress={600}
         hitSlop={{ top: 24, bottom: 24, left: 24, right: 24 }}
         accessibilityLabel="Ajustes"
+        style={s.gearBtn}
       >
-        <Text style={s.gear}>⚙</Text>
+        <Icon name="settings" size={20} color={colors.brandPrimary} style={{ opacity: 0.4 }} />
       </TouchableOpacity>
     </View>
   );
@@ -46,7 +46,6 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
   },
-  left: { flexShrink: 1 },
   wordmark: {
     fontFamily: typography.serifBold,
     fontSize: sizes.wordmark,
@@ -62,10 +61,10 @@ const s = StyleSheet.create({
     textAlign: 'center',
     letterSpacing: 1,
   },
-  gear: {
-    fontSize: 20,
-    color: colors.brandPrimary,
-    opacity: 0.3,
-    flexShrink: 0,
+  gearBtn: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

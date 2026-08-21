@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { Animated, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
+import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View, Pressable } from 'react-native';
+import Icon from 'react-native-vector-icons/Feather';
+import { ReactNativeHapticFeedback } from 'react-native-haptic-feedback';
 import { colors, radii, spacing, typography, sizes } from '../theme';
 import { getServerBase, getTypes, PLAN_META, type RoomType, type TypesResponse } from '../api';
 import RoomCard from '../components/RoomCard';
@@ -18,6 +20,8 @@ type Props = {
   onContinue: (roomLabel: string, total: number) => void;
   onBack: () => void;
 };
+
+const hapticOpts = { enableVibrateFallback: true, ignoreAndroidSystemSettings: false };
 
 export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selectedDays, onSelectRoom, onSelectExtra, onSelectDays, onContinue, onBack }: Props) {
   const [data, setData] = useState<TypesResponse | null>(null);
@@ -63,17 +67,28 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
   const bodyAnim = fadeIn(0);
   const dockAnim = slideUp(0, 80, 350);
 
+  const handleBack = () => {
+    ReactNativeHapticFeedback.trigger('impactLight', hapticOpts);
+    onBack();
+  };
+
+  const handleContinue = () => {
+    ReactNativeHapticFeedback.trigger('impactMedium', hapticOpts);
+    onContinue(currentRoom!.label, total);
+  };
+
   return (
     <View style={s.screen}>
       <View style={s.titleRow}>
-        <Pressable onPress={onBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
-          <Text style={s.backIcon}>‹</Text>
+        <Pressable onPress={handleBack} style={s.backBtn} hitSlop={12} accessibilityLabel="Volver">
+          <Icon name="arrow-left" size={24} color={colors.brandPrimary} />
         </Pressable>
         <Text style={s.title}>{(PLAN_META[planKey]?.name ?? planKey).toUpperCase()}</Text>
       </View>
       <Animated.View style={[s.body, bodyAnim]}>
         {loading ? <Shimmer /> : error ? (
           <View style={s.errorBox}>
+            <Icon name="alert-circle" size={32} color={colors.error} style={{ marginBottom: spacing.md }} />
             <Text style={s.errorText}>No se pudieron cargar las habitaciones.</Text>
             <Pressable onPress={retry} style={s.retryBtn}><Text style={s.retryText}>Reintentar</Text></Pressable>
           </View>
@@ -100,8 +115,9 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
             <Text style={s.totalLabel}>TOTAL</Text>
             <Text style={s.totalValue}>${total}</Text>
           </View>
-          <TouchableOpacity onPress={() => onContinue(currentRoom.label, total)} style={s.cta} accessibilityLabel="Continuar">
+          <TouchableOpacity onPress={handleContinue} style={s.cta} accessibilityLabel="Continuar">
             <Text style={s.ctaText}>CONTINUAR</Text>
+            <Icon name="arrow-right" size={18} color={colors.brandCream} style={{ marginLeft: 8 }} />
           </TouchableOpacity>
         </Animated.View>
       )}
@@ -113,7 +129,6 @@ const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screen },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
   backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: sizes.back, lineHeight: 38, color: colors.brandPrimary, marginTop: -2 },
   title: { fontFamily: typography.sansMedium, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
   body: { flex: 1 },
   grid: { gap: spacing.gap, paddingHorizontal: spacing.screen },
@@ -121,10 +136,23 @@ const s = StyleSheet.create({
   errorText: { color: colors.error, fontSize: sizes.cardSubtitle, marginBottom: spacing.md },
   retryBtn: { paddingVertical: spacing.sm, paddingHorizontal: spacing.lg },
   retryText: { color: colors.brandAccent, fontSize: sizes.cardSubtitle, fontWeight: '600', textDecorationLine: 'underline' },
-  dock: { backgroundColor: colors.white, borderTopWidth: 1, borderTopColor: colors.border, paddingHorizontal: spacing.screen, paddingVertical: spacing.md, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+  dock: {
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    paddingHorizontal: spacing.screen,
+    paddingVertical: spacing.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...Platform.select({
+      android: { elevation: 8 },
+      ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1, shadowRadius: 6 },
+    }),
+  },
   totalBox: { alignItems: 'flex-start' },
   totalLabel: { fontSize: sizes.label, textTransform: 'uppercase', letterSpacing: 1.5, color: colors.textMuted },
   totalValue: { fontFamily: typography.serifBold, fontSize: sizes.totalValue, color: colors.brandPrimary },
-  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingHorizontal: 36, paddingVertical: 14 },
+  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingHorizontal: 28, paddingVertical: 14, flexDirection: 'row', alignItems: 'center' },
   ctaText: { color: colors.brandCream, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium, letterSpacing: 1 },
 });
