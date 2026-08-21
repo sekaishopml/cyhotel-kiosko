@@ -21,7 +21,7 @@ import IdleScreen from './src/components/IdleScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.1.4';
+const APP_VERSION = '6.1.5';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
