@@ -4,6 +4,7 @@ import {
   DeviceEventEmitter,
   Modal as RNModal,
   NativeModules,
+  StatusBar,
   StyleSheet,
   Text,
   TextInput,
@@ -21,7 +22,7 @@ import IdleScreen from './src/components/IdleScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '6.1.5';
+const APP_VERSION = '6.1.6';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 90000;
 
@@ -72,6 +73,13 @@ function App() {
   useEffect(() => {
     getServerBase().then(setServerBaseState);
     installCrashReporter();
+    // Hide status bar on app start for kiosk mode
+    try {
+      StatusBar.setHidden(true);
+      StatusBar.setBarStyle('light-content');
+    } catch (e) {
+      // StatusBar not available in web mode, ignore
+    }
   }, []);
 
   const goHome = useCallback(() => {
@@ -301,6 +309,30 @@ function App() {
                 >
                   <Text style={styles.modalBtnText}>
                     {checking ? 'Buscando…' : 'Buscar actualización'}
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  onPress={() => {
+                    try {
+                      const isHidden = StatusBar.isBarHidden ? StatusBar.isBarHidden() : true;
+                      if (isHidden) {
+                        StatusBar.setHidden(false);
+                        Alert.alert('Modo kiosk', 'Se mostrará la barra de notificaciones y navegación. Reinicia la app para aplicar.');
+                      } else {
+                        StatusBar.setHidden(true);
+                        StatusBar.setBarStyle('light-content');
+                        Alert.alert('Modo kiosk', 'Barra de notificaciones oculta. Usá el icono ⚙ para volver a mostrarla.');
+                      }
+                    } catch (e) {
+                      Alert.alert('Error', 'No se pudo cambiar el modo kiosk');
+                    }
+                  }}
+                  style={[styles.modalBtn, styles.modalBtnOutline]}
+                  accessibilityLabel="Alternar modo kiosk"
+                >
+                  <Text style={styles.modalBtnOutlineText}>
+                    {StatusBar.isBarHidden ? 'Mostrar barra' : 'Ocultar barra'}
                   </Text>
                 </TouchableOpacity>
 
