@@ -117,9 +117,9 @@ export default function RoomScreen({ planKey, selectedRoom, selectedExtra, selec
 const s = StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.screen },
   titleRow: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: spacing.screen, paddingTop: spacing.md, paddingBottom: spacing.sm },
-  backBtn: { width: 44, height: 44, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: sizes.back, lineHeight: 38, color: colors.brandPrimary, marginTop: -2 },
-  title: { fontFamily: typography.sansMedium, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
+  backBtn: { width: 48, height: 48, alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: sizes.back, lineHeight: 40, color: colors.brandPrimary, marginTop: -2 },
+  title: { fontFamily: typography.serifBold, fontSize: sizes.title, color: colors.brandPrimary, letterSpacing: 1.5 },
   body: { flex: 1 },
   grid: { paddingHorizontal: spacing.screen, gap: spacing.gap },
   errorBox: { padding: spacing.screen, alignItems: 'center' },
@@ -143,6 +143,6 @@ const s = StyleSheet.create({
   totalBox: { alignItems: 'flex-start' },
   totalLabel: { fontSize: sizes.label, textTransform: 'uppercase', letterSpacing: 1.5, color: colors.textMuted },
   totalValue: { fontFamily: typography.serifBold, fontSize: sizes.totalValue, color: colors.brandPrimary },
-  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingHorizontal: 36, paddingVertical: 14 },
+  cta: { backgroundColor: colors.brandPrimary, borderRadius: radii.button, paddingHorizontal: 44, paddingVertical: 18 },
   ctaText: { color: colors.brandCream, fontSize: sizes.cta, fontWeight: '600', fontFamily: typography.sansMedium, letterSpacing: 1 },
 });

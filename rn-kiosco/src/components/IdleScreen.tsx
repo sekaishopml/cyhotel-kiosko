@@ -1,17 +1,18 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, StyleSheet, Text, View } from 'react-native';
+import { Animated, Image, StyleSheet, Text, View } from 'react-native';
 import { colors, sizes, spacing, typography } from '../theme';
-import { EASE_OUT } from '../lib/anims';
+import { EASE_OUT, usePulse } from '../lib/anims';
 
-type Props = { onWake?: () => void };
+type Props = { onWake?: () => void; bgUri?: string | null };
 
-export default function IdleScreen({ onWake }: Props) {
+export default function IdleScreen({ onWake, bgUri }: Props) {
   const fade = useRef(new Animated.Value(0)).current;
   const logoScale = useRef(new Animated.Value(0.6)).current;
   const titleFade = useRef(new Animated.Value(0)).current;
   const titleSlide = useRef(new Animated.Value(16)).current;
   const dividerWidth = useRef(new Animated.Value(0)).current;
   const hintFade = useRef(new Animated.Value(0)).current;
+  const hintPulse = usePulse(1700);
 
   useEffect(() => {
     Animated.timing(fade, { toValue: 1, duration: 400, useNativeDriver: true }).start();
@@ -34,6 +35,8 @@ export default function IdleScreen({ onWake }: Props) {
 
   return (
     <Animated.View style={[s.root, { opacity: fade }]} onTouchStart={touch}>
+      {bgUri && <Image source={{ uri: bgUri }} style={s.bg} blurRadius={12} resizeMode="cover" />}
+      <View style={s.overlay} />
       <View style={s.watermark}>
         <Text style={s.watermarkTxt}>HV</Text>
       </View>
@@ -45,8 +48,8 @@ export default function IdleScreen({ onWake }: Props) {
           <Text style={s.label}>BIENVENIDO</Text>
           <Text style={s.wordmark}>HOTEL DEL VALLE</Text>
         </Animated.View>
-        <Animated.View style={[s.divider, { width: dividerWidth.interpolate({ inputRange: [0, 1], outputRange: [0, 40] }) }]} />
-        <Animated.View style={{ opacity: hintFade }}>
+        <Animated.View style={[s.divider, { width: dividerWidth.interpolate({ inputRange: [0, 1], outputRange: [0, 48] }) }]} />
+        <Animated.View style={[s.hintWrap, hintFade, hintPulse]}>
           <Text style={s.hint}>TOCA PARA COMENZAR</Text>
         </Animated.View>
       </Animated.View>
@@ -61,15 +64,22 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  bg: {
+    ...StyleSheet.absoluteFillObject,
+  },
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: colors.overlayDeep,
+  },
   watermark: {
     position: 'absolute',
     bottom: 50,
     right: -10,
-    opacity: 0.05,
+    opacity: 0.06,
     pointerEvents: 'none',
   },
   watermarkTxt: {
-    fontFamily: typography.serifBold,
+    fontFamily: typography.display,
     fontSize: 200,
     color: colors.brandCream,
     letterSpacing: -8,
@@ -79,22 +89,22 @@ const s = StyleSheet.create({
     paddingHorizontal: spacing.xl,
   },
   logoBox: {
-    width: 72,
-    height: 72,
-    borderRadius: 18,
+    width: 84,
+    height: 84,
+    borderRadius: 21,
     backgroundColor: colors.brandAccent,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
   },
   logoTxt: {
-    fontFamily: typography.serifBold,
-    fontSize: 24,
+    fontFamily: typography.displayBold,
+    fontSize: 28,
     color: colors.brandPrimary,
     letterSpacing: 1,
   },
   label: {
-    fontFamily: typography.sansMedium,
+    fontFamily: typography.uiMedium,
     fontSize: sizes.label,
     color: colors.brandAccent,
     letterSpacing: 4,
@@ -103,7 +113,7 @@ const s = StyleSheet.create({
     textAlign: 'center',
   },
   wordmark: {
-    fontFamily: typography.serifBold,
+    fontFamily: typography.displayBold,
     fontSize: sizes.idleTitle,
     color: colors.brandCream,
     letterSpacing: 2,
@@ -116,10 +126,17 @@ const s = StyleSheet.create({
     backgroundColor: colors.brandAccent,
     marginBottom: spacing.xl,
   },
+  hintWrap: {
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: 'rgba(244,238,226,0.25)',
+  },
   hint: {
-    fontFamily: typography.sansMedium,
+    fontFamily: typography.uiMedium,
     fontSize: sizes.idleHint,
-    color: 'rgba(244,238,226,0.4)',
+    color: colors.brandCream,
     letterSpacing: 2,
     textAlign: 'center',
     textTransform: 'uppercase',

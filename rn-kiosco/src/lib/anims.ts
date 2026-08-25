@@ -4,6 +4,7 @@ import { Animated, Easing } from 'react-native';
 export const EASE_OUT = Easing.bezier(0.16, 1, 0.3, 1);    // Suave salida
 export const EASE_IN_OUT = Easing.bezier(0.45, 0, 0.55, 1); // Suave entrada/salida
 export const EASE_SPRING = Easing.bezier(0.34, 1.56, 0.64, 1); // Con rebote sutil
+export const EASE_OUT_EXPO = Easing.bezier(0.19, 1, 0.22, 1); // Entrada "grandiosa"
 
 // Fade + slide down (entrada elegante)
 export function fadeInDown(delay = 0, distance = 24) {
@@ -139,4 +140,73 @@ export function scaleOnPress(to = 0.96) {
 // Stagger entrance (entrada escalonada para listas)
 export function staggerEntrance(count: number, staggerMs = 80) {
   return Array.from({ length: count }, (_, i) => fadeInDown(i * staggerMs));
+}
+
+// Fade + slide up (entrada desde abajo, para modales/listas)
+export function fadeInUp(delay = 0, distance = 24) {
+  const anim = new Animated.Value(0);
+  Animated.timing(anim, {
+    toValue: 1,
+    duration: 500,
+    delay,
+    easing: EASE_OUT,
+    useNativeDriver: true,
+  }).start();
+  return {
+    opacity: anim,
+    transform: [
+      {
+        translateY: anim.interpolate({
+          inputRange: [0, 1],
+          outputRange: [-distance, 0],
+        }),
+      },
+    ],
+  };
+}
+
+// Scale-in con spring suave (entrada de tarjetas / CTAs)
+export function scaleIn(delay = 0, duration = 400) {
+  const anim = new Animated.Value(0.9);
+  Animated.spring(anim, {
+    toValue: 1,
+    friction: 12,
+    tension: 140,
+    delay,
+    useNativeDriver: true,
+  }).start();
+  return {
+    opacity: anim,
+    transform: [{ scale: anim }],
+  };
+}
+
+// Pulso continuo (respiración para CTA idle / loaders)
+export function usePulse(duration = 1600) {
+  const anim = new Animated.Value(0);
+  Animated.loop(
+    Animated.sequence([
+      Animated.timing(anim, { toValue: 1, duration: duration / 2, easing: EASE_IN_OUT, useNativeDriver: true }),
+      Animated.timing(anim, { toValue: 0, duration: duration / 2, easing: EASE_IN_OUT, useNativeDriver: true }),
+    ])
+  ).start();
+  return {
+    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.55, 1] }),
+    transform: [{ scale: anim.interpolate({ inputRange: [0, 1], outputRange: [0.97, 1.03] }) }],
+  };
+}
+
+// Barra de progreso que se llena de izquierda a derecha (width %)
+export function useFill(duration = 1500, delay = 0) {
+  const anim = new Animated.Value(0);
+  Animated.timing(anim, {
+    toValue: 1,
+    duration,
+    delay,
+    easing: EASE_OUT,
+    useNativeDriver: false,
+  }).start();
+  return {
+    width: anim.interpolate({ inputRange: [0, 1], outputRange: ['0%', '100%'] }),
+  };
 }

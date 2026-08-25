@@ -37,7 +37,7 @@ export default function KioskHeader({ onAdminLongPress }: Props) {
 
 const s = StyleSheet.create({
   root: {
-    height: 50,
+    height: 56,
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.screen,
@@ -55,20 +55,20 @@ const s = StyleSheet.create({
     fontFamily: typography.sansMedium,
     fontSize: sizes.clock,
     color: colors.brandPrimary,
-    opacity: 0.4,
+    opacity: 0.6,
     flex: 1,
     textAlign: 'center',
     letterSpacing: 1,
   },
   gearBtn: {
-    width: 40,
-    height: 40,
+    width: 48,
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
   },
   gear: {
-    fontSize: 18,
+    fontSize: 22,
     color: colors.brandPrimary,
-    opacity: 0.3,
+    opacity: 0.55,
   },
 });

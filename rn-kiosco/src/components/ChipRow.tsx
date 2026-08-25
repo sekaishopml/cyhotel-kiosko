@@ -73,8 +73,11 @@ const s = StyleSheet.create({
     borderColor: colors.border,
     backgroundColor: colors.white,
     borderRadius: radii.chip,
-    paddingHorizontal: 18,
-    paddingVertical: 12,
+    paddingHorizontal: 22,
+    paddingVertical: 16,
+    minHeight: 64,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   chipSel: {
     backgroundColor: colors.brandPrimary,

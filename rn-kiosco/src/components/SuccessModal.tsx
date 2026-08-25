@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Modal as RNModal, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { colors, radii, sizes, spacing, typography } from '../theme';
-import { EASE_OUT } from '../lib/anims';
+import { EASE_OUT, usePulse } from '../lib/anims';
 import type { Order } from '../api';
 
 type Props = { visible: boolean; order: Order | null; onClose: () => void };
@@ -20,6 +20,7 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
   const cardScale = useRef(new Animated.Value(0.85)).current;
   const cardFade = useRef(new Animated.Value(0)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
+  const ringPulse = usePulse(1600);
 
   useEffect(() => {
     if (visible) {
@@ -51,9 +52,10 @@ export default function SuccessModal({ visible, order, onClose }: Props) {
     <RNModal visible={visible} transparent animationType="fade" onRequestClose={handleClose}>
       <Animated.View style={[s.overlay, { opacity: overlayFade }]}>
         <Animated.View style={[s.card, { opacity: cardFade, transform: [{ scale: cardScale }] }]}>
-          <Animated.View style={[s.checkCircle, { transform: [{ scale: checkScale }] }]}>
-            <Text style={s.check}>✓</Text>
-          </Animated.View>
+        <Animated.View style={[s.checkRing, ringPulse]} />
+        <Animated.View style={[s.checkCircle, { transform: [{ scale: checkScale }] }]}>
+          <Text style={s.check}>✓</Text>
+        </Animated.View>
           <Text style={s.title}>¡RESERVA CONFIRMADA!</Text>
           <Text style={s.subtitle}>Tu habitación está lista</Text>
           {order && (
@@ -89,6 +91,15 @@ const s = StyleSheet.create({
       android: { elevation: 16 },
       ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.4, shadowRadius: 16 },
     }),
+  },
+  checkRing: {
+    position: 'absolute',
+    top: spacing.md,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
+    borderWidth: 2,
+    borderColor: colors.brandAccent,
   },
   checkCircle: {
     width: 60,

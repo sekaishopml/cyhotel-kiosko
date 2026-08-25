@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, radii, spacing, typography } from '../theme';
+import { colors, radii, sizes, spacing, typography } from '../theme';
 import { EASE_OUT } from '../lib/anims';
 
 type Props = {
@@ -23,7 +23,7 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
   }, [enter, delay]);
 
   const onIn = () => {
-    Animated.spring(press, { toValue: 0.94, stiffness: 400, damping: 22, useNativeDriver: true }).start();
+    Animated.spring(press, { toValue: 0.96, stiffness: 400, damping: 22, useNativeDriver: true }).start();
   };
 
   const onOut = () => {
@@ -87,18 +87,18 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 34,
+    paddingVertical: 38,
     borderRadius: radii.card,
   },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: 34,
+    fontSize: sizes.cardTitle,
     letterSpacing: 2,
     textAlign: 'center',
   },
   subtitle: {
     fontFamily: typography.sansMedium,
-    fontSize: 16,
+    fontSize: sizes.cardSubtitle,
     marginTop: 6,
     textAlign: 'center',
     letterSpacing: 0.5,

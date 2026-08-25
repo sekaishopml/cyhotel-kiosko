@@ -9,12 +9,14 @@ import CheckinScreen from './src/screens/CheckinScreen';
 import ScreenTransition from './src/components/ScreenTransition';
 import IdleScreen from './src/components/IdleScreen';
 import SplashScreen from './src/components/SplashScreen';
+import LoadingScreen from './src/components/LoadingScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '9.7.1';
+const APP_VERSION = '10.0.0';
 const ADMIN_PIN = '12345';
-const IDLE_MS = 90000;
+const IDLE_MS = 120000;
+const SCREEN_ORDER: Record<Screen, number> = { plan: 0, room: 1, checkin: 2 };
 
 function reportCrash(error: unknown, isFatal: boolean) {
   try {
@@ -51,6 +53,14 @@ export default function App() {
   const [idle, setIdle] = useState(false);
   const [splashDone, setSplashDone] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [direction, setDirection] = useState<'forward' | 'back'>('forward');
+  const prevScreen = React.useRef<Screen>('plan');
+
+  useEffect(() => {
+    const prev = prevScreen.current;
+    setDirection(SCREEN_ORDER[screen] >= SCREEN_ORDER[prev] ? 'forward' : 'back');
+    prevScreen.current = screen;
+  }, [screen]);
 
   useEffect(() => {
     getServerBase().then(setServerBaseState);
@@ -128,28 +138,20 @@ export default function App() {
   }
 
   if (loading) {
-    return (
-      <View style={s.loading}>
-        <View style={s.loadingContent}>
-          <View style={s.loadingLogo}>
-            <Text style={s.loadingLogoTxt}>HV</Text>
-          </View>
-        </View>
-      </View>
-    );
+    return <LoadingScreen />;
   }
 
   return (
     <View style={s.app} onTouchStart={wakeUp}>
       <KioskHeader onAdminLongPress={openAdmin} />
       <View style={s.stage}>
-        <ScreenTransition screenKey={screen}>
+        <ScreenTransition screenKey={screen} direction={direction}>
           {screen === 'plan' && <HomeScreen onSelectPlan={selectPlan} />}
           {screen === 'room' && selectedPlan && <RoomScreen planKey={selectedPlan} selectedRoom={selectedRoom} selectedExtra={selectedExtra} selectedDays={selectedDays} onSelectRoom={selectRoom} onSelectExtra={setSelectedExtra} onSelectDays={setSelectedDays} onContinue={continueToCheckin} onBack={goHome} />}
           {screen === 'checkin' && selectedPlan && selectedRoom && <CheckinScreen planKey={selectedPlan} roomLabel={roomLabel} roomKey={selectedRoom} durationLabel={selectedExtra} days={selectedDays} total={total} onBack={() => setScreen('room')} onSuccess={goHome} />}
         </ScreenTransition>
       </View>
-      {idle && <IdleScreen onWake={wakeUp} />}
+      {idle && <IdleScreen onWake={wakeUp} bgUri={serverBase ? `${serverBase}/img/habitacion.jpeg` : null} />}
       <RNModal visible={adminModal} transparent animationType="fade" onRequestClose={() => setAdminModal(false)}>
         <View style={s.mOverlay}>
           <View style={s.mCard}>

@@ -13,8 +13,13 @@ export default function RoomCard({ room, selected, onPress, wide }: Props) {
   return (
     <Animated.View style={[press.style, wide && s.wide]}>
       <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={press.pressIn} onPressOut={press.pressOut} style={[s.card, selected ? s.sel : s.unsel, wide && s.cardWide]}>
-        {photoUri && <Image source={photoUri} style={s.bgImage} blurRadius={6} resizeMode="cover" />}
+        {photoUri && <Image source={photoUri} style={s.bgImage} blurRadius={8} resizeMode="cover" />}
         <View style={[s.overlay, selected && s.overlaySel]} />
+        {selected && (
+          <View style={s.check}>
+            <Text style={s.checkTxt}>✓</Text>
+          </View>
+        )}
         <View style={s.content}>
           <View style={s.top}>
             <Text style={[s.name, selected && s.nameSel]} numberOfLines={1}>{room.label}</Text>
@@ -38,20 +43,37 @@ const s = StyleSheet.create({
     flex: 1,
   },
   card: {
-    height: 110,
+    height: 132,
     borderRadius: radii.card,
-    borderWidth: 1.5,
+    borderWidth: 2,
     overflow: 'hidden',
     justifyContent: 'flex-end',
   },
   cardWide: {
-    height: 130,
+    height: 150,
   },
   sel: {
     borderColor: colors.brandAccent,
   },
   unsel: {
     borderColor: 'rgba(27,46,34,0.08)',
+  },
+  check: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.brandAccent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2,
+  },
+  checkTxt: {
+    color: colors.brandPrimary,
+    fontSize: 18,
+    fontWeight: '700',
   },
   bgImage: {
     ...StyleSheet.absoluteFillObject,

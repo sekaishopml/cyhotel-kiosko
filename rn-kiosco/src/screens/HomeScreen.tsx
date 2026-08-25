@@ -66,7 +66,7 @@ const s = StyleSheet.create({
   },
   heading: {
     fontFamily: typography.serifBold,
-    fontSize: 26,
+    fontSize: 30,
     color: colors.brandPrimary,
     textAlign: 'center',
     letterSpacing: 1,
