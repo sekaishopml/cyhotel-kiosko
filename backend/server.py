@@ -4,6 +4,7 @@ import json
 import math
 import os
 import secrets
+import socket
 import threading
 import time
 from datetime import datetime, timedelta
@@ -149,6 +150,10 @@ SSE_LOCK = threading.Lock()
 # Canal pg_notify entre procesos: el kiosco notifica y admin/master re-emiten a sus clientes SSE.
 PG_NOTIFY_CHANNEL = "cyhotel_changed"
 
+# Caché en memoria del APK: se lee del disco una sola vez y se sirve desde RAM en cada
+# descarga de actualización (evita I/O de disco por request y maximiza la velocidad de envío).
+_APK_CACHE = {"path": None, "mtime": 0.0, "bytes": None}
+
 
 def pg_notify_change(conn, event_type, data=None):
     """NOTIFY dentro de la transacción actual (se entrega en COMMIT)."""
@@ -275,6 +280,13 @@ class Handler(BaseHTTPRequestHandler):
 
     MODE = APP_MODE
     HOTEL = HOTEL_ID
+
+    def setup(self):
+        super().setup()
+        try:
+            self.connection.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        except Exception:
+            pass
 
     def _send(self, code, payload):
         body = json.dumps(
@@ -2995,6 +3007,35 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _load_apk(self, target):
+        """Lee el APK una vez y lo cachea en RAM; lo relee solo si el archivo cambió."""
+        global _APK_CACHE
+        try:
+            mtime = os.path.getmtime(target)
+        except OSError:
+            mtime = 0.0
+        cached = _APK_CACHE
+        if cached["path"] == target and cached["mtime"] == mtime and cached["bytes"] is not None:
+            return cached["bytes"]
+        with open(target, "rb") as f:
+            data = f.read()
+        _APK_CACHE = {"path": target, "mtime": mtime, "bytes": data}
+        return data
+
+    def _serve_apk(self, target):
+        apk = self._load_apk(target)
+        self.send_response(200)
+        self.send_header("Content-Type", "application/vnd.android-package-archive")
+        self.send_header("Content-Disposition", 'attachment; filename="kiosco.apk"')
+        self.send_header("Content-Length", str(len(apk)))
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.send_header("Pragma", "no-cache")
+        self.send_header("Expires", "0")
+        self.send_header("Accept-Ranges", "none")
+        self.end_headers()
+        # Envío directo desde RAM en un solo write (rápido, sin I/O de disco por request).
+        self.wfile.write(apk)
+
     def _serve_static(self, path):
         base = WEB_MASTER_DIR if self.MODE == "master" else WEB_DIR
         name = self._static_map().get(path)
@@ -3006,16 +3047,16 @@ class Handler(BaseHTTPRequestHandler):
             self._error(404, "Página no construida todavía")
             return
         ext = os.path.splitext(target)[1]
-        ctype = {".html": "text/html", ".js": "application/javascript", ".css": "text/css", ".apk": "application/vnd.android.package-archive"}.get(
+        if ext == ".apk":
+            self._serve_apk(target)
+            return
+        ctype = {".html": "text/html", ".js": "application/javascript", ".css": "text/css"}.get(
             ext, "application/octet-stream"
         )
         with open(target, "rb") as f:
             body = f.read()
         self.send_response(200)
-        if ext == ".apk":
-            self.send_header("Content-Type", "application/vnd.android.package-archive")
-            self.send_header("Content-Disposition", 'attachment; filename="kiosko.apk"')
-        elif ext == ".html":
+        if ext == ".html":
             self.send_header("Content-Type", "text/html; charset=utf-8")
         else:
             self.send_header("Content-Type", ctype)
@@ -3086,6 +3127,13 @@ def main():
         worker.start()
         print(f"[worker] hilo de vencimientos activo (cada {WORKER_INTERVAL}s)", flush=True)
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
+    try:
+        server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        server.socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+        # Búfer de envío grande: el APK (50MB) se entrega en menos vueltas de red.
+        server.socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2 * 1024 * 1024)
+    except Exception:
+        pass
     print(f"CyHotel API ({APP_MODE}) en http://localhost:{PORT}", flush=True)
     if APP_MODE == "kiosco":
         print(f"  Kiosco: http://localhost:{PORT}/kiosco", flush=True)
