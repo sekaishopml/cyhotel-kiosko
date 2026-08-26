@@ -37,22 +37,24 @@ export default function RoomScreen() {
     suite: 'SUITE JACUZZI',
   }
 
+  const hasExtras = currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0
+
   return (
     <div className="h-full flex flex-col slide-in-right">
-      <div className="shrink-0 px-[var(--pad)] py-[var(--gap)] flex items-center gap-3">
-        <button onClick={goBack} className="tap-scale w-10 h-10 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+      <div className="shrink-0 px-4 py-3 flex items-center gap-3">
+        <button onClick={goBack} className="tap-scale w-9 h-9 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="font-display text-[length:var(--fs-section)] text-navy font-bold uppercase">
+        <h2 className="font-display text-[length:var(--fs-body)] text-navy font-bold uppercase">
           {planLabels[selectedPlan!] ?? selectedPlan}
         </h2>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-[var(--pad)] pb-[var(--gap)]">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-3">
         {loading && (
-          <div className="grid grid-cols-2 gap-[var(--gap)]">
+          <div className="grid grid-cols-2 gap-3">
             {[1, 2, 3, 4].map(i => (
               <div key={i} className="skeleton" style={{ height: 'var(--room-h)', minHeight: 'var(--tap)' }} />
             ))}
@@ -85,7 +87,7 @@ export default function RoomScreen() {
         )}
 
         {!loading && !error && rooms.length > 0 && (
-          <div className="grid grid-cols-2 gap-[var(--gap)]">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
             {rooms.map((room, i) => (
               <div
                 key={room.key}
@@ -101,62 +103,64 @@ export default function RoomScreen() {
             ))}
           </div>
         )}
-
-        {currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0 && (
-          <div className="mt-4">
-            <p className="text-[length:var(--fs-small)] font-semibold text-slate mb-2 uppercase">Duración</p>
-            <div className="flex flex-wrap gap-2">
-              {Object.entries(currentRoom.extras).map(([key, val]: [string, { label: string; price: number }]) => (
-                <button
-                  key={key}
-                  onClick={() => selectExtra(selectedExtra === key ? null : key)}
-                  className={`tap-scale px-4 py-2 rounded-full text-[length:var(--fs-small)] font-bold border-2 transition-all duration-200 uppercase ${
-                    selectedExtra === key
-                      ? 'bg-navy text-white border-navy'
-                      : 'bg-white text-navy border-navy/15 hover:border-gold/40'
-                  }`}
-                >
-                  {val.label} · ${val.price}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {selectedPlan === 'hospedaje' && (
-          <div className="mt-4">
-            <p className="text-[length:var(--fs-small)] font-semibold text-slate mb-2 uppercase">Noches</p>
-            <div className="flex flex-wrap gap-2">
-              {Array.from({ length: 7 }, (_, i) => i + 1).map(d => (
-                <button
-                  key={d}
-                  onClick={() => selectDays(d)}
-                  className={`tap-scale px-4 py-2 rounded-full text-[length:var(--fs-small)] font-bold border-2 transition-all duration-200 ${
-                    selectedDays === d
-                      ? 'bg-navy text-white border-navy'
-                      : 'bg-white text-navy border-navy/15 hover:border-gold/40'
-                  }`}
-                >
-                  {d} {d === 1 ? 'noche' : 'noches'} · ${basePrice * d}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {selectedRoom && (
-        <div className="shrink-0 bg-white border-t border-navy/8 px-[var(--pad)] py-[var(--gap)] flex items-center gap-4 animate-slide-up">
-          <div className="flex-1">
-            <p className="text-[length:var(--fs-small)] text-slate uppercase tracking-wide font-semibold">Total</p>
-            <p className="font-display text-[length:var(--fs-section)] text-navy font-bold">${total}</p>
+        <div className="shrink-0 bg-white border-t border-navy/8 px-4 py-3 animate-slide-up">
+          {hasExtras && (
+            <div className="mb-3">
+              <p className="text-[length:0.7rem] font-semibold text-slate mb-2 uppercase tracking-wide">Duración</p>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
+                  <button
+                    key={key}
+                    onClick={() => selectExtra(selectedExtra === key ? null : key)}
+                    className={`tap-scale shrink-0 px-3 py-1.5 rounded-full text-[length:0.7rem] font-bold border-2 transition-all duration-200 uppercase ${
+                      selectedExtra === key
+                        ? 'bg-navy text-white border-navy'
+                        : 'bg-white text-navy border-navy/15 hover:border-gold/40'
+                    }`}
+                  >
+                    {val.label} · ${val.price}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {selectedPlan === 'hospedaje' && (
+            <div className="mb-3">
+              <p className="text-[length:0.7rem] font-semibold text-slate mb-2 uppercase tracking-wide">Noches</p>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                {Array.from({ length: 7 }, (_, i) => i + 1).map(d => (
+                  <button
+                    key={d}
+                    onClick={() => selectDays(d)}
+                    className={`tap-scale shrink-0 px-3 py-1.5 rounded-full text-[length:0.7rem] font-bold border-2 transition-all duration-200 ${
+                      selectedDays === d
+                        ? 'bg-navy text-white border-navy'
+                        : 'bg-white text-navy border-navy/15 hover:border-gold/40'
+                    }`}
+                  >
+                    {d} {d === 1 ? 'noche' : 'noches'} · ${basePrice * d}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <p className="text-[length:0.7rem] text-slate uppercase tracking-wide font-semibold">Total</p>
+              <p className="font-display text-[length:var(--fs-section)] text-navy font-bold">${total}</p>
+            </div>
+            <button
+              onClick={() => goTo('checkin')}
+              className="tap-scale bg-navy text-white rounded-2xl px-8 py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
+            >
+              Continuar
+            </button>
           </div>
-          <button
-            onClick={() => goTo('checkin')}
-            className="tap-scale bg-navy text-white rounded-2xl px-8 py-[var(--gap)] font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
-          >
-            Continuar
-          </button>
         </div>
       )}
     </div>

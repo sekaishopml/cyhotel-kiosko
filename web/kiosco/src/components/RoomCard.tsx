@@ -11,10 +11,10 @@ export default function RoomCard({ room, selected, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`tap-scale flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden border-2 transition-all duration-200 ${
+      className={`tap-scale flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden transition-all duration-200 ${
         selected
-          ? 'bg-navy border-gold text-white ring-2 ring-gold/30'
-          : 'bg-white border-gold/12 text-navy hover:border-gold/30 card-shadow'
+          ? 'bg-navy text-white ring-2 ring-gold shadow-lg'
+          : 'bg-white text-navy hover:bg-navy/5 card-shadow'
       }`}
     >
       <img
