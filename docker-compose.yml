@@ -39,6 +39,8 @@ services:
     restart: always
     networks:
       - backend
+    volumes:
+      - ./web:/app/web
 
   admin:
     build:
