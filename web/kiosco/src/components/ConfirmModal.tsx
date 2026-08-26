@@ -14,11 +14,10 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, a
         className="animate-pop bg-white rounded-3xl p-7 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]"
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-sage/20 flex items-center justify-center">
-          <svg className="w-10 h-10 text-sage" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        </div>
+        <svg className="w-20 h-20 mx-auto mb-4" viewBox="0 0 52 52">
+          <circle className="checkmark-circle" cx="26" cy="26" r="23" fill="none" stroke="#6B8F71" strokeWidth="2.5" />
+          <path className="checkmark-check" fill="none" stroke="#6B8F71" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+        </svg>
 
         <h3 className="font-display text-[length:var(--fs-section)] text-navy font-bold mb-1">
           ¡RESERVA CONFIRMADA!
@@ -27,7 +26,7 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, a
           Tu habitación está lista
         </p>
 
-        <div className="bg-cream border-l-4 border-gold rounded-2xl p-4 text-left space-y-3">
+        <div className="bg-cream border-l-4 border-gold rounded-2xl p-4 text-left space-y-2.5">
           <p className="text-[length:var(--fs-body)]">
             <span className="font-bold text-navy">ID:</span> {orderId}
           </p>

@@ -9,11 +9,10 @@ export default function OfflineModal({ onClose }: Props) {
         className="animate-pop bg-white rounded-3xl p-7 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]"
         onClick={e => e.stopPropagation()}
       >
-        <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
-          <svg className="w-10 h-10 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+        <svg className="w-20 h-20 mx-auto mb-4" viewBox="0 0 52 52">
+          <circle className="checkmark-circle" cx="26" cy="26" r="23" fill="none" stroke="#D4A574" strokeWidth="2.5" />
+          <path className="checkmark-check" fill="none" stroke="#D4A574" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" d="M14.1 27.2l7.1 7.2 16.7-16.8" />
+        </svg>
 
         <h3 className="font-display text-[length:var(--fs-section)] text-navy font-bold mb-1 uppercase">
           Reserva Guardada

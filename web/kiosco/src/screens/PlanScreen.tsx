@@ -22,7 +22,8 @@ export default function PlanScreen() {
         {plans.map((plan, i) => (
           <div
             key={plan.key}
-            className={`flex-1 min-h-0 opacity-0 animate-fade-up stagger-${i + 1}`}
+            className="flex-1 min-h-0 opacity-0 animate-fade-up"
+            style={{ animationDelay: `${i * 0.06}s` }}
           >
             <PlanCard plan={plan} onClick={() => selectPlan(plan.key)} />
           </div>

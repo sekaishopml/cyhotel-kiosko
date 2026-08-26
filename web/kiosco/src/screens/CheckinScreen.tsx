@@ -44,7 +44,7 @@ export default function CheckinScreen() {
 
   return (
     <>
-      <div className="h-full flex flex-col screen-enter">
+      <div className="h-full flex flex-col slide-in-right">
         <div className="shrink-0 px-[var(--pad)] py-[var(--gap)] flex items-center gap-3">
           <button onClick={goBack} className="tap-scale w-10 h-10 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -66,10 +66,10 @@ export default function CheckinScreen() {
       </div>
 
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm">
           <div className="bg-white rounded-2xl px-8 py-6 text-center shadow-lg">
-            <div className="w-8 h-8 border-3 border-navy/20 border-t-navy rounded-full animate-spin mx-auto" />
-            <p className="mt-3 font-semibold text-navy uppercase">Confirmando…</p>
+            <div className="w-10 h-10 border-[3px] border-navy/15 border-t-navy rounded-full animate-spin mx-auto" />
+            <p className="mt-3 font-bold text-navy uppercase text-[length:var(--fs-small)]">Confirmando…</p>
           </div>
         </div>
       )}

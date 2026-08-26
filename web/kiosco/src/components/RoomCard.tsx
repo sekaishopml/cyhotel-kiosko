@@ -11,10 +11,10 @@ export default function RoomCard({ room, selected, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`tap-scale flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden border-2 transition-all ${
+      className={`tap-scale flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden border-2 transition-all duration-200 ${
         selected
-          ? 'bg-navy border-navy text-white ring-2 ring-gold/40'
-          : 'bg-white border-gold/15 text-navy hover:border-gold/40'
+          ? 'bg-navy border-gold text-white ring-2 ring-gold/30'
+          : 'bg-white border-gold/12 text-navy hover:border-gold/30 card-shadow'
       }`}
     >
       <img
@@ -32,7 +32,7 @@ export default function RoomCard({ room, selected, onClick }: Props) {
             ${room.price}
           </span>
           {room.free && (
-            <span className="text-[length:0.7rem] bg-sage text-white px-2 py-0.5 rounded-full font-bold uppercase">
+            <span className="text-[length:0.65rem] bg-sage text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide">
               Gratis
             </span>
           )}

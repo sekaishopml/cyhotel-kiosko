@@ -38,7 +38,7 @@ export default function RoomScreen() {
   }
 
   return (
-    <div className="h-full flex flex-col screen-enter">
+    <div className="h-full flex flex-col slide-in-right">
       <div className="shrink-0 px-[var(--pad)] py-[var(--gap)] flex items-center gap-3">
         <button onClick={goBack} className="tap-scale w-10 h-10 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
@@ -53,25 +53,45 @@ export default function RoomScreen() {
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-[var(--pad)] pb-[var(--gap)]">
         {loading && (
           <div className="grid grid-cols-2 gap-[var(--gap)]">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="h-[var(--room-h)] rounded-2xl bg-white/50 animate-pulse" />
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="skeleton" style={{ height: 'var(--room-h)', minHeight: 'var(--tap)' }} />
             ))}
           </div>
         )}
 
         {error && (
-          <div className="text-center py-12">
-            <p className="text-red-500 font-semibold mb-3">{error}</p>
-            <button onClick={() => window.location.reload()} className="text-gold underline font-semibold">
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 rounded-full bg-navy/5 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-navy/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+              </svg>
+            </div>
+            <p className="text-navy/60 font-semibold mb-3">{error}</p>
+            <button onClick={() => window.location.reload()} className="text-gold font-bold underline">
               Reintentar
             </button>
           </div>
         )}
 
-        {!loading && !error && (
+        {!loading && !error && rooms.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-center">
+            <div className="w-16 h-16 rounded-full bg-navy/5 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-navy/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+              </svg>
+            </div>
+            <p className="text-navy/60 font-semibold">No hay habitaciones disponibles</p>
+          </div>
+        )}
+
+        {!loading && !error && rooms.length > 0 && (
           <div className="grid grid-cols-2 gap-[var(--gap)]">
             {rooms.map((room, i) => (
-              <div key={room.key} className={`opacity-0 animate-fade-up stagger-${Math.min(i + 1, 4)}`}>
+              <div
+                key={room.key}
+                className="opacity-0 animate-fade-up"
+                style={{ animationDelay: `${i * 0.06}s` }}
+              >
                 <RoomCard
                   room={room}
                   selected={selectedRoom === room.key}
@@ -90,7 +110,7 @@ export default function RoomScreen() {
                 <button
                   key={key}
                   onClick={() => selectExtra(selectedExtra === key ? null : key)}
-                  className={`tap-scale px-4 py-2 rounded-full text-[length:var(--fs-small)] font-bold border-2 transition-all uppercase ${
+                  className={`tap-scale px-4 py-2 rounded-full text-[length:var(--fs-small)] font-bold border-2 transition-all duration-200 uppercase ${
                     selectedExtra === key
                       ? 'bg-navy text-white border-navy'
                       : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -111,7 +131,7 @@ export default function RoomScreen() {
                 <button
                   key={d}
                   onClick={() => selectDays(d)}
-                  className={`tap-scale px-4 py-2 rounded-full text-[length:var(--fs-small)] font-bold border-2 transition-all ${
+                  className={`tap-scale px-4 py-2 rounded-full text-[length:var(--fs-small)] font-bold border-2 transition-all duration-200 ${
                     selectedDays === d
                       ? 'bg-navy text-white border-navy'
                       : 'bg-white text-navy border-navy/15 hover:border-gold/40'
