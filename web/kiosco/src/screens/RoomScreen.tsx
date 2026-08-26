@@ -9,6 +9,7 @@ export default function RoomScreen() {
   const [rooms, setRooms] = useState<RoomType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [expandedRoom, setExpandedRoom] = useState<string | null>(null)
 
   useEffect(() => {
     let cancelled = false
@@ -21,6 +22,15 @@ export default function RoomScreen() {
     return () => { cancelled = true }
   }, [selectedPlan])
 
+  const handleRoomClick = (roomKey: string) => {
+    if (expandedRoom === roomKey) {
+      setExpandedRoom(null)
+    } else {
+      setExpandedRoom(roomKey)
+      selectRoom(roomKey)
+    }
+  }
+
   const currentRoom = rooms.find(r => r.key === selectedRoom)
   const basePrice = currentRoom?.price ?? 0
   const extraPrice = selectedExtra && currentRoom?.extras[selectedExtra]
@@ -28,9 +38,7 @@ export default function RoomScreen() {
     : 0
   const total = selectedPlan === 'hospedaje'
     ? basePrice * selectedDays
-    : selectedPlan === 'amanecida'
-      ? basePrice
-      : basePrice + extraPrice
+    : basePrice + extraPrice
 
   const planLabels: Record<string, string> = {
     momento: 'MOMENTO',
@@ -100,7 +108,8 @@ export default function RoomScreen() {
                   room={room}
                   selected={selectedRoom === room.key}
                   selectedPlan={selectedPlan!}
-                  onClick={() => selectRoom(room.key)}
+                  expanded={expandedRoom === room.key}
+                  onClick={() => handleRoomClick(room.key)}
                 />
               </div>
             ))}
@@ -108,7 +117,7 @@ export default function RoomScreen() {
         )}
       </div>
 
-      {selectedRoom && (
+      {selectedRoom && !expandedRoom && (
         <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 animate-slide-up">
           {hasExtras && (
             <div className="mb-3">

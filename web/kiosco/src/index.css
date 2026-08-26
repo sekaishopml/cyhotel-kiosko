@@ -189,3 +189,74 @@ body {
 .card-shadow:hover {
   box-shadow: 0 8px 30px -6px rgba(15, 23, 42, 0.15);
 }
+
+/* Room card expand/collapse */
+.room-card {
+  transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+  overflow: hidden;
+}
+
+.room-card-compact {
+  min-height: var(--tap);
+}
+
+.room-card-expanded {
+  min-height: 280px;
+}
+
+.room-card-shrunk {
+  min-height: 56px;
+  opacity: 0.6;
+  transform: scale(0.97);
+}
+
+/* Photo carousel */
+.carousel-container {
+  position: relative;
+  width: 100%;
+  height: 160px;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.05);
+}
+
+.carousel-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: opacity 0.4s ease;
+}
+
+.carousel-dots {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+}
+
+.carousel-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.carousel-dot.active {
+  background: #D4A574;
+  width: 14px;
+  border-radius: 3px;
+}
+
+/* Chevron rotate */
+.chevron-rotate {
+  transition: transform 0.3s ease;
+}
+
+.chevron-rotate.open {
+  transform: rotate(180deg);
+}
