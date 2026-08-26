@@ -62,7 +62,7 @@ export default function RoomScreen() {
         </h2>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-2">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-4">
         {loading && (
           <div className="flex flex-col gap-2.5">
             {[1, 2, 3, 4].map(i => (
@@ -118,7 +118,7 @@ export default function RoomScreen() {
       </div>
 
       {selectedRoom && (
-        <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 animate-slide-up">
+        <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 bottom-bar">
           {hasExtras && (
             <div className="mb-3">
               <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
