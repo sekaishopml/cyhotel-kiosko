@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { fadeInUp } from '../lib/animations'
+import { fadeInUp, screen, modalPop } from '../lib/animations'
 import { createOrder } from '../api/client'
 import { enqueueOrder } from '../lib/offlineQueue'
 import Modal from '../components/Modal'
@@ -72,7 +72,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
 
   return (
     <>
-      <motion.div className="h-full flex flex-col" {...fadeInUp}>
+      <motion.div className="h-full flex flex-col" {...screen}>
         <div className="shrink-0 px-[var(--pad)] pt-[var(--gap)] pb-[var(--gap)] flex items-center gap-3">
           <button onClick={onBack} className="text-verde-600 hover:text-verde-900 transition-colors">
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -84,33 +84,33 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
 
         <div className="flex-1 min-h-0 overflow-hidden px-[var(--pad)] pb-[var(--gap)]">
           <div className="bg-crema rounded-2xl p-5 space-y-2 mb-6">
-            <p className="text-[length:var(--fs-small)]"><span className="font-semibold text-verde-900">Plan:</span> {planLabels[planKey] ?? planKey}</p>
-            <p className="text-[length:var(--fs-small)]"><span className="font-semibold text-verde-900">Habitación:</span> {roomKey}</p>
-            {extra && <p className="text-[length:var(--fs-small)]"><span className="font-semibold text-verde-900">Duración:</span> {extra}</p>}
+            <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Plan:</span> {planLabels[planKey] ?? planKey}</p>
+            <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Habitación:</span> {roomKey}</p>
+            {extra && <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Duración:</span> {extra}</p>}
             {planKey === 'hospedaje' && (
-              <p className="text-[length:var(--fs-small)]"><span className="font-semibold text-verde-900">Noches:</span> {days}</p>
+              <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Noches:</span> {days}</p>
             )}
           </div>
 
           <div className="space-y-4 mb-6">
             <div>
-              <label className="block text-[length:var(--fs-small)] font-medium text-verde-900 mb-1">Nombre completo *</label>
+              <label className="block text-[length:var(--fs-body)] font-bold text-verde-900 mb-2">Nombre completo *</label>
               <input
                 type="text"
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Tu nombre"
-                className="w-full rounded-xl border border-verde-900/20 px-4 py-[var(--pad)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 transition-colors"
+                className="w-full rounded-2xl border-2 border-verde-900/20 px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 transition-colors"
               />
             </div>
             <div>
-              <label className="block text-[length:var(--fs-small)] font-medium text-verde-900 mb-1">Documento (opcional)</label>
+              <label className="block text-[length:var(--fs-body)] font-bold text-verde-900 mb-2">Documento (opcional)</label>
               <input
                 type="text"
                 value={document}
                 onChange={e => setDocument(e.target.value)}
                 placeholder="DNI o pasaporte"
-                className="w-full rounded-xl border border-verde-900/20 px-4 py-[var(--pad)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 transition-colors"
+                className="w-full rounded-2xl border-2 border-verde-900/20 px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 transition-colors"
               />
             </div>
           </div>
@@ -122,10 +122,10 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
 
         <div className="shrink-0 px-[var(--pad)] py-[var(--gap)] border-t border-verde-900/10">
           <motion.button
-            whileTap={{ scale: 0.95 }}
+            whileTap={{ scale: 0.96 }}
             onClick={handleSubmit}
             disabled={!canSubmit || loading}
-            className="w-full bg-verde-900 text-white rounded-2xl py-[var(--pad)] font-semibold text-[length:var(--fs-body)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-verde-700 transition-colors"
+            className="w-full bg-verde-900 text-white rounded-2xl py-[var(--pad)] font-extrabold text-[length:var(--fs-section)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-verde-700 transition-colors"
           >
             {loading ? 'Confirmando…' : 'Confirmar Reserva'}
           </motion.button>
@@ -144,24 +144,31 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
         />
       )}
       {offline && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onSuccess}>
-          <div
-            className="bg-white rounded-3xl p-6 max-w-sm w-full text-center"
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          onClick={onSuccess}
+        >
+          <motion.div
+            {...modalPop}
             onClick={e => e.stopPropagation()}
+            className="bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-soft-lg"
           >
             <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center text-3xl">⏳</div>
-            <p className="mt-3 text-[length:var(--fs-body)] font-semibold">Reserva guardada</p>
+            <p className="mt-3 text-[length:var(--fs-body)] font-extrabold">Reserva guardada</p>
             <p className="mt-1 text-[length:var(--fs-small)] opacity-70">
               No hay conexión con recepción ahora. Se enviará automáticamente en cuanto vuelva.
             </p>
             <button
               onClick={onSuccess}
-              className="mt-4 px-6 py-3 rounded-2xl bg-[var(--accent)] text-black font-bold text-[length:var(--fs-body)]"
+              className="mt-4 px-6 py-3 rounded-2xl bg-[var(--accent)] text-black font-extrabold text-[length:var(--fs-body)]"
             >
               Listo
             </button>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
     </>
   )
