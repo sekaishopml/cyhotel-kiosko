@@ -4,9 +4,9 @@
 
 :root {
   /* Tipografía grande y bold para tercera edad (vh para caber sin scroll en 8") */
-  --fs-display: clamp(2.25rem, 5vw, 3.25rem);
+  --fs-display: clamp(2.5rem, 6vw, 3.5rem);
   --fs-section: clamp(1.6rem, 3.4vh, 2.2rem);
-  --fs-plan-name: clamp(1.9rem, 4.2vh, 2.6rem);
+  --fs-plan-name: clamp(2.2rem, 5.5vh, 3.4rem);
   --fs-plan-sub: clamp(1rem, 2.4vh, 1.35rem);
   --fs-room-name: clamp(1.4rem, 3vh, 1.9rem);
   --fs-body: clamp(1.1rem, 2.2vh, 1.35rem);

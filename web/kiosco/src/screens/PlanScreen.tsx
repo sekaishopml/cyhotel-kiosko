@@ -23,7 +23,7 @@ export default function PlanScreen({ onSelect }: Props) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="font-serif text-[length:var(--fs-display)] text-verde-900 font-semibold mb-[var(--gap)]"
+        className="font-serif text-[length:var(--fs-display)] text-verde-900 font-bold uppercase tracking-wide text-center mb-[var(--gap)]"
       >
         Elegí tu plan
       </motion.h2>

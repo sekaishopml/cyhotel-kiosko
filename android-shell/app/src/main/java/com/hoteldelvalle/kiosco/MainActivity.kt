@@ -56,7 +56,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "11.2.0"
+        const val APP_VERSION = "11.3.0"
         private const val TAPS_REQUIRED = 5
         private const val TAP_TIMEOUT_MS = 2000L
     }
@@ -71,6 +71,7 @@ class MainActivity : Activity() {
         installCrashReporter()
         logBoot("onCreate")
         startWatchdog()
+        autoCheckUpdate()
 
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val savedUrl = prefs.getString(KEY_URL, null)
@@ -239,7 +240,8 @@ class MainActivity : Activity() {
             wv.settings.domStorageEnabled = true
             wv.settings.databaseEnabled = true
             wv.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
-            wv.settings.cacheMode = WebSettings.LOAD_DEFAULT
+            // Sin caché: los cambios del frontend en el server se ven de inmediato.
+            wv.settings.cacheMode = WebSettings.LOAD_NO_CACHE
             // Necesario para cargar la UI empaquetada localmente (file:///android_asset)
             wv.settings.allowFileAccess = true
             wv.settings.allowContentAccess = true
@@ -475,6 +477,36 @@ class MainActivity : Activity() {
                 }
             }
             .show()
+    }
+
+    // Chequeo automático y silencioso al arrancar: avisa si hay nueva versión.
+    private fun autoCheckUpdate() {
+        thread {
+            try {
+                val c = URL(UPDATE_API).openConnection() as HttpURLConnection
+                c.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                c.connectTimeout = 10000
+                c.readTimeout = 10000
+                val code = c.responseCode
+                val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
+                c.disconnect()
+                val tagName = body?.let { json ->
+                    val idx = json.indexOf("\"tag_name\"")
+                    if (idx >= 0) {
+                        val s = json.indexOf("\"", idx + 11) + 1
+                        val e = json.indexOf("\"", s)
+                        if (s > 0 && e > s) json.substring(s, e) else null
+                    } else null
+                }
+                if (tagName != null && tagName != "v$APP_VERSION") {
+                    handler.post {
+                        if (!isFinishing && !isDestroyed)
+                            Toast.makeText(this, "Nueva versión disponible: $tagName", Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (_: Exception) {
+            }
+        }
     }
 
     private fun checkForUpdate() {
