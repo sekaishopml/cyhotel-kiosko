@@ -39,10 +39,10 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, a
           <p className="text-[length:var(--fs-body)]">
             <span className="font-bold text-navy">CHECK-OUT:</span> {checkOut}
           </p>
-          <p className="text-[length:var(--fs-body)]">
-            <span className="font-bold text-navy">TOTAL:</span>{' '}
-            <span className="font-extrabold text-gold">${amount}</span>
-          </p>
+          <div className="pt-2 border-t border-navy/10">
+            <span className="font-bold text-navy text-[length:var(--fs-body)]">TOTAL: </span>
+            <span className="font-extrabold text-gold text-[length:var(--fs-display)]">${amount}</span>
+          </div>
         </div>
 
         <button
