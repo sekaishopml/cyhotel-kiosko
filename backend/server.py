@@ -408,6 +408,9 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = unquote(urlparse(self.path).path).rstrip("/") or "/"
         try:
+            if path == "/api/health":
+                self.api_health()
+                return
             if path == "/api/events":
                 if self.MODE == "kiosco":
                     self._error(404, "Ruta no encontrada")
@@ -2643,6 +2646,29 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, payload)
         except Exception:
             self._error(500, "No se pudo leer la versión")
+
+    def api_health(self):
+        """Endpoint ligero para healthchecks (Docker, uptime, watchdog del quiosco)."""
+        db_ok = False
+        try:
+            conn = db()
+            try:
+                cur = conn.cursor()
+                cur.execute("SELECT 1")
+                cur.fetchone()
+                db_ok = True
+            finally:
+                conn.close()
+        except Exception:
+            db_ok = False
+        status = "ok" if db_ok else "degraded"
+        code = 200 if db_ok else 503
+        self._send(code, {
+            "status": status,
+            "db": "ok" if db_ok else "down",
+            "mode": self.MODE,
+            "ts": int(time.time()),
+        })
 
     def kiosco_crash(self, data):
         """Registra crashes de la app Android para diagnóstico remoto."""

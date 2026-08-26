@@ -1,7 +1,0 @@
-com.hoteldelvalle.kiosco.app-pngs-0 /home/CyHotel/android-shell/app/build/generated/res/pngs/release
-com.hoteldelvalle.kiosco.app-resValues-1 /home/CyHotel/android-shell/app/build/generated/res/resValues/release
-com.hoteldelvalle.kiosco.app-packageReleaseResources-2 /home/CyHotel/android-shell/app/build/intermediates/incremental/release/packageReleaseResources/merged.dir
-com.hoteldelvalle.kiosco.app-packageReleaseResources-3 /home/CyHotel/android-shell/app/build/intermediates/incremental/release/packageReleaseResources/stripped.dir
-com.hoteldelvalle.kiosco.app-release-4 /home/CyHotel/android-shell/app/build/intermediates/merged_res/release/mergeReleaseResources
-com.hoteldelvalle.kiosco.app-main-5 /home/CyHotel/android-shell/app/src/main/res
-com.hoteldelvalle.kiosco.app-release-6 /home/CyHotel/android-shell/app/src/release/res

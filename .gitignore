@@ -2,6 +2,14 @@
 /dist/
 *.apk
 *.iml
+web/kiosco/dist/
+backups/
+logs/
+
+# Android build (no versionar outputs)
+android-shell/.gradle/
+android-shell/app/build/
+android-shell/build/
 
 # Secretos / firma
 /keys/
@@ -10,6 +18,7 @@ keystore.properties
 local.properties
 .env
 .env.*
+!.env.example
 
 # Python
 __pycache__/

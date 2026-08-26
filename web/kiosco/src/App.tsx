@@ -1,10 +1,11 @@
 import { Routes, Route, useNavigate } from 'react-router-dom'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import PlanScreen from './screens/PlanScreen'
 import RoomScreen from './screens/RoomScreen'
 import CheckinScreen from './screens/CheckinScreen'
 import Header from './components/Header'
+import { syncPending } from './lib/offlineQueue'
 
 interface AppState {
   selectedPlan: string | null
@@ -45,6 +46,18 @@ export default function App() {
     setState({ selectedPlan: null, selectedRoom: null, selectedExtra: null, selectedDays: 1 })
     navigate('/')
   }, [navigate])
+
+  // Reintenta enviar las reservas guardadas offline (cola 24/7).
+  useEffect(() => {
+    const tick = () => { syncPending().catch(() => {}) }
+    const id = setInterval(tick, 30000)
+    window.addEventListener('online', tick)
+    tick()
+    return () => {
+      clearInterval(id)
+      window.removeEventListener('online', tick)
+    }
+  }, [])
 
   return (
     <div className="h-full flex flex-col bg-white">

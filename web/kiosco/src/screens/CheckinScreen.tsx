@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { fadeInUp } from '../lib/animations'
 import { createOrder } from '../api/client'
+import { enqueueOrder } from '../lib/offlineQueue'
 import Modal from '../components/Modal'
 
 interface Props {
@@ -32,6 +33,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
     check_out: string
     amount: number
   } | null>(null)
+  const [offline, setOffline] = useState(false)
 
   const canSubmit = name.trim().length > 0
 
@@ -51,7 +53,18 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
       })
       setOrder(result.order)
     } catch {
-      setError('No se pudo completar la reserva. Intentá de nuevo.')
+      // Backend no disponible: guardamos la reserva en el tablet y se sincroniza sola.
+      enqueueOrder({
+        product: planKey,
+        room_type: roomKey,
+        guest_name: name.trim(),
+        id_document: document.trim() || undefined,
+        client_ref: `kiosco-${Date.now()}`,
+        extra: extra ?? undefined,
+        days: planKey === 'hospedaje' ? days : undefined,
+      })
+      setError(null)
+      setOffline(true)
     } finally {
       setLoading(false)
     }
@@ -129,6 +142,26 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
           checkOut={order.check_out}
           amount={order.amount}
         />
+      )}
+      {offline && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onSuccess}>
+          <div
+            className="bg-white rounded-3xl p-6 max-w-sm w-full text-center"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/20 flex items-center justify-center text-3xl">⏳</div>
+            <p className="mt-3 text-[length:var(--fs-body)] font-semibold">Reserva guardada</p>
+            <p className="mt-1 text-[length:var(--fs-small)] opacity-70">
+              No hay conexión con recepción ahora. Se enviará automáticamente en cuanto vuelva.
+            </p>
+            <button
+              onClick={onSuccess}
+              className="mt-4 px-6 py-3 rounded-2xl bg-[var(--accent)] text-black font-bold text-[length:var(--fs-body)]"
+            >
+              Listo
+            </button>
+          </div>
+        </div>
       )}
     </>
   )

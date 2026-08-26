@@ -2,6 +2,8 @@ package com.hoteldelvalle.kiosco
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.app.admin.DevicePolicyManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Color
@@ -37,6 +39,15 @@ class MainActivity : Activity() {
     private var lastTapTime = 0L
     private var updateUrl: String? = null
 
+    // Resiliencia: fallback local + watchdog 24/7
+    private var pageLoaded = false
+    private var pageError = false
+    private var lastUrl: String? = null
+    private var usingFallback = false
+    private var locked = false
+    private val FALLBACK_TIMEOUT_MS = 6000L
+    private val WATCHDOG_MS = 20000L
+
     companion object {
         const val PREFS = "kiosko_prefs"
         const val KEY_URL = "server_url"
@@ -45,7 +56,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "2.2.0"
+        const val APP_VERSION = "11.1.0"
         private const val TAPS_REQUIRED = 5
         private const val TAP_TIMEOUT_MS = 2000L
     }
@@ -59,6 +70,7 @@ class MainActivity : Activity() {
 
         installCrashReporter()
         logBoot("onCreate")
+        startWatchdog()
 
         val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val savedUrl = prefs.getString(KEY_URL, null)
@@ -228,15 +240,45 @@ class MainActivity : Activity() {
             wv.settings.databaseEnabled = true
             wv.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             wv.settings.cacheMode = WebSettings.LOAD_DEFAULT
-            wv.settings.allowFileAccess = false
-            wv.settings.allowContentAccess = false
+            // Necesario para cargar la UI empaquetada localmente (file:///android_asset)
+            wv.settings.allowFileAccess = true
+            wv.settings.allowContentAccess = true
+
+            pageLoaded = false
+            pageError = false
+            lastUrl = url
 
             wv.webViewClient = object : WebViewClient() {
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean = false
+
+                override fun onPageStarted(view: WebView?, url: String?, favicon: android.graphics.Bitmap?) {
+                    super.onPageStarted(view, url, favicon)
+                    pageLoaded = false
+                }
+
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    pageLoaded = true
+                    pageError = false
+                }
+
+                override fun onReceivedError(view: WebView?, req: WebResourceRequest?, err: android.webkit.WebResourceError?) {
+                    super.onReceivedError(view, req, err)
+                    val failing = req?.url?.toString()
+                    if (failing == lastUrl) {
+                        logBoot("WebView error ${err?.errorCode}: ${err?.description}")
+                        pageError = true
+                        fallbackToLocal()
+                    }
+                }
             }
 
             logBoot("Cargando URL...")
             wv.loadUrl(url)
+
+            // Si en N segundos no cargó la página principal, usar UI local empaquetada.
+            handler.removeCallbacks(fallbackRunnable)
+            handler.postDelayed(fallbackRunnable, FALLBACK_TIMEOUT_MS)
 
             val container = FrameLayout(this)
             container.addView(wv, FrameLayout.LayoutParams(
@@ -251,6 +293,60 @@ class MainActivity : Activity() {
                 "${e.javaClass.name}: ${e.message}\n\n" +
                 "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\nModelo: ${Build.MODEL}\n\n" +
                 "Verifica que 'Android System WebView' esté habilitado y actualizado.\n\nDetalle:\n${Log.getStackTraceString(e)}")
+        }
+    }
+
+    // ================= RESILIENCIA / FALLBACK LOCAL =================
+
+    // Fallback a la UI empaquetada en el APK (funciona sin red).
+    private val fallbackRunnable = Runnable {
+        if (!pageLoaded && !usingFallback) {
+            logBoot("Timeout cargando server -> fallback local")
+            fallbackToLocal()
+        }
+    }
+
+    private fun fallbackToLocal() {
+        if (usingFallback) return
+        usingFallback = true
+        handler.removeCallbacks(fallbackRunnable)
+        val base = serverBase()
+        val url = "file:///android_asset/kiosco/index.html?api=$base"
+        logBoot("Cargando fallback local: $url")
+        handler.post { loadWebView(url) }
+    }
+
+    // Watchdog 24/7: si la web se queda en blanco o con error, recarga/fallback.
+    private fun startWatchdog() {
+        handler.postDelayed(object : Runnable {
+            override fun run() {
+                try {
+                    val wv = webView
+                    if (wv != null && !usingFallback && (pageError || wv.url == null)) {
+                        logBoot("Watchdog: reintentando última URL")
+                        if (lastUrl != null) wv.loadUrl(lastUrl!!)
+                    }
+                } catch (_: Throwable) {
+                }
+                handler.postDelayed(this, WATCHDOG_MS)
+            }
+        }, WATCHDOG_MS)
+    }
+
+    // Bloquea la app como quiosco si el dispositivo es Device Owner (single-app).
+    private fun tryLockTask() {
+        try {
+            val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+            val cn = ComponentName(this, AdminReceiver::class.java)
+            if (dpm.isDeviceOwnerApp(packageName)) {
+                dpm.setLockTaskPackages(cn, arrayOf(packageName))
+                if (!locked) {
+                    startLockTask()
+                    locked = true
+                }
+            }
+        } catch (e: Throwable) {
+            Log.w(TAG, "tryLockTask: ${e.message}")
         }
     }
 
@@ -446,10 +542,18 @@ class MainActivity : Activity() {
     override fun onResume() {
         super.onResume()
         applyKioskMode()
+        tryLockTask()
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        try {
+            if (locked) {
+                stopLockTask()
+                locked = false
+            }
+        } catch (_: Throwable) {
+        }
         try {
             webView?.let { wv ->
                 val parent = wv.parent
