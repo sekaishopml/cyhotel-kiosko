@@ -68,18 +68,18 @@ export default function RoomScreen({
 
   return (
     <motion.div className="h-full flex flex-col" {...fadeInUp}>
-      <div className="shrink-0 px-6 pt-4 pb-2 flex items-center gap-3">
+      <div className="shrink-0 px-[var(--pad)] pt-[var(--gap)] pb-[var(--gap)] flex items-center gap-3">
         <button onClick={onBack} className="text-verde-600 hover:text-verde-900 transition-colors">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
-        <h2 className="font-serif text-2xl text-verde-900 font-semibold">
+        <h2 className="font-serif text-[length:var(--fs-section)] text-verde-900 font-semibold">
           {planLabels[planKey] ?? planKey}
         </h2>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto px-6 pb-4">
+      <div className="flex-1 min-h-0 overflow-hidden px-[var(--pad)] pb-[var(--gap)]">
         {loading && <LoadingShimmer />}
 
         {error && (
@@ -87,7 +87,7 @@ export default function RoomScreen({
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="text-verde-600 underline text-sm"
+              className="text-verde-600 underline text-[length:var(--fs-small)]"
             >
               Reintentar
             </button>
@@ -95,7 +95,7 @@ export default function RoomScreen({
         )}
 
         {!loading && !error && (
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-[var(--gap)]">
             {rooms.map(room => (
               <RoomCard
                 key={room.key}
@@ -127,16 +127,16 @@ export default function RoomScreen({
         <motion.div
           initial={{ y: 80 }}
           animate={{ y: 0 }}
-          className="shrink-0 bg-white border-t border-verde-900/10 px-6 py-4 flex items-center gap-4"
+          className="shrink-0 bg-white border-t border-verde-900/10 px-[var(--pad)] py-[var(--gap)] flex items-center gap-4"
         >
           <div className="flex-1">
-            <p className="text-xs text-verde-700/60 uppercase tracking-wide">Total</p>
-            <p className="font-serif text-2xl text-verde-900 font-bold">${total}</p>
+            <p className="text-[length:var(--fs-small)] text-verde-700/60 uppercase tracking-wide">Total</p>
+            <p className="font-serif text-[length:var(--fs-section)] text-verde-900 font-bold">${total}</p>
           </div>
           <motion.button
             whileTap={{ scale: 0.95 }}
             onClick={onContinue}
-            className="bg-verde-900 text-white rounded-2xl px-8 py-3 font-semibold text-lg hover:bg-verde-700 transition-colors"
+            className="bg-verde-900 text-white rounded-2xl px-8 py-[var(--gap)] font-semibold text-[length:var(--fs-body)] hover:bg-verde-700 transition-colors"
           >
             Continuar
           </motion.button>

@@ -24,12 +24,12 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-verde-900 text-white px-6 py-3 flex items-center justify-between shrink-0">
-        <h1 className="font-serif text-xl font-semibold tracking-wide">Hotel del Valle</h1>
+      <header className="bg-verde-900 text-white px-[var(--pad)] py-[var(--gap)] flex items-center justify-between shrink-0">
+        <h1 className="font-serif text-[length:var(--fs-section)] font-semibold tracking-wide">Hotel del Valle</h1>
         <button
           onClick={checkUpdate}
           disabled={checking}
-          className="text-xs opacity-70 hover:opacity-100 transition-opacity font-sans disabled:opacity-40"
+          className="text-[length:var(--fs-small)] opacity-70 hover:opacity-100 transition-opacity font-sans disabled:opacity-40"
         >
           {checking ? 'Buscando…' : 'Actualizar'}
         </button>
@@ -52,11 +52,11 @@ export default function Header() {
               onClick={e => e.stopPropagation()}
               className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl"
             >
-              <h3 className="font-serif text-xl text-verde-900 mb-2">{dialog.title}</h3>
-              <p className="text-sm text-ink/70 whitespace-pre-line">{dialog.body}</p>
+              <h3 className="font-serif text-[length:var(--fs-section)] text-verde-900 mb-2">{dialog.title}</h3>
+              <p className="text-[length:var(--fs-small)] text-ink/70 whitespace-pre-line">{dialog.body}</p>
               <button
                 onClick={() => setDialog(null)}
-                className="mt-4 w-full bg-verde-900 text-white rounded-xl py-2 font-semibold text-sm"
+                className="mt-4 w-full bg-verde-900 text-white rounded-xl py-2 font-semibold text-[length:var(--fs-small)]"
               >
                 Entendido
               </button>

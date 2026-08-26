@@ -16,7 +16,7 @@ const plans = [
 export default function PlanScreen({ onSelect }: Props) {
   return (
     <motion.div
-      className="h-full overflow-y-auto p-6"
+      className="h-full overflow-hidden p-[var(--pad)] flex flex-col"
       {...staggerContainer}
       initial="initial"
       animate="animate"
@@ -25,11 +25,11 @@ export default function PlanScreen({ onSelect }: Props) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="font-serif text-3xl text-verde-900 mb-6"
+        className="font-serif text-[length:var(--fs-display)] text-verde-900 mb-[var(--gap)]"
       >
         Elegí tu plan
       </motion.h2>
-      <div className="grid gap-4">
+      <div className="grid grid-cols-2 grid-rows-2 gap-[var(--gap)] flex-1 min-h-0">
         {plans.map(plan => (
           <PlanCard
             key={plan.key}
