@@ -74,8 +74,8 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
     <>
       <motion.div className="h-full flex flex-col" {...screen}>
         <div className="shrink-0 px-[var(--pad)] pt-[var(--gap)] pb-[var(--gap)] flex items-center gap-3">
-          <button onClick={onBack} className="text-verde-600 hover:text-verde-900 transition-colors">
-            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <button onClick={onBack} className="rounded-full bg-verde-900/10 p-2 hover:bg-verde-900/20 transition-colors">
+            <svg className="w-7 h-7 text-verde-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -83,7 +83,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
         </div>
 
         <div className="flex-1 min-h-0 overflow-y-auto px-[var(--pad)] pb-[var(--gap)]">
-          <div className="bg-crema rounded-2xl p-5 space-y-2 mb-6">
+          <div className="bg-crema rounded-2xl border-l-4 border-verde-600 p-5 space-y-2 mb-6">
             <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Plan:</span> {planLabels[planKey] ?? planKey}</p>
             <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Habitación:</span> {roomKey}</p>
             {extra && <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Duración:</span> {extra}</p>}
@@ -100,7 +100,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
                 value={name}
                 onChange={e => setName(e.target.value)}
                 placeholder="Tu nombre"
-                className="w-full rounded-2xl border-2 border-verde-900/20 px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 transition-colors"
+                className="w-full rounded-2xl border-2 border-verde-900/20 px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 focus:ring-2 focus:ring-verde-500/30 transition-colors"
               />
             </div>
             <div>
@@ -110,7 +110,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
                 value={document}
                 onChange={e => setDocument(e.target.value)}
                 placeholder="DNI o pasaporte"
-                className="w-full rounded-2xl border-2 border-verde-900/20 px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 transition-colors"
+                className="w-full rounded-2xl border-2 border-verde-900/20 px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-ink placeholder:text-ink/30 focus:outline-none focus:border-verde-600 focus:ring-2 focus:ring-verde-500/30 transition-colors"
               />
             </div>
           </div>
@@ -125,7 +125,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
             whileTap={{ scale: 0.96 }}
             onClick={handleSubmit}
             disabled={!canSubmit || loading}
-            className="w-full bg-verde-900 text-white rounded-2xl py-[var(--pad)] font-extrabold text-[length:var(--fs-section)] disabled:opacity-40 disabled:cursor-not-allowed hover:bg-verde-700 transition-colors"
+            className="w-full bg-verde-900 text-white rounded-2xl py-[var(--pad)] font-extrabold text-[length:var(--fs-section)] shadow-soft disabled:opacity-40 disabled:cursor-not-allowed hover:bg-verde-700 transition-colors"
           >
             {loading ? 'Confirmando…' : 'Confirmar Reserva'}
           </motion.button>
@@ -163,7 +163,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
             </p>
             <button
               onClick={onSuccess}
-              className="mt-4 px-6 py-3 rounded-2xl bg-[var(--accent)] text-black font-extrabold text-[length:var(--fs-body)]"
+              className="mt-4 px-6 py-3 rounded-2xl bg-verde-900 text-white font-extrabold text-[length:var(--fs-body)]"
             >
               Listo
             </button>

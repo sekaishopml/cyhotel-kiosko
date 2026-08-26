@@ -59,3 +59,17 @@ export const slideUpBar = {
   exit: { y: 80, opacity: 0 },
   transition: { duration: 0.35, ease: EASE },
 }
+
+// Splash screen: breathe animation
+export const splashBreathe = {
+  animate: {
+    scale: [1, 1.03, 1],
+    opacity: [1, 0.8, 1],
+    transition: { duration: 2.5, repeat: Infinity, ease: 'easeInOut' },
+  },
+}
+
+// Splash exit: fade out + scale up
+export const splashExit = {
+  exit: { opacity: 0, scale: 1.08, transition: { duration: 0.6, ease: EASE } },
+}

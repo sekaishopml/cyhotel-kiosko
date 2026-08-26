@@ -16,6 +16,7 @@ export default {
       fontFamily: {
         'serif': ['"Cormorant Garamond"', 'Georgia', 'serif'],
         'sans': ['Manrope', 'system-ui', 'sans-serif'],
+        'display': ['"Playfair Display"', 'Georgia', 'serif'],
       },
       boxShadow: {
         'soft': '0 12px 32px -12px rgba(20,58,42,0.30)',
