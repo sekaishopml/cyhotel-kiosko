@@ -117,7 +117,7 @@ export default function RoomScreen() {
         )}
       </div>
 
-      {selectedRoom && !expandedRoom && (
+      {selectedRoom && (
         <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 animate-slide-up">
           {hasExtras && (
             <div className="mb-3">

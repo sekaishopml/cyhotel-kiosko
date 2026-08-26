@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import { RoomType } from '../types'
 import { imgUrl } from '../api'
 
@@ -12,7 +12,6 @@ interface Props {
 
 export default function RoomCard({ room, selected, selectedPlan, expanded, onClick }: Props) {
   const [photoIdx, setPhotoIdx] = useState(0)
-
   const photos = [room.photo]
   const hasMultiplePhotos = photos.length > 1
 
@@ -34,17 +33,11 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
     ? null
     : '/ 3h'
 
-  const stateClass = expanded
-    ? 'room-card-expanded'
-    : selected
-    ? 'room-card-compact'
-    : 'room-card-shrunk'
-
   if (expanded) {
     return (
       <button
         onClick={onClick}
-        className={`tap-scale w-full rounded-2xl transition-all duration-400 bg-navy text-white shadow-[0_8px_30px_rgba(15,23,42,0.3)]`}
+        className="tap-scale w-full rounded-2xl bg-navy text-white shadow-[0_8px_30px_rgba(15,23,42,0.3)] room-card-expanded"
       >
         <div className="flex items-center gap-3 p-3 pb-0">
           <div className="flex-1 min-w-0 text-left">
@@ -69,7 +62,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
           </div>
         </div>
 
-        <div className="px-3 pt-3">
+        <div className="px-3 pt-3 pb-3">
           <div className="carousel-container">
             {photos.map((photo, i) => (
               <img
@@ -89,12 +82,6 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
             )}
           </div>
         </div>
-
-        <div className="px-3 py-3 text-left">
-          <p className="text-[0.75rem] text-white/70 leading-relaxed">
-            {room.desc}
-          </p>
-        </div>
       </button>
     )
   }
@@ -102,10 +89,10 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
   return (
     <button
       onClick={onClick}
-      className={`tap-scale w-full flex items-center gap-4 rounded-2xl p-3 transition-all duration-400 ${
+      className={`tap-scale w-full flex items-center gap-4 rounded-2xl p-3 transition-all duration-500 room-card-normal ${
         selected
           ? 'bg-navy text-white shadow-[0_4px_20px_rgba(15,23,42,0.2)]'
-          : 'bg-white text-navy card-shadow opacity-60 scale-[0.97]'
+          : 'bg-white text-navy card-shadow'
       }`}
     >
       <img
