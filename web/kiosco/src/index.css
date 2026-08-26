@@ -4,7 +4,7 @@
 
 :root {
   /* Giganimalismo para tercera edad: tipografía muy grande y bold */
-  --fs-display: clamp(3rem, 7vw, 4.5rem);
+  --fs-display: clamp(2.4rem, 5vw, 3.2rem);
   --fs-section: clamp(2rem, 4.5vh, 3rem);
   --fs-plan-name: clamp(3rem, 9vh, 5rem);
   --fs-plan-sub: clamp(1.1rem, 2.6vh, 1.5rem);

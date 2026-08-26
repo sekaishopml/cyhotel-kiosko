@@ -19,8 +19,8 @@ export default function RoomCard({ name, photo, price, free, selected, onClick }
       onClick={onClick}
       className={`flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden border transition-colors ${
         selected
-          ? 'bg-verde-900 border-verde-900 text-white shadow-soft'
-          : 'bg-crema border-verde-900/10 text-ink hover:border-verde-600'
+          ? 'bg-verde-900 border-verde-900 text-white'
+          : 'bg-white border-verde-900/12 text-ink hover:border-verde-600'
       }`}
     >
       <img
@@ -29,7 +29,7 @@ export default function RoomCard({ name, photo, price, free, selected, onClick }
         className="w-[var(--room-h)] h-full object-cover shrink-0"
       />
       <div className="flex-1 flex flex-col justify-center px-5 min-w-0">
-        <h4 className="font-serif text-[length:var(--fs-room-name)] font-extrabold truncate">{name}</h4>
+        <h4 className="font-sans text-[length:var(--fs-room-name)] font-extrabold uppercase tracking-wide truncate">{name}</h4>
         <div className="flex items-center gap-2 mt-1">
           <span className={`text-[length:var(--fs-body)] font-extrabold ${selected ? 'text-white' : 'text-verde-700'}`}>
             ${price}
