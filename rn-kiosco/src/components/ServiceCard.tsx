@@ -87,7 +87,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 38,
+    paddingVertical: 28,
     borderRadius: radii.card,
   },
   title: {

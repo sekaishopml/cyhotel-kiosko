@@ -10,10 +10,11 @@ import ScreenTransition from './src/components/ScreenTransition';
 import IdleScreen from './src/components/IdleScreen';
 import SplashScreen from './src/components/SplashScreen';
 import LoadingScreen from './src/components/LoadingScreen';
+import UpdateOverlay from './src/components/UpdateOverlay';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '10.0.2';
+const APP_VERSION = '10.0.3';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 120000;
 const SCREEN_ORDER: Record<Screen, number> = { plan: 0, room: 1, checkin: 2 };
@@ -54,6 +55,15 @@ export default function App() {
   const [splashDone, setSplashDone] = useState(false);
   const [loading, setLoading] = useState(true);
   const [direction, setDirection] = useState<'forward' | 'back'>('forward');
+  const [update, setUpdate] = useState<{
+    status: 'idle' | 'available' | 'downloading' | 'installing' | 'error' | 'uptodate' | 'permission';
+    version: string;
+    apkUrl: string;
+    percent: number;
+    loaded: number;
+    total: number;
+    error: string;
+  }>({ status: 'idle', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: '' });
   const prevScreen = React.useRef<Screen>('plan');
 
   useEffect(() => {
@@ -89,37 +99,63 @@ export default function App() {
     return () => { if (timer) clearTimeout(timer); };
   }, [screen, goHome, idle]);
 
-  const checkForUpdate = useCallback(() => {
+  const checkForUpdate = useCallback(async () => {
     if (checking) return;
     setChecking(true);
-    (async () => {
-      try {
-        const base = await getServerBase();
-        const res = await fetch(`${base}/api/kiosco-version`);
-        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        const remote = String(data?.version ?? '');
-        if (!remote || remote === APP_VERSION) { Alert.alert('Sin actualizaciones', 'Ya estás en la última versión.'); return; }
-        const apkPath = String(data?.apk ?? '/kiosco.apk');
-        Alert.alert('Actualización disponible', `Versión ${remote} lista para instalarse.`, [
-          { text: 'Ahora no', style: 'cancel' },
-          { text: 'Actualizar ahora', onPress: () => startUpdate(`${base}${apkPath}`, remote) },
-        ]);
-      } catch { Alert.alert('Sin actualizaciones', 'No se pudo consultar el servidor.'); }
-      finally { setChecking(false); }
-    })();
+    try {
+      const base = await getServerBase();
+      const res = await fetch(`${base}/api/kiosco-version`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      const remote = String(data?.version ?? '');
+      if (!remote || remote === APP_VERSION) { setUpdate({ status: 'uptodate', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: '' }); return; }
+      const apkPath = String(data?.apk ?? '/kiosco.apk');
+      setUpdate({ status: 'available', version: remote, apkUrl: `${base}${apkPath}`, percent: 0, loaded: 0, total: 0, error: '' });
+    } catch {
+      setUpdate({ status: 'error', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: 'No se pudo consultar el servidor.' });
+    } finally { setChecking(false); }
   }, [checking]);
 
-  const startUpdate = useCallback(async (apkUrl: string, v: string) => {
+  const startUpdate = useCallback(async () => {
+    const apkUrl = update.apkUrl;
+    const v = update.version;
     const updater = NativeModules.ApkUpdater;
-    if (!updater) { Alert.alert('Error', 'Módulo de actualización no disponible.'); return; }
-    try { const can = await updater.canInstall(); if (can === false) { Alert.alert('Permiso de instalación', 'Habilitá "Instalar apps desconocidas" para continuar.', [{ text: 'Cancelar', style: 'cancel' }, { text: 'Configurar', onPress: () => updater.openInstallSettings() }]); return; } } catch { Alert.alert('Error', 'No se pudo verificar el permiso.'); return; }
-    Alert.alert('Actualizando…', `Descargando versión ${v}…`);
-    const sub = DeviceEventEmitter.addListener('apkDownloadProgress', () => {});
-    try { await updater.downloadAndInstall(apkUrl); }
-    catch (e: any) { const m = e?.message || String(e); Alert.alert('Error de actualización', m.includes('download_failed') ? 'No se pudo descargar el APK.' : m.includes('no_installer') ? 'No hay instalador de paquetes.' : m || 'No se pudo instalar.'); }
-    finally { sub.remove(); }
+    if (!updater) { setUpdate(u => ({ ...u, status: 'error', error: 'Módulo de actualización no disponible.' })); return; }
+    try {
+      const can = await updater.canInstall();
+      if (can === false) { setUpdate(u => ({ ...u, status: 'permission' })); return; }
+    } catch { setUpdate(u => ({ ...u, status: 'error', error: 'No se pudo verificar el permiso.' })); return; }
+
+    setUpdate(u => ({ ...u, status: 'downloading', percent: 0, loaded: 0, total: 0 }));
+    const sub = DeviceEventEmitter.addListener('apkDownloadProgress', (e: any) => {
+      const total = Number(e?.total) || 0;
+      const loaded = Number(e?.loaded) || 0;
+      const percent = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+      setUpdate(u => ({ ...u, percent, loaded, total }));
+    });
+    try {
+      await updater.downloadAndInstall(apkUrl);
+      setUpdate(u => ({ ...u, status: 'installing' }));
+    } catch (e: any) {
+      const m = e?.message || String(e);
+      const msg = m.includes('download_failed') ? 'No se pudo descargar el APK.' : m.includes('no_installer') ? 'No hay instalador de paquetes.' : (m || 'No se pudo instalar.');
+      setUpdate(u => ({ ...u, status: 'error', error: msg }));
+    } finally { sub.remove(); }
+  }, [update.apkUrl, update.version]);
+
+  const openInstallSettings = useCallback(() => {
+    const updater = NativeModules.ApkUpdater;
+    if (!updater) return;
+    try { updater.openInstallSettings(); setUpdate(u => ({ ...u, status: 'available' })); } catch { setUpdate(u => ({ ...u, status: 'available' })); }
   }, []);
+
+  const closeUpdate = useCallback(() => setUpdate(u => ({ ...u, status: 'idle' })), []);
+
+  const adminCheckUpdate = useCallback(() => {
+    setAdminModal(false);
+    setUpdate(u => ({ ...u, status: 'idle' }));
+    setTimeout(() => checkForUpdate(), 250);
+  }, [checkForUpdate]);
 
   const openAdmin = useCallback(() => { setPinInput(''); setAdminView('pin'); setAdminModal(true); }, []);
   const tryAdmin = useCallback(() => {
@@ -152,6 +188,21 @@ export default function App() {
         </ScreenTransition>
       </View>
       {idle && <IdleScreen onWake={wakeUp} bgUri={serverBase ? `${serverBase}/img/habitacion.jpeg` : null} />}
+      {update.status !== 'idle' && (
+        <UpdateOverlay
+          status={update.status}
+          version={update.version}
+          percent={update.percent}
+          loaded={update.loaded}
+          total={update.total}
+          error={update.error}
+          onUpdate={startUpdate}
+          onCancel={closeUpdate}
+          onOpenSettings={openInstallSettings}
+          onRetry={startUpdate}
+          onClose={closeUpdate}
+        />
+      )}
       <RNModal visible={adminModal} transparent animationType="fade" onRequestClose={() => setAdminModal(false)}>
         <View style={s.mOverlay}>
           <View style={s.mCard}>
@@ -165,7 +216,7 @@ export default function App() {
             {adminView === 'panel' && (<>
               <Text style={s.mTitle}>Administración</Text>
               <Text style={s.mSub}>Versión {APP_VERSION}</Text>
-              <TouchableOpacity onPress={checkForUpdate} disabled={checking} style={[s.mBtn, checking && { opacity: 0.5 }]}><Text style={s.mBtnTxt}>{checking ? 'Buscando…' : 'Buscar actualización'}</Text></TouchableOpacity>
+               <TouchableOpacity onPress={adminCheckUpdate} disabled={checking} style={[s.mBtn, checking && { opacity: 0.5 }]}><Text style={s.mBtnTxt}>{checking ? 'Buscando…' : 'Buscar actualización'}</Text></TouchableOpacity>
               <TouchableOpacity onPress={openServerInput} style={[s.mBtn, s.mBtnOutline]}><Text style={s.mBtnOutlineTxt}>Configurar servidor</Text></TouchableOpacity>
               <TouchableOpacity onPress={() => setAdminModal(false)} style={s.mCancel}><Text style={s.mCancelTxt}>Cerrar</Text></TouchableOpacity>
             </>)}

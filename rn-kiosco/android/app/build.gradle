@@ -82,8 +82,8 @@ android {
         applicationId "com.hoteldelvalle.kioscoapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 10002
-        versionName "10.0.2"
+        versionCode 10003
+        versionName "10.0.3"
     }
     signingConfigs {
         debug {

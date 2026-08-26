@@ -19,7 +19,6 @@ export default function HomeScreen({ onSelectPlan }: Props) {
         <Text style={s.watermarkTxt}>HV</Text>
       </View>
       <View style={s.top}>
-        <Text style={s.label}>ELEGÍ TU PLAN</Text>
         <Text style={s.heading}>¿Qué necesitás hoy?</Text>
       </View>
       <View style={s.grid}>
@@ -36,7 +35,7 @@ const s = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.screen,
     paddingHorizontal: spacing.screen,
-    paddingVertical: spacing.lg,
+    paddingVertical: spacing.md,
   },
   watermark: {
     position: 'absolute',
@@ -54,19 +53,12 @@ const s = StyleSheet.create({
   },
   top: {
     alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  label: {
-    fontFamily: typography.sansMedium,
-    fontSize: sizes.label,
-    color: colors.brandAccent,
-    letterSpacing: 3,
-    textTransform: 'uppercase',
-    marginBottom: spacing.xs,
+    marginBottom: spacing.md,
   },
   heading: {
     fontFamily: typography.serifBold,
-    fontSize: 30,
+    fontSize: 40,
+    lineHeight: 46,
     color: colors.brandPrimary,
     textAlign: 'center',
     letterSpacing: 1,
