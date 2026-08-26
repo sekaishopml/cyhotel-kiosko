@@ -13,12 +13,12 @@ export default function PlanScreen() {
   const { selectPlan } = useStore()
 
   return (
-    <div className="h-full overflow-hidden p-[var(--pad)] flex flex-col">
-      <h2 className="font-display text-[length:var(--fs-display)] text-navy font-bold uppercase tracking-wide text-center mb-[var(--gap)]">
+    <div className="h-full overflow-hidden px-4 pt-4 pb-3 flex flex-col">
+      <h2 className="font-display text-[length:var(--fs-section)] text-navy font-bold uppercase tracking-wide text-center mb-3">
         Elegí Tu Plan
       </h2>
 
-      <div className="flex flex-col gap-[var(--gap)] flex-1 min-h-0">
+      <div className="flex flex-col gap-2.5 flex-1 min-h-0">
         {plans.map((plan, i) => (
           <div
             key={plan.key}

@@ -11,19 +11,19 @@ export default function RoomCard({ room, selected, onClick }: Props) {
   return (
     <button
       onClick={onClick}
-      className={`tap-scale flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden transition-all duration-200 ${
+      className={`tap-scale w-full flex items-center gap-3 rounded-2xl p-2.5 transition-all duration-200 ${
         selected
-          ? 'bg-navy text-white ring-2 ring-gold shadow-lg'
-          : 'bg-white text-navy hover:bg-navy/5 card-shadow'
+          ? 'bg-navy text-white shadow-[0_4px_20px_rgba(15,23,42,0.2)]'
+          : 'bg-white text-navy card-shadow'
       }`}
     >
       <img
         src={imgUrl(room.photo)}
         alt={room.label}
-        className="w-[var(--room-h)] h-full object-cover shrink-0"
+        className="w-20 h-20 rounded-xl object-cover shrink-0"
         loading="lazy"
       />
-      <div className="flex-1 flex flex-col justify-center px-4 min-w-0">
+      <div className="flex-1 min-w-0 text-left">
         <h4 className="font-sans text-[length:var(--fs-room-name)] font-extrabold uppercase tracking-wide truncate leading-tight">
           {room.label}
         </h4>
@@ -31,12 +31,22 @@ export default function RoomCard({ room, selected, onClick }: Props) {
           <span className={`text-[length:var(--fs-body)] font-extrabold ${selected ? 'text-gold' : 'text-navy'}`}>
             ${room.price}
           </span>
+          <span className="text-[0.6rem] text-navy/40 font-semibold uppercase">/ 3h</span>
           {room.free && (
-            <span className="text-[length:0.65rem] bg-sage text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide">
+            <span className="text-[0.6rem] bg-sage text-white px-2 py-0.5 rounded-full font-extrabold uppercase tracking-wide">
               Gratis
             </span>
           )}
         </div>
+      </div>
+      <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+        selected ? 'border-gold bg-gold' : 'border-navy/15'
+      }`}>
+        {selected && (
+          <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+          </svg>
+        )}
       </div>
     </button>
   )

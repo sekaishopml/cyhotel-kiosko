@@ -54,9 +54,9 @@ export default function RoomScreen() {
 
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-3">
         {loading && (
-          <div className="grid grid-cols-2 gap-3">
+          <div className="flex flex-col gap-2.5">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="skeleton" style={{ height: 'var(--room-h)', minHeight: 'var(--tap)' }} />
+              <div key={i} className="skeleton w-full" style={{ height: 'var(--room-h)', minHeight: 'var(--tap)' }} />
             ))}
           </div>
         )}
@@ -87,7 +87,7 @@ export default function RoomScreen() {
         )}
 
         {!loading && !error && rooms.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+          <div className="flex flex-col gap-2.5">
             {rooms.map((room, i) => (
               <div
                 key={room.key}
@@ -106,16 +106,16 @@ export default function RoomScreen() {
       </div>
 
       {selectedRoom && (
-        <div className="shrink-0 bg-white border-t border-navy/8 px-4 py-3 animate-slide-up">
+        <div className="shrink-0 bg-white border-t border-navy/5 px-4 py-3 animate-slide-up">
           {hasExtras && (
-            <div className="mb-3">
-              <p className="text-[length:0.7rem] font-semibold text-slate mb-2 uppercase tracking-wide">Duración</p>
+            <div className="mb-2.5">
+              <p className="text-[0.65rem] font-semibold text-slate mb-1.5 uppercase tracking-wide">Duración</p>
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
                     onClick={() => selectExtra(selectedExtra === key ? null : key)}
-                    className={`tap-scale shrink-0 px-3 py-1.5 rounded-full text-[length:0.7rem] font-bold border-2 transition-all duration-200 uppercase ${
+                    className={`tap-scale shrink-0 px-3 py-1.5 rounded-full text-[0.65rem] font-bold border transition-all duration-200 uppercase ${
                       selectedExtra === key
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -129,14 +129,14 @@ export default function RoomScreen() {
           )}
 
           {selectedPlan === 'hospedaje' && (
-            <div className="mb-3">
-              <p className="text-[length:0.7rem] font-semibold text-slate mb-2 uppercase tracking-wide">Noches</p>
+            <div className="mb-2.5">
+              <p className="text-[0.65rem] font-semibold text-slate mb-1.5 uppercase tracking-wide">Noches</p>
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {Array.from({ length: 7 }, (_, i) => i + 1).map(d => (
                   <button
                     key={d}
                     onClick={() => selectDays(d)}
-                    className={`tap-scale shrink-0 px-3 py-1.5 rounded-full text-[length:0.7rem] font-bold border-2 transition-all duration-200 ${
+                    className={`tap-scale shrink-0 px-3 py-1.5 rounded-full text-[0.65rem] font-bold border transition-all duration-200 ${
                       selectedDays === d
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -151,7 +151,7 @@ export default function RoomScreen() {
 
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <p className="text-[length:0.7rem] text-slate uppercase tracking-wide font-semibold">Total</p>
+              <p className="text-[0.65rem] text-slate uppercase tracking-wide font-semibold">Total</p>
               <p className="font-display text-[length:var(--fs-section)] text-navy font-bold">${total}</p>
             </div>
             <button
