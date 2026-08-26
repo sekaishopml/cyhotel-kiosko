@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, createContext, useContext, useMemo, createElement } from 'react'
 import { AppScreen } from './types'
 
 interface StoreState {
@@ -17,7 +17,20 @@ const INITIAL: StoreState = {
   selectedDays: 1,
 }
 
-export function useStore() {
+interface Store extends StoreState {
+  step: number
+  goTo: (screen: AppScreen) => void
+  selectPlan: (planKey: string) => void
+  selectRoom: (roomKey: string) => void
+  selectExtra: (extra: string | null) => void
+  selectDays: (days: number) => void
+  goBack: () => void
+  goHome: () => void
+}
+
+const StoreContext = createContext<Store | null>(null)
+
+export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<StoreState>(INITIAL)
 
   const goTo = useCallback((screen: AppScreen) => {
@@ -50,13 +63,12 @@ export function useStore() {
 
   const goHome = useCallback(() => {
     setState(INITIAL)
-    // Skip splash on return
     setTimeout(() => setState(s => ({ ...s, screen: 'plan' })), 0)
   }, [])
 
   const step = state.screen === 'plan' ? 0 : state.screen === 'room' ? 1 : 2
 
-  return {
+  const value = useMemo(() => ({
     ...state,
     step,
     goTo,
@@ -66,5 +78,13 @@ export function useStore() {
     selectDays,
     goBack,
     goHome,
-  }
+  }), [state, step, goTo, selectPlan, selectRoom, selectExtra, selectDays, goBack, goHome])
+
+  return createElement(StoreContext.Provider, { value }, children)
+}
+
+export function useStore(): Store {
+  const ctx = useContext(StoreContext)
+  if (!ctx) throw new Error('useStore must be used within StoreProvider')
+  return ctx
 }
