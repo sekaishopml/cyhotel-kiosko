@@ -14,7 +14,7 @@ import UpdateOverlay from './src/components/UpdateOverlay';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '10.0.4';
+const APP_VERSION = '10.0.5';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 120000;
 const SCREEN_ORDER: Record<Screen, number> = { plan: 0, room: 1, checkin: 2 };
@@ -110,7 +110,8 @@ export default function App() {
       const remote = String(data?.version ?? '');
       if (!remote || remote === APP_VERSION) { setUpdate({ status: 'uptodate', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: '' }); return; }
       const apkPath = String(data?.apk ?? '/kiosco.apk');
-      setUpdate({ status: 'available', version: remote, apkUrl: `${base}${apkPath}`, percent: 0, loaded: 0, total: 0, error: '' });
+      const apkUrl = apkPath.startsWith('http') ? apkPath : `${base}${apkPath}`;
+      setUpdate({ status: 'available', version: remote, apkUrl, percent: 0, loaded: 0, total: 0, error: '' });
     } catch {
       setUpdate({ status: 'error', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: 'No se pudo consultar el servidor.' });
     } finally { setChecking(false); }
