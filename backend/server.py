@@ -407,6 +407,13 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = unquote(urlparse(self.path).path).rstrip("/") or "/"
+        # Redirige /kiosco -> /kiosco/ para que las rutas relativas del build
+        # (base "./") resuelvan correctamente bajo /kiosco/.
+        if urlparse(self.path).path == "/kiosco":
+            self.send_response(302)
+            self.send_header("Location", "/kiosco/")
+            self.end_headers()
+            return
         try:
             if path == "/api/health":
                 self.api_health()

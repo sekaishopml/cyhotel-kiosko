@@ -52,7 +52,7 @@ class MainActivity : Activity() {
         const val PREFS = "kiosko_prefs"
         const val KEY_URL = "server_url"
         const val KEY_PIN = "exit_pin"
-        const val DEFAULT_URL = "http://68.168.20.219:8000/kiosco"
+        const val DEFAULT_URL = "http://68.168.20.219:8000/kiosco/"
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
@@ -416,7 +416,7 @@ class MainActivity : Activity() {
 
     private fun promptServerUrl() {
         val input = EditText(this).apply {
-            hint = "http://IP:8000/kiosco"
+            hint = "http://IP:8000/kiosco/"
             setText(DEFAULT_URL)
             setPadding(48, 32, 48, 32)
         }
