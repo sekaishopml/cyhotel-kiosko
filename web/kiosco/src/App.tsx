@@ -35,6 +35,9 @@ export default function App() {
         {screen === 'room' && <RoomScreen />}
         {screen === 'checkin' && <CheckinScreen />}
       </main>
+      <footer className="shrink-0 text-center py-1 bg-cream">
+        <span className="text-[0.5rem] text-navy/25 font-semibold">v1.0.8</span>
+      </footer>
     </div>
   )
 }

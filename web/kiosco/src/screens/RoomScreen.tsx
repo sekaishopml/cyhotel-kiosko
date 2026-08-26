@@ -99,6 +99,7 @@ export default function RoomScreen() {
                 <RoomCard
                   room={room}
                   selected={selectedRoom === room.key}
+                  selectedPlan={selectedPlan!}
                   onClick={() => selectRoom(room.key)}
                 />
               </div>

@@ -4,10 +4,17 @@ import { imgUrl } from '../api'
 interface Props {
   room: RoomType
   selected: boolean
+  selectedPlan: string
   onClick: () => void
 }
 
-export default function RoomCard({ room, selected, onClick }: Props) {
+export default function RoomCard({ room, selected, selectedPlan, onClick }: Props) {
+  const timeLabel = selectedPlan === 'amanecida'
+    ? '19:00 - 09:00'
+    : selectedPlan === 'hospedaje'
+    ? null
+    : '/ 3h'
+
   return (
     <button
       onClick={onClick}
@@ -31,9 +38,11 @@ export default function RoomCard({ room, selected, onClick }: Props) {
           <span className={`text-[length:var(--fs-display)] font-extrabold leading-none ${selected ? 'text-gold' : 'text-navy'}`}>
             ${room.price}
           </span>
-          <span className={`text-[0.65rem] font-semibold uppercase ${selected ? 'text-white' : 'text-navy/40'}`}>
-            / 3h
-          </span>
+          {timeLabel && (
+            <span className={`text-[0.65rem] font-semibold uppercase ${selected ? 'text-white' : 'text-navy/40'}`}>
+              {timeLabel}
+            </span>
+          )}
         </div>
       </div>
       <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
