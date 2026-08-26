@@ -28,7 +28,9 @@ export default function RoomScreen() {
     : 0
   const total = selectedPlan === 'hospedaje'
     ? basePrice * selectedDays
-    : basePrice + extraPrice
+    : selectedPlan === 'amanecida'
+      ? basePrice
+      : basePrice + extraPrice
 
   const planLabels: Record<string, string> = {
     momento: 'MOMENTO',
@@ -37,7 +39,7 @@ export default function RoomScreen() {
     suite: 'SUITE JACUZZI',
   }
 
-  const hasExtras = currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0
+  const hasExtras = selectedPlan !== 'amanecida' && currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0
 
   return (
     <div className="h-full flex flex-col slide-in-right">

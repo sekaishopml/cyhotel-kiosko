@@ -767,7 +767,7 @@ class Handler(BaseHTTPRequestHandler):
                 "free": free,
                 "eligible": eligible,
                 "reason": reason,
-                "extras": info.get("extras") or {},
+                "extras": {} if product == "amanecida" else (info.get("extras") or {}),
             })
         self._send(200, {"product": product, "types": result})
 
