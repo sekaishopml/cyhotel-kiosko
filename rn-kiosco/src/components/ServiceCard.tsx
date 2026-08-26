@@ -1,8 +1,9 @@
 import React, { useEffect, useRef } from 'react';
-import { Animated, Platform, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { Animated, Platform, StyleProp, StyleSheet, Text, TouchableOpacity, ViewStyle } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, radii, sizes, spacing, typography } from '../theme';
+import { colors, radii, spacing, typography } from '../theme';
 import { EASE_OUT } from '../lib/anims';
+import FitText from './FitText';
 
 type Props = {
   title: string;
@@ -11,9 +12,10 @@ type Props = {
   dark?: boolean;
   accent?: boolean;
   delay?: number;
+  style?: StyleProp<ViewStyle>;
 };
 
-export default function ServiceCard({ title, onPress, featured, dark, accent, delay = 0 }: Props) {
+export default function ServiceCard({ title, onPress, featured, dark, accent, delay = 0, style }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(1)).current;
 
@@ -50,6 +52,7 @@ export default function ServiceCard({ title, onPress, featured, dark, accent, de
         ],
       },
       featured && s.featured,
+      style,
     ]}>
       <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={title}>
         <LinearGradient
@@ -58,7 +61,7 @@ export default function ServiceCard({ title, onPress, featured, dark, accent, de
           end={{ x: 1, y: 1 }}
           style={s.gradient}
         >
-          <Text style={[s.title, { color: txtColor }]} numberOfLines={1}>{title.toUpperCase()}</Text>
+          <FitText text={title} style={[s.title, { color: txtColor }]} fill={0.92} />
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
@@ -72,7 +75,16 @@ const s = StyleSheet.create({
     borderRadius: radii.card,
     overflow: 'hidden',
   },
+  gradient: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderRadius: radii.card,
+  },
   touch: {
+    flex: 1,
     borderRadius: radii.card,
     overflow: 'hidden',
     ...Platform.select({
@@ -80,17 +92,9 @@ const s = StyleSheet.create({
       ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 10 },
     }),
   },
-  gradient: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: 36,
-    borderRadius: radii.card,
-  },
   title: {
     fontFamily: typography.serifBold,
-    fontSize: sizes.cardTitle,
-    letterSpacing: 2,
+    letterSpacing: 1,
     textAlign: 'center',
   },
 });
