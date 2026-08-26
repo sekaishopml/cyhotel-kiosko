@@ -1,46 +1,43 @@
-import { motion } from 'framer-motion'
-import { fadeInUp, scaleOnTap } from '../lib/animations'
-import { imgUrl } from '../api/client'
+import { RoomType } from '../types'
+import { imgUrl } from '../api'
 
 interface Props {
-  name: string
-  photo: string
-  price: number
-  free: boolean
+  room: RoomType
   selected: boolean
   onClick: () => void
 }
 
-export default function RoomCard({ name, photo, price, free, selected, onClick }: Props) {
+export default function RoomCard({ room, selected, onClick }: Props) {
   return (
-    <motion.button
-      {...fadeInUp}
-      {...scaleOnTap}
+    <button
       onClick={onClick}
-      className={`flex h-[var(--room-h)] w-full rounded-2xl overflow-hidden border transition-colors ${
+      className={`tap-scale flex h-[var(--room-h)] min-h-[var(--tap)] w-full rounded-2xl overflow-hidden border-2 transition-all ${
         selected
-          ? 'bg-verde-900 border-verde-900 text-white'
-          : 'bg-crema border-verde-900/10 text-ink hover:border-verde-600'
+          ? 'bg-navy border-navy text-white ring-2 ring-gold/40'
+          : 'bg-white border-gold/15 text-navy hover:border-gold/40'
       }`}
     >
       <img
-        src={imgUrl(photo)}
-        alt={name}
+        src={imgUrl(room.photo)}
+        alt={room.label}
         className="w-[var(--room-h)] h-full object-cover shrink-0"
+        loading="lazy"
       />
       <div className="flex-1 flex flex-col justify-center px-4 min-w-0">
-        <h4 className="font-serif text-[length:var(--fs-room-name)] font-semibold truncate">{name}</h4>
+        <h4 className="font-sans text-[length:var(--fs-room-name)] font-extrabold uppercase tracking-wide truncate leading-tight">
+          {room.label}
+        </h4>
         <div className="flex items-center gap-2 mt-1">
-          <span className={`text-[length:var(--fs-body)] font-bold ${selected ? 'text-white' : 'text-verde-700'}`}>
-            ${price}
+          <span className={`text-[length:var(--fs-body)] font-extrabold ${selected ? 'text-gold' : 'text-navy'}`}>
+            ${room.price}
           </span>
-          {free && (
-            <span className="text-[length:var(--fs-small)] bg-verde-500 text-white px-2 py-0.5 rounded-full font-medium">
+          {room.free && (
+            <span className="text-[length:0.7rem] bg-sage text-white px-2 py-0.5 rounded-full font-bold uppercase">
               Gratis
             </span>
           )}
         </div>
       </div>
-    </motion.button>
+    </button>
   )
 }

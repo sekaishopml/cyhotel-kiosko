@@ -4,20 +4,17 @@ export default {
   theme: {
     extend: {
       colors: {
-        'verde': {
-          900: '#143A2A',
-          700: '#1B4A35',
-          600: '#2C6B4A',
-          500: '#3E9A63',
-        },
-        'crema': '#F3ECDD',
-        'ink': '#10281D',
+        navy: '#0F172A',
+        gold: '#D4A574',
+        cream: '#FBF7F0',
+        sage: '#6B8F71',
+        slate: '#64748B',
       },
       fontFamily: {
-        'serif': ['"Cormorant Garamond"', 'Georgia', 'serif'],
-        'sans': ['Manrope', 'system-ui', 'sans-serif'],
-      }
-    }
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['"Playfair Display"', 'Georgia', 'serif'],
+      },
+    },
   },
-  plugins: []
+  plugins: [],
 }

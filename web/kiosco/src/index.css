@@ -3,17 +3,17 @@
 @tailwind utilities;
 
 :root {
-  --fs-display: clamp(1.75rem, 4vw, 2.75rem);
-  --fs-section: clamp(1.25rem, 2.4vw, 1.75rem);
-  --fs-plan-name: clamp(1.5rem, 3.6vw, 2.4rem);
-  --fs-plan-sub: clamp(0.95rem, 1.6vw, 1.25rem);
-  --fs-room-name: clamp(1.1rem, 1.8vw, 1.5rem);
-  --fs-body: clamp(0.9rem, 1.4vw, 1.05rem);
-  --fs-small: clamp(0.75rem, 1.1vw, 0.875rem);
-  --icon: clamp(48px, 6vw, 72px);
-  --pad: clamp(1rem, 2.5vw, 1.5rem);
-  --gap: clamp(0.5rem, 1.2vw, 1rem);
-  --room-h: clamp(88px, 12vh, 120px);
+  /* Giganimalismo: tamaños grandes para tercera edad */
+  --fs-display: clamp(2.2rem, 5vw, 3rem);
+  --fs-section: clamp(1.8rem, 4vh, 2.5rem);
+  --fs-plan-name: clamp(2.5rem, 8vh, 4.5rem);
+  --fs-room-name: clamp(1.6rem, 3.5vh, 2.2rem);
+  --fs-body: clamp(1.2rem, 2.4vh, 1.5rem);
+  --fs-small: clamp(1rem, 2vh, 1.2rem);
+  --pad: clamp(1rem, 2.5vh, 1.5rem);
+  --gap: clamp(0.5rem, 1.2vh, 0.9rem);
+  --room-h: clamp(100px, 14vh, 150px);
+  --tap: 130px;
 }
 
 * {
@@ -30,19 +30,81 @@ html, body, #root {
 }
 
 body {
-  font-family: 'Manrope', system-ui, sans-serif;
-  background: #FFFFFF;
-  color: #10281D;
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #FBF7F0;
+  color: #0F172A;
   user-select: none;
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+/* Transiciones CSS para animaciones ligeras */
+.screen-enter {
+  animation: screenIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.shimmer {
-  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
+.screen-exit {
+  animation: screenOut 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
+
+@keyframes screenIn {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes screenOut {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0; transform: translateY(-12px); }
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes breathe {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-up {
+  animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-breathe {
+  animation: breathe 2.5s ease-in-out infinite;
+}
+
+.animate-pop {
+  animation: popIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Stagger delays for cards */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+
+/* Tap feedback */
+.tap-scale {
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tap-scale:active {
+  transform: scale(0.97);
+}
+
+/* Scrollbar hidden */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
