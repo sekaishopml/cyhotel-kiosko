@@ -14,7 +14,7 @@ import UpdateOverlay from './src/components/UpdateOverlay';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '10.0.8';
+const APP_VERSION = '10.0.9';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 120000;
 const SCREEN_ORDER: Record<Screen, number> = { plan: 0, room: 1, checkin: 2 };
@@ -59,11 +59,13 @@ export default function App() {
     status: 'idle' | 'available' | 'downloading' | 'installing' | 'error' | 'uptodate' | 'permission';
     version: string;
     apkUrl: string;
+    apkCdn: string;
+    triedCdn: boolean;
     percent: number;
     loaded: number;
     total: number;
     error: string;
-  }>({ status: 'idle', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: '' });
+  }>({ status: 'idle', version: '', apkUrl: '', apkCdn: '', triedCdn: false, percent: 0, loaded: 0, total: 0, error: '' });
   const prevScreen = React.useRef<Screen>('plan');
 
   useEffect(() => {
@@ -108,41 +110,53 @@ export default function App() {
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       const remote = String(data?.version ?? '');
-      if (!remote || remote === APP_VERSION) { setUpdate({ status: 'uptodate', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: '' }); return; }
+      if (!remote || remote === APP_VERSION) { setUpdate(u => ({ ...u, status: 'uptodate', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: '' })); return; }
       const apkPath = String(data?.apk ?? '/kiosco.apk');
       const apkUrl = apkPath.startsWith('http') ? apkPath : `${base}${apkPath}`;
-      setUpdate({ status: 'available', version: remote, apkUrl, percent: 0, loaded: 0, total: 0, error: '' });
+      const apkCdn = String(data?.apkCdn ?? '');
+      setUpdate({ status: 'available', version: remote, apkUrl, apkCdn, triedCdn: false, percent: 0, loaded: 0, total: 0, error: '' });
     } catch {
-      setUpdate({ status: 'error', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: 'No se pudo consultar el servidor.' });
+      setUpdate(u => ({ ...u, status: 'error', version: '', apkUrl: '', percent: 0, loaded: 0, total: 0, error: 'No se pudo consultar el servidor.' }));
     } finally { setChecking(false); }
   }, [checking]);
 
   const startUpdate = useCallback(async () => {
-    const apkUrl = update.apkUrl;
-    const v = update.version;
-    const updater = NativeModules.ApkUpdater;
-    if (!updater) { setUpdate(u => ({ ...u, status: 'error', error: 'Módulo de actualización no disponible.' })); return; }
-    try {
-      const can = await updater.canInstall();
-      if (can === false) { setUpdate(u => ({ ...u, status: 'permission' })); return; }
-    } catch { setUpdate(u => ({ ...u, status: 'error', error: 'No se pudo verificar el permiso.' })); return; }
+    const apkCdn = update.apkCdn;
 
-    setUpdate(u => ({ ...u, status: 'downloading', percent: 0, loaded: 0, total: 0 }));
-    const sub = DeviceEventEmitter.addListener('apkDownloadProgress', (e: any) => {
-      const total = Number(e?.total) || 0;
-      const loaded = Number(e?.loaded) || 0;
-      const percent = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
-      setUpdate(u => ({ ...u, percent, loaded, total }));
-    });
-    try {
-      await updater.downloadAndInstall(apkUrl);
-      setUpdate(u => ({ ...u, status: 'installing' }));
-    } catch (e: any) {
-      const m = e?.message || String(e);
-      const msg = m.includes('download_failed') ? 'No se pudo descargar el APK.' : m.includes('no_installer') ? 'No hay instalador de paquetes.' : (m || 'No se pudo instalar.');
-      setUpdate(u => ({ ...u, status: 'error', error: msg }));
-    } finally { sub.remove(); }
-  }, [update.apkUrl, update.version]);
+    const run = async (url: string, useCdn: boolean) => {
+      const updater = NativeModules.ApkUpdater;
+      if (!updater) { setUpdate(u => ({ ...u, status: 'error', error: 'Módulo de actualización no disponible.' })); return; }
+      try {
+        const can = await updater.canInstall();
+        if (can === false) { setUpdate(u => ({ ...u, status: 'permission' })); return; }
+      } catch { setUpdate(u => ({ ...u, status: 'error', error: 'No se pudo verificar el permiso.' })); return; }
+
+      setUpdate(u => ({ ...u, status: 'downloading', percent: 0, loaded: 0, total: 0, triedCdn: useCdn }));
+      const sub = DeviceEventEmitter.addListener('apkDownloadProgress', (e: any) => {
+        const total = Number(e?.total) || 0;
+        const loaded = Number(e?.loaded) || 0;
+        const percent = total > 0 ? Math.min(100, Math.round((loaded / total) * 100)) : 0;
+        setUpdate(u => ({ ...u, percent, loaded, total }));
+      });
+      try {
+        await updater.downloadAndInstall(url);
+        sub.remove();
+        setUpdate(u => ({ ...u, status: 'installing' }));
+      } catch (e: any) {
+        sub.remove();
+        if (!useCdn && apkCdn) {
+          setUpdate(u => ({ ...u, error: '', version: u.version, apkUrl: apkCdn }));
+          run(apkCdn, true);
+          return;
+        }
+        const m = e?.message || String(e);
+        const msg = m.includes('download_failed') ? 'No se pudo descargar el APK.' : m.includes('no_installer') ? 'No hay instalador de paquetes.' : (m || 'No se pudo instalar.');
+        setUpdate(u => ({ ...u, status: 'error', error: msg }));
+      }
+    };
+
+    run(update.apkUrl, update.triedCdn);
+  }, [update.apkUrl, update.apkCdn, update.triedCdn, update.version]);
 
   const openInstallSettings = useCallback(() => {
     const updater = NativeModules.ApkUpdater;

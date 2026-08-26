@@ -16,6 +16,7 @@ import com.facebook.react.bridge.UiThreadUtil
 import com.facebook.react.modules.core.DeviceEventManagerModule
 import java.io.File
 import java.io.FileOutputStream
+import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -31,6 +32,12 @@ class ApkUpdaterModule(reactContext: ReactApplicationContext) :
     reactApplicationContext
       .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
       .emit("apkDownloadProgress", map)
+  }
+
+  // Emit on the JS queue so progress events are not delayed/batched by the bridge
+  // when called from the background download thread.
+  private fun emitProgressSafe(loaded: Long, total: Long) {
+    reactApplicationContext.runOnJSQueueThread { emitProgress(loaded, total) }
   }
 
   @ReactMethod
@@ -73,21 +80,23 @@ class ApkUpdaterModule(reactContext: ReactApplicationContext) :
 
         conn = URL(url).openConnection() as HttpURLConnection
         conn.connectTimeout = 30000
-        conn.readTimeout = 120000
-        conn.setRequestProperty("Accept", "application/vnd.android.package-archive")
+        conn.readTimeout = 60000
+        conn.setRequestProperty("Accept", "application/vnd.android-package-archive")
         conn.connect()
 
         if (conn.responseCode !in 200..299) {
           throw IllegalStateException("HTTP ${conn.responseCode} — No se pudo descargar el APK")
         }
 
-        val contentLength = conn.contentLength.toLong()
+        val contentLength = conn.contentLengthLong
         if (contentLength <= 0L) {
           throw IllegalStateException("El servidor no informó el tamaño del archivo")
         }
 
-        emitProgress(0, contentLength)
+        emitProgressSafe(0, contentLength)
 
+        val startTime = System.currentTimeMillis()
+        var lastEmit = startTime
         var downloaded = 0L
         FileOutputStream(target).use { out ->
           conn.inputStream.use { inp ->
@@ -96,7 +105,17 @@ class ApkUpdaterModule(reactContext: ReactApplicationContext) :
             while (inp.read(buf).also { read = it } != -1) {
               out.write(buf, 0, read)
               downloaded += read
-              emitProgress(downloaded, contentLength)
+              val now = System.currentTimeMillis()
+              // Throttle bridge events to ~150ms; always emit the final chunk.
+              if (downloaded >= contentLength || now - lastEmit >= 150) {
+                lastEmit = now
+                emitProgressSafe(downloaded, contentLength)
+              }
+              // Si el servidor es demasiado lento, abortamos para que la app
+              // reintente desde el CDN de GitHub (más rápido para el dispositivo).
+              if (now - startTime > 4000 && downloaded < 1024 * 1024) {
+                throw IOException("Descarga demasiado lenta, se usará el servidor alternativo")
+              }
             }
           }
         }
@@ -108,7 +127,7 @@ class ApkUpdaterModule(reactContext: ReactApplicationContext) :
 
         val uri = FileProvider.getUriForFile(ctx, "${ctx.packageName}.fileprovider", target)
         val intent = Intent(Intent.ACTION_VIEW)
-        intent.setDataAndType(uri, "application/vnd.android.package-archive")
+        intent.setDataAndType(uri, "application/vnd.android-package-archive")
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
         ctx.startActivity(intent)
