@@ -1,38 +1,41 @@
 import { motion } from 'framer-motion'
-import { scaleOnTap } from '../lib/animations'
+import { fadeInUp, scaleOnTap } from '../lib/animations'
 
 interface Props {
   name: string
-  subtitle?: string
+  subtitle: string
   badge?: string
-  icon?: string
+  icon: string
   hero?: boolean
   onClick: () => void
 }
 
-export default function PlanCard({ name, badge, hero, onClick }: Props) {
+export default function PlanCard({ name, subtitle, badge, icon, hero, onClick }: Props) {
   return (
     <motion.button
+      {...fadeInUp}
       {...scaleOnTap}
-      initial={{ scale: 0.97 }}
-      animate={{ scale: 1 }}
-      transition={{ type: 'spring', stiffness: 300, damping: 20 }}
       onClick={onClick}
-      className={`relative w-full h-full min-h-[var(--tap)] rounded-3xl p-[var(--pad)] overflow-hidden flex flex-col items-center justify-center text-center border-2 transition-colors ${
+      className={`relative w-full h-full text-left rounded-3xl p-[var(--pad)] overflow-hidden ${
         hero
-          ? 'bg-verde-900 text-white border-verde-900'
-          : 'bg-white text-verde-900 border-verde-900/12 border-l-4 border-l-verde-500'
+          ? 'bg-gradient-to-br from-verde-900 to-verde-600 text-white'
+          : 'bg-ink text-white'
       }`}
     >
-      {hero && (
-        <div className="absolute top-0 left-0 right-0 h-[2px] bg-[#F3ECDD]" />
-      )}
       {badge && (
-        <span className={`absolute top-3 right-3 text-[length:var(--fs-small)] font-bold uppercase tracking-[0.15em] ${hero ? 'text-verde-200' : 'text-verde-600'}`}>
+        <span className="absolute top-4 right-4 bg-verde-500 text-white text-[length:var(--fs-small)] font-bold px-3 py-1 rounded-full uppercase tracking-wide">
           {badge}
         </span>
       )}
-      <h3 className="font-sans text-[length:var(--fs-plan-name)] leading-[1.05] font-extrabold uppercase tracking-wide">{name}</h3>
+      <div className="flex items-center gap-4 h-full">
+        <div className="w-[var(--icon)] h-[var(--icon)] rounded-full bg-white/15 flex items-center justify-center text-[length:var(--fs-plan-sub)] shrink-0">
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <h3 className="font-serif text-[length:var(--fs-plan-name)] leading-tight font-semibold truncate">{name}</h3>
+          <p className="text-[length:var(--fs-plan-sub)] opacity-80 mt-1 truncate">{subtitle}</p>
+        </div>
+      </div>
     </motion.button>
   )
 }

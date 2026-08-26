@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { fadeInUp, screenRight, staggerContainer, slideUpBar } from '../lib/animations'
+import { fadeInUp } from '../lib/animations'
 import { getTypes, type TypeOption } from '../api/client'
 import RoomCard from '../components/RoomCard'
 import ChipRow from '../components/ChipRow'
@@ -67,7 +67,7 @@ export default function RoomScreen({
     : basePrice + extraPrice
 
   return (
-    <motion.div className="h-full flex flex-col" {...screenRight}>
+    <motion.div className="h-full flex flex-col" {...fadeInUp}>
       <div className="shrink-0 px-[var(--pad)] pt-[var(--gap)] pb-[var(--gap)] flex items-center gap-3">
         <button onClick={onBack} className="text-verde-600 hover:text-verde-900 transition-colors">
           <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -95,12 +95,7 @@ export default function RoomScreen({
         )}
 
         {!loading && !error && (
-          <motion.div
-            className="grid grid-cols-2 md:grid-cols-3 gap-[var(--gap)]"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-          >
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-[var(--gap)]">
             {rooms.map(room => (
               <RoomCard
                 key={room.key}
@@ -112,7 +107,7 @@ export default function RoomScreen({
                 onClick={() => onSelectRoom(room.key)}
               />
             ))}
-          </motion.div>
+          </div>
         )}
 
         {currentRoom && (
@@ -128,11 +123,12 @@ export default function RoomScreen({
         )}
       </div>
 
-        {selectedRoom && (
-          <motion.div
-            {...slideUpBar}
-            className="shrink-0 bg-white border-t border-verde-900/10 px-[var(--pad)] py-[var(--gap)] flex items-center gap-4"
-          >
+      {selectedRoom && (
+        <motion.div
+          initial={{ y: 80 }}
+          animate={{ y: 0 }}
+          className="shrink-0 bg-white border-t border-verde-900/10 px-[var(--pad)] py-[var(--gap)] flex items-center gap-4"
+        >
           <div className="flex-1">
             <p className="text-[length:var(--fs-small)] text-verde-700/60 uppercase tracking-wide">Total</p>
             <p className="font-serif text-[length:var(--fs-section)] text-verde-900 font-bold">${total}</p>

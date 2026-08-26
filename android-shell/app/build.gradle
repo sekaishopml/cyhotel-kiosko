@@ -11,8 +11,8 @@ android {
         applicationId "com.hoteldelvalle.kiosco"
         minSdk 23
         targetSdk 34
-        versionCode 18
-        versionName "11.6.0"
+        versionCode 19
+        versionName "11.7.0"
     }
 
     signingConfigs {
