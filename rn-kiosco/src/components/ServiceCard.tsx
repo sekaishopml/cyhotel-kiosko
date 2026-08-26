@@ -6,7 +6,6 @@ import { EASE_OUT } from '../lib/anims';
 
 type Props = {
   title: string;
-  subtitle: string;
   onPress: () => void;
   featured?: boolean;
   dark?: boolean;
@@ -14,7 +13,7 @@ type Props = {
   delay?: number;
 };
 
-export default function ServiceCard({ title, subtitle, onPress, featured, dark, accent, delay = 0 }: Props) {
+export default function ServiceCard({ title, onPress, featured, dark, accent, delay = 0 }: Props) {
   const enter = useRef(new Animated.Value(0)).current;
   const press = useRef(new Animated.Value(1)).current;
 
@@ -40,7 +39,6 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
     : ['#1F3A2C', colors.brandPrimary];
 
   const txtColor = colors.brandCream;
-  const subTxtColor = isAccent ? 'rgba(244,238,226,0.7)' : 'rgba(244,238,226,0.5)';
 
   return (
     <Animated.View style={[
@@ -53,7 +51,7 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
       },
       featured && s.featured,
     ]}>
-      <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={`${title}: ${subtitle}`}>
+      <TouchableOpacity activeOpacity={1} onPress={onPress} onPressIn={onIn} onPressOut={onOut} style={s.touch} accessibilityLabel={title}>
         <LinearGradient
           colors={gradientColors}
           start={{ x: 0, y: 0 }}
@@ -61,7 +59,6 @@ export default function ServiceCard({ title, subtitle, onPress, featured, dark, 
           style={s.gradient}
         >
           <Text style={[s.title, { color: txtColor }]} numberOfLines={1}>{title.toUpperCase()}</Text>
-          <Text style={[s.subtitle, { color: subTxtColor }]} numberOfLines={1}>{subtitle}</Text>
         </LinearGradient>
       </TouchableOpacity>
     </Animated.View>
@@ -87,7 +84,7 @@ const s = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.lg,
-    paddingVertical: 28,
+    paddingVertical: 36,
     borderRadius: radii.card,
   },
   title: {
@@ -95,12 +92,5 @@ const s = StyleSheet.create({
     fontSize: sizes.cardTitle,
     letterSpacing: 2,
     textAlign: 'center',
-  },
-  subtitle: {
-    fontFamily: typography.sansMedium,
-    fontSize: sizes.cardSubtitle,
-    marginTop: 6,
-    textAlign: 'center',
-    letterSpacing: 0.5,
   },
 });

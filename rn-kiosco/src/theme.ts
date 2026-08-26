@@ -45,7 +45,7 @@ export const radii = {
 
 export const sizes = {
   wordmark: 26,
-  cardTitle: 42,
+  cardTitle: 54,
   cardSubtitle: 23,
   idleTitle: 66,
   idleHint: 26,

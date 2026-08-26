@@ -6,10 +6,10 @@ import ServiceCard from '../components/ServiceCard';
 type Props = { onSelectPlan: (key: string) => void };
 
 const PLANS = [
-  { key: 'momento', title: 'Momento', subtitle: 'Por horas, sin complicaciones', accent: true, featured: true },
-  { key: 'amanecida', title: 'Amanecida', subtitle: 'Desde la tarde hasta la mañana' },
-  { key: 'hospedaje', title: 'Hospedaje', subtitle: 'Estadía por noches' },
-  { key: 'suite', title: 'Suite Jacuzzi', subtitle: 'Noche de lujo', dark: true },
+  { key: 'momento', title: 'Momento', accent: true, featured: true },
+  { key: 'amanecida', title: 'Amanecida' },
+  { key: 'hospedaje', title: 'Hospedaje' },
+  { key: 'suite', title: 'Suite Jacuzzi', dark: true },
 ];
 
 export default function HomeScreen({ onSelectPlan }: Props) {
@@ -23,7 +23,7 @@ export default function HomeScreen({ onSelectPlan }: Props) {
       </View>
       <View style={s.grid}>
         {PLANS.map((p, i) => (
-          <ServiceCard key={p.key} title={p.title} subtitle={p.subtitle} featured={p.featured} accent={p.accent} dark={p.dark} delay={i * 100} onPress={() => onSelectPlan(p.key)} />
+          <ServiceCard key={p.key} title={p.title} featured={p.featured} accent={p.accent} dark={p.dark} delay={i * 100} onPress={() => onSelectPlan(p.key)} />
         ))}
       </View>
     </View>
