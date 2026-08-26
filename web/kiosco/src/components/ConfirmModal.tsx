@@ -9,7 +9,7 @@ interface Props {
 
 export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, amount, onClose }: Props) {
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 p-4" onClick={onClose}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-md p-4" onClick={onClose}>
       <div
         className="animate-pop bg-white rounded-3xl p-6 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]"
         onClick={e => e.stopPropagation()}
@@ -39,9 +39,9 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, a
           <p className="text-[length:var(--fs-body)]">
             <span className="font-bold text-navy">CHECK-OUT:</span> {checkOut}
           </p>
-          <div className="pt-2 border-t border-navy/10">
-            <span className="font-bold text-navy text-[length:var(--fs-body)]">TOTAL: </span>
-            <span className="font-extrabold text-gold text-[length:var(--fs-display)]">${amount}</span>
+          <div className="pt-2 border-t border-navy/10 flex items-baseline gap-2">
+            <span className="font-bold text-navy text-[length:var(--fs-body)]">TOTAL:</span>
+            <span className="font-extrabold text-gold text-3xl">${amount}</span>
           </div>
         </div>
 

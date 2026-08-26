@@ -41,8 +41,8 @@ export default function RoomScreen() {
 
   return (
     <div className="h-full flex flex-col slide-in-right">
-      <div className="shrink-0 px-3 py-2 flex items-center gap-2">
-        <button onClick={goBack} className="tap-scale w-8 h-8 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
+      <div className="shrink-0 px-4 py-2.5 flex items-center gap-3">
+        <button onClick={goBack} className="tap-scale w-9 h-9 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -52,23 +52,23 @@ export default function RoomScreen() {
         </h2>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-3 pb-2">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-2">
         {loading && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="skeleton w-full" style={{ height: 'var(--room-h)', minHeight: 'var(--tap)' }} />
+              <div key={i} className="skeleton w-full" style={{ height: '100px' }} />
             ))}
           </div>
         )}
 
         {error && (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-navy/5 flex items-center justify-center mb-3">
-              <svg className="w-7 h-7 text-navy/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-16 h-16 rounded-full bg-navy/5 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-navy/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
               </svg>
             </div>
-            <p className="text-navy/60 font-semibold mb-2">{error}</p>
+            <p className="text-navy/60 font-semibold mb-3">{error}</p>
             <button onClick={() => window.location.reload()} className="text-gold font-bold underline">
               Reintentar
             </button>
@@ -77,8 +77,8 @@ export default function RoomScreen() {
 
         {!loading && !error && rooms.length === 0 && (
           <div className="flex flex-col items-center justify-center py-10 text-center">
-            <div className="w-14 h-14 rounded-full bg-navy/5 flex items-center justify-center mb-3">
-              <svg className="w-7 h-7 text-navy/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <div className="w-16 h-16 rounded-full bg-navy/5 flex items-center justify-center mb-4">
+              <svg className="w-8 h-8 text-navy/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
               </svg>
             </div>
@@ -87,7 +87,7 @@ export default function RoomScreen() {
         )}
 
         {!loading && !error && rooms.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2.5">
             {rooms.map((room, i) => (
               <div
                 key={room.key}
@@ -106,16 +106,16 @@ export default function RoomScreen() {
       </div>
 
       {selectedRoom && (
-        <div className="shrink-0 bg-white border-t border-navy/5 px-3 py-2 animate-slide-up">
+        <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 animate-slide-up">
           {hasExtras && (
-            <div className="mb-2">
-              <p className="text-[0.65rem] font-semibold text-slate mb-1 uppercase tracking-wide">Duración</p>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="mb-3">
+              <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
                     onClick={() => selectExtra(selectedExtra === key ? null : key)}
-                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-full text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
+                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-xl text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
                       selectedExtra === key
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -129,14 +129,14 @@ export default function RoomScreen() {
           )}
 
           {selectedPlan === 'hospedaje' && (
-            <div className="mb-2">
-              <p className="text-[0.65rem] font-semibold text-slate mb-1 uppercase tracking-wide">Noches</p>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            <div className="mb-3">
+              <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Noches</p>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
                 {Array.from({ length: 7 }, (_, i) => i + 1).map(d => (
                   <button
                     key={d}
                     onClick={() => selectDays(d)}
-                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-full text-[0.8rem] font-bold border transition-all duration-200 ${
+                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-xl text-[0.8rem] font-bold border transition-all duration-200 ${
                       selectedDays === d
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -149,10 +149,10 @@ export default function RoomScreen() {
             </div>
           )}
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <div className="flex-1">
-              <p className="text-[0.65rem] text-slate uppercase tracking-wide font-semibold">Total</p>
-              <p className="font-display text-3xl text-navy font-bold">${total}</p>
+              <p className="text-[0.7rem] text-navy/60 uppercase tracking-wide font-semibold">Total</p>
+              <p className="font-display text-3xl text-navy font-bold leading-none">${total}</p>
             </div>
             <button
               onClick={() => goTo('checkin')}

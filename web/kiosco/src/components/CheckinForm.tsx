@@ -64,11 +64,13 @@ export default function CheckinForm({ planKey, roomKey, extra, days, onSubmit }:
             Documento (opcional)
           </label>
           <input
-            type="text"
+            type="tel"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            placeholder="Sin puntos ni espacios"
             value={doc}
-            onChange={e => setDoc(e.target.value)}
-            placeholder="DNI O PASAPORTE"
-            className="w-full rounded-2xl border-2 border-navy/15 bg-white px-5 py-[var(--pad)] text-[length:var(--fs-body)] text-navy placeholder:text-slate/40 uppercase font-semibold focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
+            onChange={e => setDoc(e.target.value.replace(/\D/g, ''))}
+            className="w-full bg-white border-2 border-navy/12 rounded-2xl px-4 py-3 text-[length:var(--fs-body)] text-navy font-semibold placeholder:text-navy/30 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all"
           />
         </div>
       </div>
