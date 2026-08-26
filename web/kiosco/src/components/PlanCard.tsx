@@ -26,7 +26,7 @@ export default function PlanCard({ name, subtitle, badge, icon, hero, onClick }:
           {badge}
         </span>
       )}
-      <h3 className="font-serif text-[length:var(--fs-plan-name)] leading-tight font-extrabold">{name}</h3>
+      <h3 className="font-serif text-[length:var(--fs-plan-name)] leading-[1.05] font-extrabold uppercase tracking-wide">{name}</h3>
     </motion.button>
   )
 }

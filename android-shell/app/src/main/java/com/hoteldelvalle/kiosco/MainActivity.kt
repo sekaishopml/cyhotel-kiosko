@@ -56,7 +56,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "11.3.0"
+        const val APP_VERSION = "11.4.0"
         private const val TAPS_REQUIRED = 5
         private const val TAP_TIMEOUT_MS = 2000L
     }

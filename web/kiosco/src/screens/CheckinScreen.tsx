@@ -82,7 +82,7 @@ export default function CheckinScreen({ planKey, roomKey, extra, days, onBack, o
           <h2 className="font-serif text-[length:var(--fs-section)] text-verde-900 font-semibold">Check-in</h2>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-hidden px-[var(--pad)] pb-[var(--gap)]">
+        <div className="flex-1 min-h-0 overflow-y-auto px-[var(--pad)] pb-[var(--gap)]">
           <div className="bg-crema rounded-2xl p-5 space-y-2 mb-6">
             <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Plan:</span> {planLabels[planKey] ?? planKey}</p>
             <p className="text-[length:var(--fs-body)]"><span className="font-bold text-verde-900">Habitación:</span> {roomKey}</p>
