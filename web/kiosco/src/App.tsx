@@ -28,8 +28,8 @@ export default function App() {
 
   return (
     <div className="h-full flex flex-col bg-cream">
-      <Header />
-      <StepBar step={step} />
+      {screen !== 'room' && <Header />}
+      {screen !== 'room' && <StepBar step={step} />}
       <main className="flex-1 min-h-0 overflow-hidden">
         {screen === 'plan' && <PlanScreen />}
         {screen === 'room' && <RoomScreen />}
