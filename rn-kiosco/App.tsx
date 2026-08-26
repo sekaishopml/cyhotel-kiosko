@@ -14,7 +14,7 @@ import UpdateOverlay from './src/components/UpdateOverlay';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '10.0.7';
+const APP_VERSION = '10.0.8';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 120000;
 const SCREEN_ORDER: Record<Screen, number> = { plan: 0, room: 1, checkin: 2 };
