@@ -13,7 +13,7 @@ import LoadingScreen from './src/components/LoadingScreen';
 
 type Screen = 'plan' | 'room' | 'checkin';
 
-const APP_VERSION = '10.0.1';
+const APP_VERSION = '10.0.2';
 const ADMIN_PIN = '12345';
 const IDLE_MS = 120000;
 const SCREEN_ORDER: Record<Screen, number> = { plan: 0, room: 1, checkin: 2 };
