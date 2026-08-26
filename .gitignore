@@ -1,9 +1,6 @@
 # Builds y artefactos
 /dist/
 *.apk
-android-kiosco/.gradle/
-android-kiosco/app/build/
-android-kiosco/build/
 *.iml
 
 # Secretos / firma

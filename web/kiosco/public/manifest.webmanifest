@@ -1,0 +1,19 @@
+{
+  "name": "Hotel del Valle - Kiosco",
+  "short_name": "Kiosco",
+  "description": "Kiosco táctil de check-in para Hotel del Valle.",
+  "start_url": "/kiosco/",
+  "scope": "/kiosco/",
+  "display": "standalone",
+  "orientation": "landscape",
+  "background_color": "#FFFFFF",
+  "theme_color": "#143A2A",
+  "icons": [
+    {
+      "src": "/kiosco/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
