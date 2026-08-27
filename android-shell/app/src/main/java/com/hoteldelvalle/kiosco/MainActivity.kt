@@ -62,7 +62,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.1.17"
+        const val APP_VERSION = "1.1.19"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -179,6 +179,14 @@ class MainActivity : Activity() {
 
     private fun jsonEscape(s: String): String =
         "\"" + s.replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\""
+
+    private fun jsonExtract(json: String, key: String): String? {
+        val idx = json.indexOf("\"$key\"")
+        if (idx < 0) return null
+        val s = json.indexOf("\"", idx + key.length + 2) + 1
+        val e = json.indexOf("\"", s)
+        return if (s > 0 && e > s) json.substring(s, e) else null
+    }
 
     // ================= KIOSK MODE =================
 
@@ -451,25 +459,42 @@ class MainActivity : Activity() {
     private fun autoCheckUpdate() {
         thread {
             try {
-                val c = URL(UPDATE_API).openConnection() as HttpURLConnection
-                c.setRequestProperty("Accept", "application/vnd.github.v3+json")
-                c.connectTimeout = 10000
-                c.readTimeout = 10000
-                val code = c.responseCode
-                val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
-                c.disconnect()
-                val tagName = body?.let { json ->
-                    val idx = json.indexOf("\"tag_name\"")
-                    if (idx >= 0) {
-                        val s = json.indexOf("\"", idx + 11) + 1
-                        val e = json.indexOf("\"", s)
-                        if (s > 0 && e > s) json.substring(s, e) else null
-                    } else null
-                }
-                if (tagName != null && tagName != "v$APP_VERSION") {
-                    handler.post {
-                        if (!isFinishing && !isDestroyed)
-                            Toast.makeText(this, "Nueva versión disponible: $tagName", Toast.LENGTH_LONG).show()
+                // Intentar servidor local primero
+                var found = false
+                try {
+                    val base = serverBase()
+                    val c = URL("$base/api/kiosco-update").openConnection() as HttpURLConnection
+                    c.connectTimeout = 5000
+                    c.readTimeout = 5000
+                    if (c.responseCode == 200) {
+                        val body = c.inputStream.bufferedReader().readText()
+                        c.disconnect()
+                        val v = jsonExtract(body, "version")
+                        if (v != null && v != APP_VERSION) {
+                            found = true
+                            handler.post {
+                                if (!isFinishing && !isDestroyed)
+                                    Toast.makeText(this, "Nueva versión disponible: v$v", Toast.LENGTH_LONG).show()
+                            }
+                        }
+                    } else { c.disconnect() }
+                } catch (_: Exception) {}
+
+                // Fallback: GitHub
+                if (!found) {
+                    val c = URL(UPDATE_API).openConnection() as HttpURLConnection
+                    c.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                    c.connectTimeout = 10000
+                    c.readTimeout = 10000
+                    val code = c.responseCode
+                    val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
+                    c.disconnect()
+                    val tagName = body?.let { jsonExtract(it, "tag_name") }
+                    if (tagName != null && tagName != "v$APP_VERSION") {
+                        handler.post {
+                            if (!isFinishing && !isDestroyed)
+                                Toast.makeText(this, "Nueva versión disponible: $tagName", Toast.LENGTH_LONG).show()
+                        }
                     }
                 }
             } catch (_: Exception) {
@@ -481,31 +506,58 @@ class MainActivity : Activity() {
         Toast.makeText(this, "Buscando actualización...", Toast.LENGTH_SHORT).show()
         thread {
             try {
-                val c = URL(UPDATE_API).openConnection() as HttpURLConnection
-                c.setRequestProperty("Accept", "application/vnd.github.v3+json")
-                c.connectTimeout = 10000
-                c.readTimeout = 10000
-                val code = c.responseCode
-                val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
-                c.disconnect()
+                var tagName: String? = null
+                var apkUrl: String? = null
+                var source = ""
 
-                val tagName = body?.let { json ->
-                    val idx = json.indexOf("\"tag_name\"")
-                    if (idx >= 0) {
-                        val s = json.indexOf("\"", idx + 11) + 1
-                        val e = json.indexOf("\"", s)
-                        if (s > 0 && e > s) json.substring(s, e) else null
-                    } else null
+                // Intentar servidor local primero
+                try {
+                    val base = serverBase()
+                    val c = URL("$base/api/kiosco-update").openConnection() as HttpURLConnection
+                    c.connectTimeout = 5000
+                    c.readTimeout = 5000
+                    if (c.responseCode == 200) {
+                        val body = c.inputStream.bufferedReader().readText()
+                        c.disconnect()
+                        val v = jsonExtract(body, "version")
+                        if (v != null && v != APP_VERSION) {
+                            tagName = "v$v"
+                            apkUrl = jsonExtract(body, "download_url")
+                            source = "servidor"
+                        }
+                    } else { c.disconnect() }
+                } catch (_: Exception) {}
+
+                // Fallback: GitHub
+                if (tagName == null) {
+                    try {
+                        val c = URL(UPDATE_API).openConnection() as HttpURLConnection
+                        c.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                        c.connectTimeout = 10000
+                        c.readTimeout = 10000
+                        val code = c.responseCode
+                        val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
+                        c.disconnect()
+                        tagName = body?.let { jsonExtract(it, "tag_name") }
+                        if (tagName != null && tagName != "v$APP_VERSION") {
+                            apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
+                            source = "GitHub"
+                        } else {
+                            tagName = null
+                        }
+                    } catch (_: Exception) {}
                 }
 
-                if (tagName != null && tagName != "v$APP_VERSION") {
-                    val apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
+                if (tagName != null && apkUrl != null) {
+                    val url = apkUrl!!
+                    val tag = tagName!!
+                    val src = source
                     handler.post {
                         if (isFinishing || isDestroyed) return@post
                         AlertDialog.Builder(this)
                             .setTitle("Actualización disponible")
-                            .setMessage("Nueva versión: $tagName\n\nVersión actual: v$APP_VERSION\n\n¿Desea descargar e instalar?")
-                            .setPositiveButton("Descargar") { _, _ -> downloadAndInstall(apkUrl, tagName) }
+                            .setMessage("Nueva versión: $tag\n\nVersión actual: v$APP_VERSION\n\nFuente: $src\n\n¿Descargar e instalar?")
+                            .setPositiveButton("Descargar") { _, _ -> downloadAndInstall(url, tag) }
                             .setNegativeButton("Cancelar", null)
                             .show()
                     }
@@ -528,32 +580,63 @@ class MainActivity : Activity() {
         thread {
             try {
                 evalJs("window.__updateStatus('checking')")
-                val c = URL(UPDATE_API).openConnection() as HttpURLConnection
-                c.setRequestProperty("Accept", "application/vnd.github.v3+json")
-                c.connectTimeout = 10000
-                c.readTimeout = 10000
-                val code = c.responseCode
-                val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
-                c.disconnect()
 
-                val tagName = body?.let { json ->
-                    val idx = json.indexOf("\"tag_name\"")
-                    if (idx >= 0) {
-                        val s = json.indexOf("\"", idx + 11) + 1
-                        val e = json.indexOf("\"", s)
-                        if (s > 0 && e > s) json.substring(s, e) else null
-                    } else null
+                // Intentar primero con el servidor local (siempre accesible en la red)
+                var tagName: String? = null
+                var apkUrl: String? = null
+                var source = ""
+
+                try {
+                    val base = serverBase()
+                    val c = URL("$base/api/kiosco-update").openConnection() as HttpURLConnection
+                    c.connectTimeout = 5000
+                    c.readTimeout = 5000
+                    val code = c.responseCode
+                    if (code == 200) {
+                        val body = c.inputStream.bufferedReader().readText()
+                        c.disconnect()
+                        val serverVersion = jsonExtract(body, "version")
+                        if (serverVersion != null && serverVersion != APP_VERSION) {
+                            tagName = "v$serverVersion"
+                            apkUrl = jsonExtract(body, "download_url")
+                            source = "servidor"
+                        }
+                    } else {
+                        c.disconnect()
+                    }
+                } catch (_: Exception) {}
+
+                // Fallback: GitHub API
+                if (tagName == null) {
+                    try {
+                        val c = URL(UPDATE_API).openConnection() as HttpURLConnection
+                        c.setRequestProperty("Accept", "application/vnd.github.v3+json")
+                        c.connectTimeout = 10000
+                        c.readTimeout = 10000
+                        val code = c.responseCode
+                        val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
+                        c.disconnect()
+                        tagName = body?.let { jsonExtract(it, "tag_name") }
+                        if (tagName != null && tagName != "v$APP_VERSION") {
+                            apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
+                            source = "GitHub"
+                        } else {
+                            tagName = null
+                        }
+                    } catch (_: Exception) {}
                 }
 
-                if (tagName != null && tagName != "v$APP_VERSION") {
-                    evalJs("window.__updateStatus('available','$tagName')")
-                    val apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
+                if (tagName != null && apkUrl != null) {
+                    val url = apkUrl!!
+                    val tag = tagName!!
+                    val src = source
+                    evalJs("window.__updateStatus('available','$tag')")
                     handler.post {
                         if (isFinishing || isDestroyed) return@post
                         AlertDialog.Builder(this)
                             .setTitle("Actualización disponible")
-                            .setMessage("Nueva versión: $tagName\n\nVersión actual: v$APP_VERSION\n\n¿Desea descargar e instalar?")
-                            .setPositiveButton("Descargar") { _, _ -> downloadAndInstallFromWeb(apkUrl, tagName) }
+                            .setMessage("Nueva versión: $tag\n\nVersión actual: v$APP_VERSION\n\nFuente: $src\n\n¿Descargar e instalar?")
+                            .setPositiveButton("Descargar") { _, _ -> downloadAndInstallFromWeb(url, tag) }
                             .setNegativeButton("Cancelar") { _, _ -> evalJs("window.__updateStatus('cancelled')") }
                             .show()
                     }

@@ -429,6 +429,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.get_types()
             elif path == "/api/kiosco-version":
                 self.kiosco_version()
+            elif path == "/api/kiosco-update":
+                self.kiosco_update()
             elif path == "/api/admin/me":
                 sess = self._require_auth()
                 if sess:
@@ -2692,6 +2694,27 @@ class Handler(BaseHTTPRequestHandler):
             self._send(200, payload)
         except Exception:
             self._error(500, "No se pudo leer la versión")
+
+    def kiosco_update(self):
+        """Endpoint de actualización local: devuelve versión + URL de descarga del servidor."""
+        try:
+            p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "web", "kiosco-version.json")
+            if os.path.exists(p):
+                with open(p, "r") as f:
+                    data = json.load(f)
+            else:
+                data = {"version": None}
+            version = data.get("version")
+            # Construir URL de descarga apuntando al servidor local
+            host = self.headers.get("Host", "localhost")
+            download_url = f"http://{host}/kiosco.apk"
+            self._send(200, {
+                "version": version,
+                "download_url": download_url,
+                "apk": "/kiosco.apk",
+            })
+        except Exception:
+            self._error(500, "No se pudo verificar actualización")
 
     def api_health(self):
         """Endpoint ligero para healthchecks (Docker, uptime, watchdog del quiosco)."""
