@@ -42,6 +42,22 @@ export default function CheckinScreen() {
     }
   }
 
+  const total = selectedPlan === 'suite' && selectedExtra
+    ? (selectedExtra === 'momento' ? 20 : selectedExtra === 'amanecida' ? 35 : 50)
+    : selectedPlan === 'hospedaje'
+    ? (selectedRoom === 'estandar' ? 30 : selectedRoom === 'matrimonial' ? 30 : 40) * selectedDays
+    : selectedRoom === 'estandar' ? 10
+    : selectedRoom === 'matrimonial' ? 12
+    : 12
+
+  const roomPrice = selectedPlan === 'suite' && selectedExtra
+    ? (selectedExtra === 'momento' ? 20 : selectedExtra === 'amanecida' ? 35 : 50)
+    : selectedPlan === 'hospedaje'
+    ? (selectedRoom === 'estandar' ? 30 : selectedRoom === 'matrimonial' ? 30 : 40)
+    : selectedRoom === 'estandar' ? 10
+    : selectedRoom === 'matrimonial' ? 12
+    : 12
+
   return (
     <>
       <div className="h-full flex flex-col slide-in-right">
@@ -56,11 +72,19 @@ export default function CheckinScreen() {
           </h2>
         </div>
 
+        <div className="shrink-0 px-4 pb-2">
+          <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
+            <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '100%' }} />
+          </div>
+        </div>
+
         <CheckinForm
           planKey={selectedPlan!}
           roomKey={selectedRoom!}
           extra={selectedExtra}
           days={selectedDays}
+          roomPrice={roomPrice}
+          total={total}
           onSubmit={handleSubmit}
         />
       </div>

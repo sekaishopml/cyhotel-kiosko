@@ -66,11 +66,17 @@ export default function RoomScreen() {
         </h2>
       </div>
 
+      <div className="shrink-0 px-4 pb-2">
+        <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '66%' }} />
+        </div>
+      </div>
+
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-4">
         {loading && (
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="skeleton w-full" style={{ height: '100px' }} />
+              <div key={i} className="skeleton w-full" style={{ height: '72px' }} />
             ))}
           </div>
         )}
@@ -101,7 +107,7 @@ export default function RoomScreen() {
         )}
 
         {!loading && !error && rooms.length > 0 && (
-          <div className="flex flex-col gap-2.5">
+          <div className="flex flex-col gap-2">
             {rooms.map((room, i) => (
               <div
                 key={room.key}
@@ -124,15 +130,37 @@ export default function RoomScreen() {
 
       {selectedRoom && (
         <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 bottom-bar">
-          {hasExtras && (
+          {hasExtras && selectedPlan === 'suite' && (
             <div className="mb-3">
               <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
-              <div className={`${selectedPlan === 'suite' ? 'flex flex-col gap-2' : 'flex gap-2 overflow-x-auto no-scrollbar pb-1'}`}>
+              <div className="grid grid-cols-1 gap-2">
                 {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
                     onClick={() => selectExtra(selectedExtra === key ? null : key)}
-                    className={`tap-scale ${selectedPlan === 'suite' ? 'w-full' : 'shrink-0'} px-5 py-2.5 rounded-xl text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
+                    className={`tap-scale w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-200 ${
+                      selectedExtra === key
+                        ? 'bg-navy text-white border-navy shadow-md'
+                        : 'bg-white text-navy border-navy/10 hover:border-gold/40'
+                    }`}
+                  >
+                    <span className="font-bold text-[0.85rem] uppercase">{val.label}</span>
+                    <span className={`font-extrabold text-lg ${selectedExtra === key ? 'text-gold' : 'text-navy'}`}>${val.price}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {hasExtras && selectedPlan !== 'suite' && (
+            <div className="mb-3">
+              <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+                {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
+                  <button
+                    key={key}
+                    onClick={() => selectExtra(selectedExtra === key ? null : key)}
+                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-lg text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
                       selectedExtra === key
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -153,7 +181,7 @@ export default function RoomScreen() {
                   <button
                     key={d}
                     onClick={() => selectDays(d)}
-                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-xl text-[0.8rem] font-bold border transition-all duration-200 ${
+                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-lg text-[0.8rem] font-bold border transition-all duration-200 ${
                       selectedDays === d
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
@@ -173,7 +201,7 @@ export default function RoomScreen() {
             </div>
             <button
               onClick={() => goTo('checkin')}
-              className="tap-scale bg-navy text-white rounded-2xl px-8 py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
+              className="tap-scale bg-navy text-white rounded-lg px-8 py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
             >
               Continuar
             </button>

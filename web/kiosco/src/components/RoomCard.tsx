@@ -47,12 +47,12 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
           : 'bg-white text-navy p-3 card-shadow'
       }`}
     >
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-3">
         <img
           src={imgUrl(room.photo)}
           alt={room.label}
           className={`rounded-md object-cover shrink-0 transition-all duration-400 ${
-            expanded ? 'w-24 h-24' : 'w-20 h-20'
+            expanded ? 'w-20 h-20' : 'w-14 h-14'
           }`}
           loading="lazy"
         />
@@ -60,25 +60,26 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
           <h4 className="font-sans text-[length:var(--fs-room-name)] font-extrabold uppercase tracking-wide leading-tight">
             {room.label}
           </h4>
-          <div className="flex items-baseline gap-2 mt-1">
-            <span className={`text-[length:var(--fs-display)] font-extrabold leading-none ${expanded || selected ? 'text-gold' : 'text-navy'}`}>
-              ${room.price}
+          {timeLabel && (
+            <span className={`text-[0.6rem] font-semibold uppercase ${expanded || selected ? 'text-white/60' : 'text-navy/35'}`}>
+              {timeLabel}
             </span>
-            {timeLabel && (
-              <span className={`text-[0.65rem] font-semibold uppercase ${expanded || selected ? 'text-white' : 'text-navy/40'}`}>
-                {timeLabel}
-              </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-right font-extrabold leading-none ${expanded || selected ? 'text-gold' : 'text-navy'}`}
+            style={{ fontSize: 'var(--fs-display)' }}>
+            ${room.price}
+          </span>
+          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+            selected || expanded ? 'border-gold bg-gold' : 'border-navy/15'
+          }`}>
+            {(selected || expanded) && (
+              <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
             )}
           </div>
-        </div>
-        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-          selected || expanded ? 'border-gold bg-gold' : 'border-navy/15'
-        }`}>
-          {(selected || expanded) && (
-            <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-            </svg>
-          )}
         </div>
       </div>
 

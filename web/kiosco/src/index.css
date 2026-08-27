@@ -266,3 +266,14 @@ body {
 .animate-shake {
   animation: shake 0.4s ease-in-out;
 }
+
+/* Progress bar fill animation */
+.progress-fill {
+  animation: progressFill 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  transform-origin: left;
+}
+
+@keyframes progressFill {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
