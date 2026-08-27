@@ -25,7 +25,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
   }, [expanded])
 
   const timeLabel = selectedPlan === 'amanecida'
-    ? '19:00 - 09:00'
+    ? '18:00 - 09:00'
     : selectedPlan === 'hospedaje'
     ? null
     : '/ 3h'

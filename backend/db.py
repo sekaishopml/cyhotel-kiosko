@@ -38,7 +38,7 @@ ROOM_TYPES = {
         "desc": "Cama matrimonial, más amplia, nevera, A/C, TV Smart, WiFi, agua caliente, sillón, luces LED, baño con mampara, bebidas y piqueos",
         "momento": 12,
         "amanecida": 20,
-        "hospedaje": None,
+        "hospedaje": 30,
         "extras": {
             "1h": {"label": "1 hora adicional", "price": 5},
             "6h": {"label": "Doble tiempo (6 horas)", "price": 24},
@@ -56,7 +56,9 @@ ROOM_TYPES = {
     "suite": {
         "label": "Suite con Jacuzzi",
         "desc": "Jacuzzi con hidromasaje, nevera, TV Smart, A/C, WiFi, agua caliente, sillón, bebidas y piqueos",
-        "suite": 20,
+        "momento": 20,
+        "amanecida": 35,
+        "hospedaje": 50,
         "extras": {
             "1h": {"label": "1 hora adicional", "price": 5},
             "6h": {"label": "Doble tiempo (6 horas)", "price": 40},
@@ -64,7 +66,7 @@ ROOM_TYPES = {
     },
 }
 
-AMANECIDA_ENTRY = "19:00"
+AMANECIDA_ENTRY = "18:00"
 AMANECIDA_EXIT = "09:00"
 AMANECIDA_EXIT_NEXT_DAY = True
 
