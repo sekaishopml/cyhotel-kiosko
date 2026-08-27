@@ -5,12 +5,16 @@ import android.app.AlertDialog
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.Settings
 import android.util.Log
 import android.view.MotionEvent
 import android.view.View
@@ -23,9 +27,13 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ProgressBar
 import android.widget.ScrollView
 import android.widget.TextView
 import android.widget.Toast
+import java.io.File
+import java.io.FileOutputStream
+import java.io.InputStream
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
@@ -56,7 +64,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.1.4"
+        const val APP_VERSION = "1.1.5"
         private const val TAPS_REQUIRED = 5
         private const val TAP_TIMEOUT_MS = 2000L
     }
@@ -529,28 +537,22 @@ class MainActivity : Activity() {
                         if (s > 0 && e > s) json.substring(s, e) else null
                     } else null
                 }
-                val htmlUrl = body?.let { json ->
-                    val idx = json.indexOf("\"html_url\"")
-                    if (idx >= 0) {
-                        val s = json.indexOf("\"", idx + 10) + 1
-                        val e = json.indexOf("\"", s)
-                        if (s > 0 && e > s) json.substring(s, e) else null
-                    } else null
-                }
 
-                handler.post {
-                    if (isFinishing || isDestroyed) return@post
-                    if (tagName != null) {
-                        val msg = if (tagName != "v$APP_VERSION") {
-                            updateUrl = htmlUrl
-                            "Nueva versión disponible: $tagName\n\nVersión actual: v$APP_VERSION"
-                        } else {
-                            "Ya tienes la última versión: v$APP_VERSION"
-                        }
-                        AlertDialog.Builder(this).setTitle("Actualización").setMessage(msg)
-                            .setPositiveButton("OK", null).show()
-                    } else {
-                        Toast.makeText(this, "No se pudo verificar actualización", Toast.LENGTH_SHORT).show()
+                if (tagName != null && tagName != "v$APP_VERSION") {
+                    val apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
+                    handler.post {
+                        if (isFinishing || isDestroyed) return@post
+                        AlertDialog.Builder(this)
+                            .setTitle("Actualización disponible")
+                            .setMessage("Nueva versión: $tagName\n\nVersión actual: v$APP_VERSION\n\n¿Desea descargar e instalar?")
+                            .setPositiveButton("Descargar") { _, _ -> downloadAndInstall(apkUrl, tagName) }
+                            .setNegativeButton("Cancelar", null)
+                            .show()
+                    }
+                } else {
+                    handler.post {
+                        if (!isFinishing && !isDestroyed)
+                            Toast.makeText(this, "Ya tienes la última versión: v$APP_VERSION", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
@@ -559,6 +561,132 @@ class MainActivity : Activity() {
                         Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
+        }
+    }
+
+    private fun downloadAndInstall(apkUrl: String, tagName: String) {
+        if (Build.VERSION.SDK_INT >= 26 && !packageManager.canRequestPackageInstalls()) {
+            handler.post {
+                AlertDialog.Builder(this)
+                    .setTitle("Permiso requerido")
+                    .setMessage("Se necesita permiso para instalar apps. Abra la configuración y permita instalación de apps desconocidas.")
+                    .setPositiveButton("Configurar") { _, _ ->
+                        val intent = Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES)
+                        intent.data = Uri.parse("package:$packageName")
+                        startActivity(intent)
+                    }
+                    .setNegativeButton("Cancelar", null)
+                    .show()
+            }
+            return
+        }
+
+        val progressBar = ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal)
+        progressBar.max = 100
+        progressBar.progress = 0
+
+        val tv = TextView(this).apply {
+            text = "Descargando $tagName..."
+            textSize = 16f
+            setPadding(48, 32, 48, 16)
+            setTextColor(Color.WHITE)
+        }
+
+        val container = FrameLayout(this)
+        container.setBackgroundColor(Color.parseColor("#0F172A"))
+        container.addView(tv, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        ))
+        val lp = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT
+        )
+        lp.setMargins(48, 0, 48, 32)
+        lp.gravity = android.view.Gravity.BOTTOM
+        container.addView(progressBar, lp)
+
+        val dialog = AlertDialog.Builder(this)
+            .setTitle("Actualizando")
+            .setView(container)
+            .setCancelable(false)
+            .create()
+
+        handler.post { dialog.show() }
+
+        thread {
+            var conn: HttpURLConnection? = null
+            try {
+                val url = URL(apkUrl)
+                conn = url.openConnection() as HttpURLConnection
+                conn.connectTimeout = 30000
+                conn.readTimeout = 60000
+                val code = conn.responseCode
+                if (code != 200) {
+                    handler.post {
+                        dialog.dismiss()
+                        Toast.makeText(this, "Error HTTP $code al descargar", Toast.LENGTH_LONG).show()
+                    }
+                    return@thread
+                }
+
+                val totalSize = conn.contentLength.toLong()
+                val input: InputStream = conn.inputStream
+
+                val dir = File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "kiosco")
+                dir.mkdirs()
+                val file = File(dir, "Kiosko-$tagName.apk")
+                val output = FileOutputStream(file)
+
+                val buffer = ByteArray(8192)
+                var downloaded = 0L
+                var read: Int
+                while (input.read(buffer).also { read = it } != -1) {
+                    output.write(buffer, 0, read)
+                    downloaded += read
+                    val progress = if (totalSize > 0) (downloaded * 100 / totalSize).toInt() else 0
+                    handler.post { progressBar.progress = progress }
+                }
+                output.flush()
+                output.close()
+                input.close()
+                conn.disconnect()
+
+                logBoot("APK descargado: ${file.absolutePath} (${file.length()} bytes)")
+
+                handler.post {
+                    dialog.dismiss()
+                    installApk(file)
+                }
+            } catch (e: Exception) {
+                logBoot("Error descargando APK: ${e.message}")
+                handler.post {
+                    dialog.dismiss()
+                    Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            } finally {
+                try { conn?.disconnect() } catch (_: Exception) {}
+            }
+        }
+    }
+
+    private fun installApk(file: File) {
+        try {
+            val uri = if (Build.VERSION.SDK_INT >= 24) {
+                androidx.core.content.FileProvider.getUriForFile(
+                    this, "$packageName.fileprovider", file
+                )
+            } else {
+                Uri.fromFile(file)
+            }
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "application/vnd.android.package-archive")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            logBoot("Instalando APK: ${file.absolutePath}")
+            startActivity(intent)
+        } catch (e: Exception) {
+            logBoot("Error instalando APK: ${e.message}")
+            Toast.makeText(this, "Error al instalar: ${e.message}", Toast.LENGTH_LONG).show()
         }
     }
 
