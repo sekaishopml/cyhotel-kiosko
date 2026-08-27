@@ -772,11 +772,22 @@ class Handler(BaseHTTPRequestHandler):
                 })
                 continue
             if product == "suite":
-                price = info.get("momento") if key == "suite" else None
+                if key == "suite":
+                    price = info.get("momento")
+                    extras = {
+                        "momento": {"label": "Momento (3h)", "price": info.get("momento", 0)},
+                        "amanecida": {"label": "Amanecida (18:00-09:00)", "price": info.get("amanecida", 0)},
+                        "hospedaje": {"label": "Hospedaje (por noche)", "price": info.get("hospedaje", 0)},
+                    }
+                else:
+                    price = None
+                    extras = {}
             elif product in ("momento", "amanecida", "hospedaje") and key == "suite":
                 price = None
+                extras = {}
             else:
                 price = info.get(product)
+                extras = {} if product == "amanecida" else (info.get("extras") or {})
             if price is None:
                 continue
             eligible, reason = True, None
@@ -795,7 +806,7 @@ class Handler(BaseHTTPRequestHandler):
                 "free": free,
                 "eligible": eligible,
                 "reason": reason,
-                "extras": {} if product == "amanecida" else (info.get("extras") or {}),
+                "extras": extras,
             })
         self._send(200, {"product": product, "types": result})
 

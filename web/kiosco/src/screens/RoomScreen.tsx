@@ -38,6 +38,8 @@ export default function RoomScreen() {
     : 0
   const total = selectedPlan === 'hospedaje'
     ? basePrice * selectedDays
+    : selectedPlan === 'suite' && selectedExtra
+    ? extraPrice
     : basePrice + extraPrice
 
   const planLabels: Record<string, string> = {
@@ -47,7 +49,9 @@ export default function RoomScreen() {
     suite: 'SUITE JACUZZI',
   }
 
-  const hasExtras = selectedPlan !== 'amanecida' && currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0
+  const hasExtras = selectedPlan === 'suite'
+    ? !!(currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0)
+    : selectedPlan !== 'amanecida' && !!(currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0)
 
   return (
     <div className="h-full flex flex-col slide-in-right">
@@ -110,6 +114,7 @@ export default function RoomScreen() {
                   selectedPlan={selectedPlan!}
                   expanded={expandedRoom === room.key}
                   onClick={() => handleRoomClick(room.key)}
+                  selectedExtra={selectedRoom === room.key ? selectedExtra : null}
                 />
               </div>
             ))}

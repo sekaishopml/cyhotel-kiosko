@@ -8,9 +8,10 @@ interface Props {
   selectedPlan: string
   expanded: boolean
   onClick: () => void
+  selectedExtra?: string | null
 }
 
-export default function RoomCard({ room, selected, selectedPlan, expanded, onClick }: Props) {
+export default function RoomCard({ room, selected, selectedPlan, expanded, onClick, selectedExtra }: Props) {
   const [photoIdx, setPhotoIdx] = useState(0)
   const photos = [room.photo]
 
@@ -24,7 +25,12 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
     if (!expanded) setPhotoIdx(0)
   }, [expanded])
 
-  const timeLabel = selectedPlan === 'amanecida'
+  const timeLabel = selectedPlan === 'suite'
+    ? selectedExtra === 'amanecida' ? '18:00 - 09:00'
+    : selectedExtra === 'hospedaje' ? 'por noche'
+    : selectedExtra === 'momento' ? '/ 3h'
+    : null
+    : selectedPlan === 'amanecida'
     ? '18:00 - 09:00'
     : selectedPlan === 'hospedaje'
     ? null
