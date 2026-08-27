@@ -88,10 +88,10 @@ export default function App() {
         {screen === 'room' && <RoomScreen />}
         {screen === 'checkin' && <CheckinScreen />}
       </main>
-      <footer className="shrink-0 text-center py-1 bg-cream">
+      <footer className="shrink-0 text-center py-1 bg-cream pointer-events-none">
         <button
-          onClick={(e) => { e.stopPropagation(); setShowPin(true) }}
-          className="text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors"
+          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setShowPin(true) }}
+          className="pointer-events-auto inline-flex items-center justify-center w-fit mx-auto px-2 py-0 text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors leading-none touch-none"
         >
           v{APP_VERSION}
         </button>
