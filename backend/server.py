@@ -748,7 +748,10 @@ class Handler(BaseHTTPRequestHandler):
                     "extras": {},
                 })
                 continue
-            price = info.get(product)
+            if product == "suite":
+                price = info.get("momento") if key == "suite" else None
+            else:
+                price = info.get(product)
             if price is None:
                 continue
             eligible, reason = True, None

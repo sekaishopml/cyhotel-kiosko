@@ -44,6 +44,7 @@ export default function RoomScreen() {
     momento: 'MOMENTO',
     amanecida: 'AMANECIDA',
     hospedaje: 'HOSPEDAJE',
+    suite: 'SUITE JACUZZI',
   }
 
   const hasExtras = selectedPlan !== 'amanecida' && currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0

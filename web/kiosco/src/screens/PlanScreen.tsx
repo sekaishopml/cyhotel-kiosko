@@ -6,6 +6,7 @@ const plans: Plan[] = [
   { key: 'momento', name: 'Momento', badge: 'El más pedido', hero: true },
   { key: 'amanecida', name: 'Amanecida', hero: false },
   { key: 'hospedaje', name: 'Hospedaje', hero: false },
+  { key: 'suite', name: 'Suite Jacuzzi', hero: false },
 ]
 
 export default function PlanScreen() {
