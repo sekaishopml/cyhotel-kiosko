@@ -111,15 +111,21 @@ export default function App() {
     <div className="h-full flex flex-col bg-cream">
       {screen !== 'room' && <Header />}
       {screen !== 'room' && <StepBar step={step} />}
-      <main className="flex-1 min-h-0 overflow-hidden">
+      <main className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
         {screen === 'plan' && <PlanScreen />}
         {screen === 'room' && <RoomScreen />}
         {screen === 'checkin' && <CheckinScreen />}
       </main>
-      <footer className="shrink-0 text-center py-1 bg-cream pointer-events-none">
+      <footer className="shrink-0 text-center py-1 bg-cream relative" style={{ pointerEvents: 'none' }}>
         <button
-          onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setShowPin(true) }}
-          className="pointer-events-auto inline-flex items-center justify-center w-fit mx-auto px-2 py-0 text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors leading-none touch-none"
+          onPointerDown={(e) => {
+            e.stopPropagation()
+            e.preventDefault()
+            e.nativeEvent.stopImmediatePropagation()
+            setShowPin(true)
+          }}
+          className="inline-flex items-center justify-center w-fit mx-auto px-2 py-0 text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors leading-none"
+          style={{ pointerEvents: 'auto', touchAction: 'none' }}
         >
           v{APP_VERSION}
         </button>
