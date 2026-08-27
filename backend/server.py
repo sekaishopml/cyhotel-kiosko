@@ -773,8 +773,6 @@ class Handler(BaseHTTPRequestHandler):
                 continue
             if product == "suite":
                 price = info.get("momento") if key == "suite" else None
-            elif product in ("momento", "amanecida", "hospedaje") and key == "suite":
-                price = None
             else:
                 price = info.get(product)
             if price is None:

@@ -33,7 +33,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
   return (
     <button
       onClick={onClick}
-      className={`tap-scale w-full text-left rounded-2xl transition-all duration-400 room-card-inner ${
+      className={`tap-scale w-full text-left rounded-lg transition-all duration-400 room-card-inner ${
         expanded
           ? 'bg-navy text-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.3)]'
           : selected
@@ -45,7 +45,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
         <img
           src={imgUrl(room.photo)}
           alt={room.label}
-          className={`rounded-xl object-cover shrink-0 transition-all duration-400 ${
+          className={`rounded-md object-cover shrink-0 transition-all duration-400 ${
             expanded ? 'w-24 h-24' : 'w-20 h-20'
           }`}
           loading="lazy"
