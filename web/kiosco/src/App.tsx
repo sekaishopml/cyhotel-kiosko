@@ -17,8 +17,9 @@ export default function App() {
   const [showAdmin, setShowAdmin] = useState(false)
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState(false)
-  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'ok' | 'available' | 'error'>('idle')
+  const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'ok' | 'available' | 'error' | 'downloading' | 'installing' | 'cancelled'>('idle')
   const [updateVersion, setUpdateVersion] = useState('')
+  const [updateProgress, setUpdateProgress] = useState(0)
   const [showServerConfig, setShowServerConfig] = useState(false)
   const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('kiosco_server') || window.location.origin)
   const pinRef = useRef<HTMLInputElement>(null)
@@ -42,6 +43,29 @@ export default function App() {
     }
   }, [showPin])
 
+  useEffect(() => {
+    ;(window as any).__updateStatus = (status: string, extra?: string) => {
+      if (status === 'checking') {
+        setUpdateStatus('checking')
+      } else if (status === 'available') {
+        setUpdateVersion(extra || '')
+        setUpdateStatus('available')
+      } else if (status === 'latest') {
+        setUpdateStatus('ok')
+      } else if (status === 'downloading') {
+        setUpdateStatus('downloading')
+        setUpdateProgress(parseInt(extra || '0', 10))
+      } else if (status === 'installing') {
+        setUpdateStatus('installing')
+      } else if (status === 'cancelled') {
+        setUpdateStatus('idle')
+      } else if (status === 'error') {
+        setUpdateStatus('error')
+      }
+    }
+    return () => { delete (window as any).__updateStatus }
+  }, [])
+
   const handlePinSubmit = () => {
     if (pinInput === ADMIN_PIN) {
       setShowPin(false)
@@ -54,6 +78,10 @@ export default function App() {
   }
 
   const handleCheckUpdate = () => {
+    if (window.Android?.checkAndUpdate) {
+      window.Android.checkAndUpdate()
+      return
+    }
     setUpdateStatus('checking')
     fetch('https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest', {
       headers: { 'Accept': 'application/vnd.github.v3+json' }
@@ -162,16 +190,28 @@ export default function App() {
             <div className="space-y-3">
               <button
                 onClick={handleCheckUpdate}
-                disabled={updateStatus === 'checking'}
+                disabled={updateStatus === 'checking' || updateStatus === 'downloading' || updateStatus === 'installing'}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-navy/10 hover:bg-navy/5 transition-colors text-left"
               >
-                <svg className="w-5 h-5 text-navy/50 shrink-0" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M10 2v4M10 14v4M2 10h4M14 10h4"/><circle cx="10" cy="10" r="3"/></svg>
+                <svg className={`w-5 h-5 text-navy/50 shrink-0 ${updateStatus === 'checking' || updateStatus === 'downloading' ? 'animate-spin' : ''}`} viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M10 2v4M10 14v4M2 10h4M14 10h4"/><circle cx="10" cy="10" r="3"/></svg>
                 <div className="flex-1">
                   <div className="text-sm font-semibold text-navy">
-                    {updateStatus === 'checking' ? 'Buscando...' : 'Buscar actualización'}
+                    {updateStatus === 'checking' && 'Buscando...'}
+                    {updateStatus === 'downloading' && `Descargando ${updateProgress}%`}
+                    {updateStatus === 'installing' && 'Instalando...'}
+                    {updateStatus === 'available' && 'Descargar e instalar'}
+                    {updateStatus === 'idle' && 'Buscar actualización'}
+                    {updateStatus === 'ok' && 'Buscar actualización'}
+                    {updateStatus === 'error' && 'Buscar actualización'}
                   </div>
                   {updateStatus === 'ok' && <div className="text-xs text-green-600 mt-0.5">Última versión: v{APP_VERSION}</div>}
-                  {updateStatus === 'available' && <div className="text-xs text-amber-600 font-bold mt-0.5">Nueva: {updateVersion}</div>}
+                  {updateStatus === 'available' && <div className="text-xs text-amber-600 font-bold mt-0.5">Nueva: {updateVersion} — toque para instalar</div>}
+                  {updateStatus === 'downloading' && (
+                    <div className="w-full bg-navy/10 rounded-full h-1.5 mt-1.5">
+                      <div className="bg-gold h-1.5 rounded-full transition-all duration-300" style={{ width: `${updateProgress}%` }} />
+                    </div>
+                  )}
+                  {updateStatus === 'installing' && <div className="text-xs text-blue-600 mt-0.5">El kiosco se reiniciará automáticamente</div>}
                   {updateStatus === 'error' && <div className="text-xs text-red-500 mt-0.5">Error al verificar</div>}
                 </div>
               </button>

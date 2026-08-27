@@ -2,8 +2,10 @@
 
 interface Window {
   __API_BASE__?: string
+  __updateStatus?: (status: string, extra?: string) => void
   Android?: {
     exitApp?: () => void
-    checkForUpdate?: () => void
+    checkAndUpdate?: () => void
+    getAppVersion?: () => string
   }
 }
