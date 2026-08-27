@@ -127,12 +127,12 @@ export default function RoomScreen() {
           {hasExtras && (
             <div className="mb-3">
               <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
-              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+              <div className={`${selectedPlan === 'suite' ? 'flex flex-col gap-2' : 'flex gap-2 overflow-x-auto no-scrollbar pb-1'}`}>
                 {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
                     onClick={() => selectExtra(selectedExtra === key ? null : key)}
-                    className={`tap-scale shrink-0 px-5 py-2.5 rounded-xl text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
+                    className={`tap-scale ${selectedPlan === 'suite' ? 'w-full' : 'shrink-0'} px-5 py-2.5 rounded-xl text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
                       selectedExtra === key
                         ? 'bg-navy text-white border-navy'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
