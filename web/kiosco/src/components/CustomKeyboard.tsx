@@ -25,7 +25,6 @@ const ROWS_NUM = [
 
 export default function CustomKeyboard({ value, onChange, type = 'text', placeholder, label, maxLength, onSubmit }: Props) {
   const [shift, setShift] = useState(false)
-  const inputRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     setShift(false)
@@ -49,41 +48,38 @@ export default function CustomKeyboard({ value, onChange, type = 'text', placeho
   const rows = type === 'numeric' ? ROWS_NUM : ROWS_TEXT
 
   return (
-    <div>
-      <label className="block text-[length:var(--fs-body)] font-bold text-navy mb-2 uppercase">
-        {label}
-      </label>
-      <div
-        ref={inputRef}
-        className="w-full bg-white border-2 border-navy/15 rounded-lg px-4 py-3 text-[length:var(--fs-body)] text-navy font-semibold min-h-[52px] flex items-center"
-      >
-        {value ? (
-          <span className="uppercase">{value}</span>
-        ) : (
-          <span className="text-navy/30">{placeholder}</span>
-        )}
-        <span className="ml-1 w-[2px] h-5 bg-gold animate-pulse" />
+    <div className="flex flex-col h-full">
+      <div className="shrink-0 px-4 pb-3">
+        <label className="block text-[0.7rem] font-bold text-navy/40 uppercase mb-1.5">{label}</label>
+        <div className="w-full bg-white border-2 border-navy/15 rounded-lg px-4 py-3 text-[length:var(--fs-body)] text-navy font-semibold min-h-[48px] flex items-center">
+          {value ? (
+            <span className="uppercase">{value}</span>
+          ) : (
+            <span className="text-navy/30">{placeholder}</span>
+          )}
+          <span className="ml-1 w-[2px] h-5 bg-gold animate-pulse" />
+        </div>
       </div>
 
-      <div className="mt-2 bg-slate-100 rounded-lg p-2 space-y-1.5">
+      <div className="flex-1 bg-slate-100 rounded-t-xl p-3 pt-2 flex flex-col justify-center gap-2">
         {rows.map((row, ri) => (
-          <div key={ri} className="flex justify-center gap-1">
+          <div key={ri} className="flex justify-center gap-1.5">
             {type === 'text' && ri === 0 && (
               <button
-                onClick={() => setShift(!shift)}
-                className={`tap-scale h-10 min-w-[36px] rounded-md text-xs font-bold transition-colors ${
+                onPointerDown={(e) => { e.preventDefault(); setShift(!shift) }}
+                className={`tap-scale h-[52px] min-w-[44px] rounded-lg text-sm font-bold transition-colors ${
                   shift ? 'bg-navy text-white' : 'bg-white text-navy border border-navy/15'
                 }`}
               >
                 ⇧
               </button>
             )}
-            {type === 'numeric' && ri === 0 && <div className="min-w-[36px]" />}
+            {type === 'numeric' && ri === 0 && <div className="min-w-[44px]" />}
             {row.map(key => (
               <button
                 key={key}
                 onPointerDown={(e) => { e.preventDefault(); handleKey(key) }}
-                className={`tap-scale h-10 min-w-[32px] flex-1 max-w-[42px] rounded-md text-sm font-bold transition-colors active:scale-95 ${
+                className={`tap-scale h-[52px] min-w-[40px] flex-1 max-w-[52px] rounded-lg text-lg font-bold transition-colors active:scale-95 ${
                   key === 'OK'
                     ? 'bg-gold text-white'
                     : key === '⌫'
@@ -94,15 +90,15 @@ export default function CustomKeyboard({ value, onChange, type = 'text', placeho
                 {key}
               </button>
             ))}
-            {type === 'text' && ri === 0 && <div className="min-w-[36px]" />}
-            {type === 'numeric' && ri === 0 && <div className="min-w-[36px]" />}
+            {type === 'text' && ri === 0 && <div className="min-w-[44px]" />}
+            {type === 'numeric' && ri === 0 && <div className="min-w-[44px]" />}
           </div>
         ))}
         {type === 'text' && (
-          <div className="flex justify-center gap-1">
+          <div className="flex justify-center gap-1.5">
             <button
               onPointerDown={(e) => { e.preventDefault(); handleKey(' ') }}
-              className="tap-scale h-10 flex-1 max-w-[200px] rounded-md text-sm font-bold bg-white text-navy border border-navy/15"
+              className="tap-scale h-[52px] flex-1 max-w-[260px] rounded-lg text-sm font-bold bg-white text-navy border border-navy/15"
             >
               ESPACIO
             </button>

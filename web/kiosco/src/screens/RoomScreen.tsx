@@ -16,7 +16,19 @@ export default function RoomScreen() {
     setLoading(true)
     setError(null)
     getTypes(selectedPlan!)
-      .then(data => { if (!cancelled) setRooms(data.types) })
+      .then(data => {
+        if (!cancelled) {
+          setRooms(data.types)
+          if (selectedPlan === 'suite') {
+            const suiteRoom = data.types.find((r: RoomType) => r.key === 'suite')
+            if (suiteRoom && !selectedRoom) {
+              selectRoom('suite')
+              setExpandedRoom('suite')
+              selectExtra('momento')
+            }
+          }
+        }
+      })
       .catch(() => { if (!cancelled) setError('No se pudieron cargar las habitaciones.') })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
@@ -33,7 +45,7 @@ export default function RoomScreen() {
 
   const currentRoom = rooms.find(r => r.key === selectedRoom)
   const basePrice = currentRoom?.price ?? 0
-  const extraPrice = selectedExtra && currentRoom?.extras[selectedExtra]
+  const extraPrice = selectedExtra && currentRoom?.extras?.[selectedExtra]
     ? currentRoom.extras[selectedExtra].price
     : 0
   const total = selectedPlan === 'hospedaje'
@@ -49,13 +61,19 @@ export default function RoomScreen() {
     suite: 'SUITE JACUZZI',
   }
 
-  const hasExtras = selectedPlan === 'suite'
-    ? !!(currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0)
-    : selectedPlan !== 'amanecida' && !!(currentRoom && currentRoom.extras && Object.keys(currentRoom.extras).length > 0)
+  const extras = currentRoom?.extras ?? {}
+  const hasExtras = Object.keys(extras).length > 0
+  const isSuite = selectedPlan === 'suite'
 
   return (
     <div className="h-full flex flex-col slide-in-right">
-      <div className="shrink-0 px-4 py-2.5 flex items-center gap-3">
+      <div className="shrink-0 px-4 pb-2 pt-1">
+        <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '66%' }} />
+        </div>
+      </div>
+
+      <div className="shrink-0 px-4 py-2 flex items-center gap-3">
         <button onClick={goBack} className="tap-scale w-9 h-9 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -64,12 +82,6 @@ export default function RoomScreen() {
         <h2 className="font-display text-[length:var(--fs-body)] text-navy font-bold uppercase">
           {planLabels[selectedPlan!] ?? selectedPlan}
         </h2>
-      </div>
-
-      <div className="shrink-0 px-4 pb-2">
-        <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '66%' }} />
-        </div>
       </div>
 
       <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-4">
@@ -89,9 +101,7 @@ export default function RoomScreen() {
               </svg>
             </div>
             <p className="text-navy/60 font-semibold mb-3">{error}</p>
-            <button onClick={() => window.location.reload()} className="text-gold font-bold underline">
-              Reintentar
-            </button>
+            <button onClick={() => window.location.reload()} className="text-gold font-bold underline">Reintentar</button>
           </div>
         )}
 
@@ -129,34 +139,36 @@ export default function RoomScreen() {
       </div>
 
       {selectedRoom && (
-        <div className="shrink-0 bg-gold/10 border-t border-gold/20 px-4 py-3 bottom-bar">
-          {hasExtras && selectedPlan === 'suite' && (
+        <div className={`shrink-0 border-t px-4 py-3 bottom-bar ${
+          isSuite ? 'bg-navy border-navy/30' : 'bg-gold/10 border-gold/20'
+        }`}>
+          {hasExtras && isSuite && (
             <div className="mb-3">
-              <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
+              <p className="text-[0.7rem] font-semibold text-white/50 mb-2 uppercase tracking-wide">Duración</p>
               <div className="grid grid-cols-1 gap-2">
-                {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
+                {Object.entries(extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
                     onClick={() => selectExtra(selectedExtra === key ? null : key)}
                     className={`tap-scale w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-200 ${
                       selectedExtra === key
-                        ? 'bg-navy text-white border-navy shadow-md'
-                        : 'bg-white text-navy border-navy/10 hover:border-gold/40'
+                        ? 'bg-white/10 text-white border-white/20 shadow-md'
+                        : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10'
                     }`}
                   >
                     <span className="font-bold text-[0.85rem] uppercase">{val.label}</span>
-                    <span className={`font-extrabold text-lg ${selectedExtra === key ? 'text-gold' : 'text-navy'}`}>${val.price}</span>
+                    <span className={`font-extrabold text-lg ${selectedExtra === key ? 'text-gold' : 'text-white/80'}`}>${val.price}</span>
                   </button>
                 ))}
               </div>
             </div>
           )}
 
-          {hasExtras && selectedPlan !== 'suite' && (
+          {hasExtras && !isSuite && (
             <div className="mb-3">
               <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Duración</p>
               <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
-                {Object.entries(currentRoom!.extras).map(([key, val]: [string, { label: string; price: number }]) => (
+                {Object.entries(extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
                     onClick={() => selectExtra(selectedExtra === key ? null : key)}
@@ -196,12 +208,16 @@ export default function RoomScreen() {
 
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <p className="text-[0.7rem] text-navy/60 uppercase tracking-wide font-semibold">Total</p>
-              <p className="font-display text-3xl text-navy font-bold leading-none">${total}</p>
+              <p className={`text-[0.7rem] uppercase tracking-wide font-semibold ${isSuite ? 'text-white/40' : 'text-navy/60'}`}>Total</p>
+              <p className={`font-display text-3xl font-bold leading-none ${isSuite ? 'text-gold' : 'text-navy'}`}>${total}</p>
             </div>
             <button
               onClick={() => goTo('checkin')}
-              className="tap-scale bg-navy text-white rounded-lg px-8 py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
+              className={`tap-scale text-white rounded-lg px-8 py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide transition-colors shadow-lg ${
+                isSuite
+                  ? 'bg-gold hover:bg-gold/90 shadow-gold/25'
+                  : 'bg-navy hover:bg-navy/90 shadow-navy/25'
+              }`}
             >
               Continuar
             </button>

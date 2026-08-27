@@ -61,21 +61,21 @@ export default function CheckinScreen() {
   return (
     <>
       <div className="h-full flex flex-col slide-in-right">
-        <div className="shrink-0 px-[var(--pad)] py-[var(--gap)] flex items-center gap-3">
-          <button onClick={goBack} className="tap-scale w-10 h-10 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h2 className="font-display text-[length:var(--fs-section)] text-navy font-bold uppercase">
-            Check-In
-          </h2>
-        </div>
-
-        <div className="shrink-0 px-4 pb-2">
+        <div className="shrink-0 px-4 pb-2 pt-1">
           <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '100%' }} />
           </div>
+        </div>
+
+        <div className="shrink-0 px-4 py-2 flex items-center gap-3">
+          <button onClick={goBack} className="tap-scale w-9 h-9 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+          </button>
+          <h2 className="font-display text-[length:var(--fs-body)] text-navy font-bold uppercase">
+            Check-In
+          </h2>
         </div>
 
         <CheckinForm
