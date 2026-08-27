@@ -43,8 +43,6 @@ class MainActivity : Activity() {
 
     private var webView: WebView? = null
     private val handler = Handler(Looper.getMainLooper())
-    private var tapCount = 0
-    private var lastTapTime = 0L
     private var updateUrl: String? = null
 
     // Resiliencia: fallback local + watchdog 24/7
@@ -64,9 +62,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.1.12"
-        private const val TAPS_REQUIRED = 5
-        private const val TAP_TIMEOUT_MS = 2000L
+        const val APP_VERSION = "1.1.13"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -418,24 +414,10 @@ class MainActivity : Activity() {
     // ================= GESTOS / PIN =================
 
     override fun dispatchTouchEvent(ev: MotionEvent?): Boolean {
-        if (ev != null && ev.action == MotionEvent.ACTION_DOWN) {
-            handleTap()
-        }
         return try {
             super.dispatchTouchEvent(ev)
         } catch (e: Exception) {
             false
-        }
-    }
-
-    private fun handleTap() {
-        val now = System.currentTimeMillis()
-        if (now - lastTapTime > TAP_TIMEOUT_MS) tapCount = 0
-        lastTapTime = now
-        tapCount++
-        if (tapCount >= TAPS_REQUIRED) {
-            tapCount = 0
-            promptPin()
         }
     }
 
@@ -462,43 +444,6 @@ class MainActivity : Activity() {
                 }
             }
             .setCancelable(false)
-            .show()
-    }
-
-    private fun promptPin() {
-        if (isFinishing || isDestroyed) return
-        val input = EditText(this).apply {
-            hint = "PIN"
-            inputType = android.text.InputType.TYPE_CLASS_NUMBER or
-                    android.text.InputType.TYPE_NUMBER_VARIATION_PASSWORD
-            setPadding(48, 32, 48, 32)
-        }
-        val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
-        val expectedPin = prefs.getString(KEY_PIN, DEFAULT_PIN) ?: DEFAULT_PIN
-
-        AlertDialog.Builder(this)
-            .setTitle("PIN de administrador")
-            .setView(input)
-            .setPositiveButton("Aceptar") { _, _ ->
-                if (input.text.toString() == expectedPin) showAdminMenu()
-                else Toast.makeText(this, "PIN incorrecto", Toast.LENGTH_SHORT).show()
-            }
-            .setNegativeButton("Cancelar", null)
-            .show()
-    }
-
-    private fun showAdminMenu() {
-        if (isFinishing || isDestroyed) return
-        val items = arrayOf("Configurar servidor", "Buscar actualización", "Salir del quiosco")
-        AlertDialog.Builder(this)
-            .setTitle("Administración")
-            .setItems(items) { _, which ->
-                when (which) {
-                    0 -> promptServerUrl()
-                    1 -> checkForUpdate()
-                    2 -> { exitKioskMode(); finish() }
-                }
-            }
             .show()
     }
 
