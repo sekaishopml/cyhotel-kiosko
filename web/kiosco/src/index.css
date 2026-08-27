@@ -23,10 +23,15 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
   height: 100dvh;
   overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  height: 100dvh;
 }
 
 body {
@@ -247,4 +252,17 @@ body {
 /* Bottom bar slide up */
 .bottom-bar {
   transition: transform 0.35s cubic-bezier(0.23, 1, 0.32, 1), opacity 0.35s ease;
+}
+
+/* Shake animation for PIN error */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-8px); }
+  40% { transform: translateX(8px); }
+  60% { transform: translateX(-5px); }
+  80% { transform: translateX(5px); }
+}
+
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
 }

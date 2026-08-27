@@ -9,6 +9,7 @@ import RoomScreen from './screens/RoomScreen'
 import CheckinScreen from './screens/CheckinScreen'
 
 const ADMIN_PIN = '12345'
+const APP_VERSION = import.meta.env.PACKAGE_VERSION || '1.1.8'
 
 export default function App() {
   const { screen, step, goTo } = useStore()
@@ -64,16 +65,16 @@ export default function App() {
           onClick={() => setShowPin(true)}
           className="text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors"
         >
-          v1.1.6
+          v{APP_VERSION}
         </button>
       </footer>
 
       {showPin && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-6"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-[popIn_0.2s_ease-out]"
           onClick={() => setShowPin(false)}
         >
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" />
+          <div className="absolute inset-0 bg-black/60" />
           <div
             className="relative bg-white rounded-2xl shadow-2xl p-8 max-w-sm w-full"
             onClick={(e) => e.stopPropagation()}
@@ -93,7 +94,7 @@ export default function App() {
               onKeyDown={(e) => { if (e.key === 'Enter') handlePinSubmit() }}
               className={`w-full text-center text-2xl tracking-[0.3em] font-mono px-4 py-3 rounded-xl border-2 outline-none transition-all ${
                 pinError
-                  ? 'border-red-400 bg-red-50 animate-[shake_0.3s_ease-in-out]'
+                  ? 'border-red-400 bg-red-50 animate-shake'
                   : 'border-navy/15 focus:border-gold'
               }`}
               placeholder="•••••"

@@ -546,6 +546,8 @@ class Handler(BaseHTTPRequestHandler):
                 data = self._body()
                 if path == "/api/admin/login" and self.MODE in ("admin", "master"):
                     self.admin_login(data)
+                elif path == "/api/admin/pin-login" and self.MODE in ("admin", "master"):
+                    self.admin_pin_login(data)
                 elif path == "/api/admin/logout" and self.MODE in ("admin", "master"):
                     if not self._require_auth():
                         return
@@ -688,6 +690,27 @@ class Handler(BaseHTTPRequestHandler):
             raise
         finally:
             conn.close()
+
+    def admin_pin_login(self, data):
+        pin = (data.get("pin") or "").strip()
+        admin_pin = os.environ.get("CYHOTEL_ADMIN_PIN", "12345")
+        if pin != admin_pin:
+            self._error(401, "PIN incorrecto")
+            return
+        token = secrets.token_hex(32)
+        sessions[token] = {
+            "username": "admin",
+            "role": "gerencia",
+            "hotel_id": self.HOTEL,
+            "scope": "hotel",
+            "expires": now() + TOKEN_TTL,
+        }
+        self._send(200, {
+            "token": token,
+            "username": "admin",
+            "role": "gerencia",
+            "scope": "hotel",
+        })
 
     def admin_logout(self):
         token = self._bearer_token()
