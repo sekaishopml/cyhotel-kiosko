@@ -2,6 +2,7 @@ import os
 import hashlib
 import psycopg2
 from psycopg2.extras import RealDictCursor
+from psycopg2.pool import ThreadedConnectionPool
 
 # RLS multi-tenant real (FORCE): el runtime conecta con el rol de app
 # (no-superusuario, creado por init_db) y debe llamar a set_app_hotel() antes de operar.
@@ -334,18 +335,37 @@ ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO {A
 """
 
 
+_pool = None
+
+
+def _get_pool():
+    global _pool
+    if _pool is None:
+        _pool = ThreadedConnectionPool(
+            1, 20,
+            host=PG_HOST,
+            port=PG_PORT,
+            user=APP_DB_USER,
+            password=APP_DB_PASSWORD,
+            dbname=PG_DATABASE,
+            cursor_factory=RealDictCursor,
+        )
+    return _pool
+
+
 def db():
     """Conexión con el rol de aplicación (sujeto a RLS); llamar a set_app_hotel() antes de operar."""
-    conn = psycopg2.connect(
-        host=PG_HOST,
-        port=PG_PORT,
-        user=APP_DB_USER,
-        password=APP_DB_PASSWORD,
-        dbname=PG_DATABASE,
-        cursor_factory=RealDictCursor,
-    )
+    conn = _get_pool().getconn()
     conn.autocommit = False
     return conn
+
+
+def release_conn(conn):
+    """Devuelve la conexión al pool."""
+    try:
+        _get_pool().putconn(conn)
+    except Exception:
+        pass
 
 
 def _admin_db():

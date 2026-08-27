@@ -1,3 +1,4 @@
+@import './fonts.css';
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -42,14 +43,6 @@ body {
 }
 
 /* Transiciones CSS para animaciones ligeras */
-.screen-enter {
-  animation: screenIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.screen-exit {
-  animation: screenOut 0.25s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
 @keyframes screenIn {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -163,15 +156,9 @@ body {
   animation: drawCheck 0.4s cubic-bezier(0.65, 0, 0.45, 1) 0.6s forwards;
 }
 
-/* Progress line fill */
-@keyframes progressFill {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-
-.progress-fill {
-  transform-origin: left;
-  animation: progressFill 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+.room-thumb {
+  image-rendering: -webkit-optimize-contrast;
+  content-visibility: auto;
 }
 
 /* Splash loading bar */
@@ -197,7 +184,7 @@ body {
 
 /* Room card — smooth morph */
 .room-card-inner {
-  transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
 }
 
 /* Photo carousel */
@@ -208,7 +195,7 @@ body {
   opacity: 0;
   overflow: hidden;
   border-radius: 0.75rem;
-  transition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+  transition: height 0.3s ease, opacity 0.3s ease;
 }
 
 .carousel-wrap.open {
@@ -240,7 +227,7 @@ body {
   height: 5px;
   border-radius: 50%;
   background: rgba(255, 255, 255, 0.5);
-  transition: all 0.3s ease;
+  transition: background 0.3s ease, width 0.3s ease;
 }
 
 .carousel-dot.active {

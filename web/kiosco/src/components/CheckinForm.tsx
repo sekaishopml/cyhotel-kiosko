@@ -9,6 +9,7 @@ interface Props {
   roomPrice: number
   total: number
   onSubmit: (name: string, document: string) => void
+  disabled?: boolean
 }
 
 const planLabels: Record<string, string> = {
@@ -24,7 +25,7 @@ const extraLabels: Record<string, string> = {
   hospedaje: 'por noche',
 }
 
-export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, total, onSubmit }: Props) {
+export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, total, onSubmit, disabled }: Props) {
   const [name, setName] = useState('')
   const [doc, setDoc] = useState('')
   const [activeField, setActiveField] = useState<'name' | 'doc'>('name')
@@ -106,13 +107,14 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
               placeholder="Sin puntos ni espacios"
               label="Documento"
               maxLength={12}
+              onSubmit={() => onSubmit(name.trim(), doc.trim())}
             />
           )}
         </div>
 
         <button
           onClick={() => onSubmit(name.trim(), doc.trim())}
-          disabled={!canSubmit}
+          disabled={!canSubmit || disabled}
           className="shrink-0 tap-scale w-full bg-navy text-white rounded-lg py-3 mt-2 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide disabled:opacity-30 disabled:cursor-not-allowed hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
         >
           Confirmar Reserva

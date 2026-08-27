@@ -5,7 +5,7 @@ import time
 from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
-from db import db, set_app_hotel, exec, fetch_one, fetch_all, HOLD_MINUTES
+from db import db, release_conn, set_app_hotel, exec, fetch_one, fetch_all, HOLD_MINUTES
 
 ECUADOR_TZ = ZoneInfo("America/Guayaquil")
 WORKER_INTERVAL = int(os.environ.get("WORKER_INTERVAL", "35"))
@@ -200,7 +200,7 @@ def _tick_hotel(hotel_id, config):
         conn.rollback()
         raise
     finally:
-        conn.close()
+        release_conn(conn)
 
 
 def _worker_tick():
@@ -209,7 +209,7 @@ def _worker_tick():
     try:
         hotels = fetch_all(conn, "SELECT id, config FROM hotels WHERE activo ORDER BY id")
     finally:
-        conn.close()
+        release_conn(conn)
     for h in hotels:
         try:
             _tick_hotel(h["id"], h.get("config") or {})

@@ -62,7 +62,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.1.19"
+        const val APP_VERSION = "1.1.20"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -188,6 +188,21 @@ class MainActivity : Activity() {
         return if (s > 0 && e > s) json.substring(s, e) else null
     }
 
+    private fun isVersionNewer(remote: String, local: String): Boolean {
+        val r = remote.removePrefix("v")
+        val l = local.removePrefix("v")
+        val rParts = r.split(".").map { it.toIntOrNull() ?: 0 }
+        val lParts = l.split(".").map { it.toIntOrNull() ?: 0 }
+        val maxLen = maxOf(rParts.size, lParts.size)
+        for (i in 0 until maxLen) {
+            val rv = rParts.getOrElse(i) { 0 }
+            val lv = lParts.getOrElse(i) { 0 }
+            if (rv > lv) return true
+            if (rv < lv) return false
+        }
+        return false
+    }
+
     // ================= KIOSK MODE =================
 
     private fun applyKioskMode() {
@@ -245,6 +260,16 @@ class MainActivity : Activity() {
                 return
             }
 
+            webView?.let { wv ->
+                try {
+                    wv.stopLoading()
+                    wv.loadDataWithBaseURL(null, "", "text/html", "utf-8", null)
+                    (wv.parent as? android.view.ViewGroup)?.removeView(wv)
+                    wv.destroy()
+                } catch (_: Exception) {}
+            }
+            webView = null
+
             logBoot("Creando WebView...")
             val wv = WebView(this)
             webView = wv
@@ -253,7 +278,7 @@ class MainActivity : Activity() {
             wv.settings.databaseEnabled = true
             wv.settings.mixedContentMode = WebSettings.MIXED_CONTENT_ALWAYS_ALLOW
             // Sin caché: los cambios del frontend en el server se ven de inmediato.
-            wv.settings.cacheMode = WebSettings.LOAD_NO_CACHE
+            wv.settings.cacheMode = WebSettings.LOAD_DEFAULT
             // Necesario para cargar la UI empaquetada localmente (file:///android_asset)
             wv.settings.allowFileAccess = true
             wv.settings.allowContentAccess = true
@@ -470,7 +495,7 @@ class MainActivity : Activity() {
                         val body = c.inputStream.bufferedReader().readText()
                         c.disconnect()
                         val v = jsonExtract(body, "version")
-                        if (v != null && v != APP_VERSION) {
+                        if (v != null && isVersionNewer(v, APP_VERSION)) {
                             found = true
                             handler.post {
                                 if (!isFinishing && !isDestroyed)
@@ -490,7 +515,7 @@ class MainActivity : Activity() {
                     val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
                     c.disconnect()
                     val tagName = body?.let { jsonExtract(it, "tag_name") }
-                    if (tagName != null && tagName != "v$APP_VERSION") {
+                    if (tagName != null && isVersionNewer(tagName, "v$APP_VERSION")) {
                         handler.post {
                             if (!isFinishing && !isDestroyed)
                                 Toast.makeText(this, "Nueva versión disponible: $tagName", Toast.LENGTH_LONG).show()
@@ -520,7 +545,7 @@ class MainActivity : Activity() {
                         val body = c.inputStream.bufferedReader().readText()
                         c.disconnect()
                         val v = jsonExtract(body, "version")
-                        if (v != null && v != APP_VERSION) {
+                        if (v != null && isVersionNewer(v, APP_VERSION)) {
                             tagName = "v$v"
                             apkUrl = jsonExtract(body, "download_url")
                             source = "servidor"
@@ -539,7 +564,7 @@ class MainActivity : Activity() {
                         val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
                         c.disconnect()
                         tagName = body?.let { jsonExtract(it, "tag_name") }
-                        if (tagName != null && tagName != "v$APP_VERSION") {
+                        if (tagName != null && isVersionNewer(tagName, "v$APP_VERSION")) {
                             apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
                             source = "GitHub"
                         } else {
@@ -596,7 +621,7 @@ class MainActivity : Activity() {
                         val body = c.inputStream.bufferedReader().readText()
                         c.disconnect()
                         val serverVersion = jsonExtract(body, "version")
-                        if (serverVersion != null && serverVersion != APP_VERSION) {
+                        if (serverVersion != null && isVersionNewer(serverVersion, APP_VERSION)) {
                             tagName = "v$serverVersion"
                             apkUrl = jsonExtract(body, "download_url")
                             source = "servidor"
@@ -617,7 +642,7 @@ class MainActivity : Activity() {
                         val body = if (code == 200) c.inputStream.bufferedReader().readText() else null
                         c.disconnect()
                         tagName = body?.let { jsonExtract(it, "tag_name") }
-                        if (tagName != null && tagName != "v$APP_VERSION") {
+                        if (tagName != null && isVersionNewer(tagName, "v$APP_VERSION")) {
                             apkUrl = "https://github.com/sekaishopml/cyhotel-kiosko/releases/download/$tagName/Kiosko-${tagName}.apk"
                             source = "GitHub"
                         } else {
@@ -864,6 +889,7 @@ class MainActivity : Activity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        handler.removeCallbacksAndMessages(null)
         try {
             if (locked) {
                 stopLockTask()

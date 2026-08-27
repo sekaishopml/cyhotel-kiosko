@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { useStore } from '../store'
 import { createOrder, enqueueOrder } from '../api'
 import CheckinForm from '../components/CheckinForm'
@@ -8,12 +8,15 @@ import OfflineModal from '../components/OfflineModal'
 export default function CheckinScreen() {
   const { selectedPlan, selectedRoom, selectedExtra, selectedDays, goBack, goHome } = useStore()
   const [loading, setLoading] = useState(false)
+  const submitting = useRef(false)
   const [order, setOrder] = useState<{
-    id: string; room_number: string; check_in: string; check_out: string; amount: number
+    id: string; room_number: string; check_in: string; check_out: string; subtotal: number
   } | null>(null)
   const [offline, setOffline] = useState(false)
 
   const handleSubmit = async (name: string, document: string) => {
+    if (submitting.current) return
+    submitting.current = true
     setLoading(true)
     try {
       const result = await createOrder({
@@ -39,24 +42,28 @@ export default function CheckinScreen() {
       setOffline(true)
     } finally {
       setLoading(false)
+      submitting.current = false
     }
   }
 
+  const prices: Record<string, Record<string, number>> = {
+    momento: { estandar: 10, matrimonial: 12, doble: 12 },
+    amanecida: { estandar: 20, matrimonial: 20, doble: 30 },
+    hospedaje: { estandar: 30, matrimonial: 30, doble: 40 },
+  }
+  const suiteExtraPrices: Record<string, number> = { momento: 20, amanecida: 35, hospedaje: 50 }
+
   const total = selectedPlan === 'suite' && selectedExtra
-    ? (selectedExtra === 'momento' ? 20 : selectedExtra === 'amanecida' ? 35 : 50)
+    ? suiteExtraPrices[selectedExtra] ?? 0
     : selectedPlan === 'hospedaje'
-    ? (selectedRoom === 'estandar' ? 30 : selectedRoom === 'matrimonial' ? 30 : 40) * selectedDays
-    : selectedRoom === 'estandar' ? 10
-    : selectedRoom === 'matrimonial' ? 12
-    : 12
+    ? (prices.hospedaje[selectedRoom!] ?? 0) * selectedDays
+    : (prices[selectedPlan!]?.[selectedRoom!] ?? 0)
 
   const roomPrice = selectedPlan === 'suite' && selectedExtra
-    ? (selectedExtra === 'momento' ? 20 : selectedExtra === 'amanecida' ? 35 : 50)
+    ? suiteExtraPrices[selectedExtra] ?? 0
     : selectedPlan === 'hospedaje'
-    ? (selectedRoom === 'estandar' ? 30 : selectedRoom === 'matrimonial' ? 30 : 40)
-    : selectedRoom === 'estandar' ? 10
-    : selectedRoom === 'matrimonial' ? 12
-    : 12
+    ? prices.hospedaje[selectedRoom!] ?? 0
+    : (prices[selectedPlan!]?.[selectedRoom!] ?? 0)
 
   return (
     <>
@@ -68,8 +75,8 @@ export default function CheckinScreen() {
         </div>
 
         <div className="shrink-0 px-4 py-2 flex items-center gap-3">
-          <button onClick={goBack} className="tap-scale w-9 h-9 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+          <button onClick={goBack} className="tap-scale w-12 h-12 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
@@ -86,6 +93,7 @@ export default function CheckinScreen() {
           roomPrice={roomPrice}
           total={total}
           onSubmit={handleSubmit}
+          disabled={loading}
         />
       </div>
 
@@ -104,7 +112,7 @@ export default function CheckinScreen() {
           roomNumber={order.room_number}
           checkIn={order.check_in}
           checkOut={order.check_out}
-          amount={order.amount}
+          subtotal={order.subtotal}
           onClose={goHome}
         />
       )}

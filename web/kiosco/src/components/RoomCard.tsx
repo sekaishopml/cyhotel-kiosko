@@ -1,4 +1,3 @@
-import { useState, useEffect } from 'react'
 import { RoomType } from '../types'
 import { imgUrl } from '../api'
 
@@ -12,19 +11,6 @@ interface Props {
 }
 
 export default function RoomCard({ room, selected, selectedPlan, expanded, onClick, selectedExtra }: Props) {
-  const [photoIdx, setPhotoIdx] = useState(0)
-  const photos = [room.photo]
-
-  useEffect(() => {
-    if (!expanded || photos.length <= 1) return
-    const id = setInterval(() => setPhotoIdx(i => (i + 1) % photos.length), 3000)
-    return () => clearInterval(id)
-  }, [expanded, photos.length])
-
-  useEffect(() => {
-    if (!expanded) setPhotoIdx(0)
-  }, [expanded])
-
   const timeLabel = selectedPlan === 'suite'
     ? selectedExtra === 'amanecida' ? '18:00 - 09:00'
     : selectedExtra === 'hospedaje' ? 'por noche'
@@ -81,25 +67,6 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
             )}
           </div>
         </div>
-      </div>
-
-      <div className={`carousel-wrap ${expanded ? 'open' : ''}`}>
-        {photos.map((photo, i) => (
-          <img
-            key={i}
-            src={imgUrl(photo)}
-            alt={room.label}
-            className="carousel-img"
-            style={{ opacity: i === photoIdx ? 1 : 0 }}
-          />
-        ))}
-        {photos.length > 1 && (
-          <div className="carousel-dots">
-            {photos.map((_, i) => (
-              <div key={i} className={`carousel-dot ${i === photoIdx ? 'active' : ''}`} />
-            ))}
-          </div>
-        )}
       </div>
     </button>
   )

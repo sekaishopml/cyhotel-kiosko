@@ -154,16 +154,19 @@ export default function App() {
               value={pinInput}
               onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
               onKeyDown={(e) => { if (e.key === 'Enter') handlePinSubmit() }}
-              className={`w-full text-center text-2xl tracking-[0.3em] font-mono px-4 py-3 rounded-xl border-2 outline-none transition-all ${
+              className={`w-full text-center text-2xl tracking-[0.3em] font-mono px-4 py-3 rounded-lg border-2 outline-none transition-all ${
                 pinError
                   ? 'border-red-400 bg-red-50 animate-shake'
                   : 'border-navy/15 focus:border-gold'
               }`}
-              placeholder="•••••"
+              placeholder="••••••••••"
             />
+            {pinError && (
+              <p className="text-sm text-red-500 font-semibold mt-2 text-center">PIN incorrecto</p>
+            )}
             <button
               onClick={handlePinSubmit}
-              className="w-full mt-4 py-3 bg-navy text-white font-semibold rounded-xl hover:bg-navy/90 transition-colors"
+              className="w-full mt-4 py-3 bg-navy text-white font-semibold rounded-lg hover:bg-navy/90 transition-colors"
             >
               Ingresar
             </button>
@@ -276,19 +279,19 @@ export default function App() {
               type="url"
               value={serverUrl}
               onChange={(e) => setServerUrl(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border-2 border-navy/15 focus:border-gold outline-none text-sm font-mono"
+              className="w-full px-4 py-3 rounded-lg border-2 border-navy/15 focus:border-gold outline-none text-sm font-mono"
               placeholder="http://68.168.20.219:8000"
             />
             <div className="flex gap-2 mt-4">
               <button
                 onClick={() => setShowServerConfig(false)}
-                className="flex-1 py-2.5 text-sm text-navy/50 border border-navy/10 rounded-xl hover:bg-navy/5"
+                className="flex-1 py-2.5 text-sm text-navy/50 border border-navy/10 rounded-lg hover:bg-navy/5"
               >
                 Cancelar
               </button>
               <button
                 onClick={handleSaveServer}
-                className="flex-1 py-2.5 text-sm font-semibold text-white bg-navy rounded-xl hover:bg-navy/90"
+                className="flex-1 py-2.5 text-sm font-semibold text-white bg-navy rounded-lg hover:bg-navy/90"
               >
                 Guardar
               </button>

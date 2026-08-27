@@ -41,7 +41,6 @@ export default function CustomKeyboard({ value, onChange, type = 'text', placeho
     } else {
       if (maxLength && value.length >= maxLength) return
       onChange(value + (shift ? key : key.toLowerCase()))
-      if (shift) setShift(false)
     }
   }
 

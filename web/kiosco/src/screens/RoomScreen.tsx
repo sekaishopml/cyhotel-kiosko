@@ -10,6 +10,7 @@ export default function RoomScreen() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedRoom, setExpandedRoom] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -32,7 +33,7 @@ export default function RoomScreen() {
       .catch(() => { if (!cancelled) setError('No se pudieron cargar las habitaciones.') })
       .finally(() => { if (!cancelled) setLoading(false) })
     return () => { cancelled = true }
-  }, [selectedPlan])
+  }, [selectedPlan, retryCount])
 
   const handleRoomClick = (roomKey: string) => {
     if (expandedRoom === roomKey) {
@@ -74,8 +75,8 @@ export default function RoomScreen() {
       </div>
 
       <div className="shrink-0 px-4 py-2 flex items-center gap-3">
-        <button onClick={goBack} className="tap-scale w-9 h-9 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+        <button onClick={goBack} className="tap-scale w-12 h-12 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
         </button>
@@ -101,7 +102,7 @@ export default function RoomScreen() {
               </svg>
             </div>
             <p className="text-navy/60 font-semibold mb-3">{error}</p>
-            <button onClick={() => window.location.reload()} className="text-gold font-bold underline">Reintentar</button>
+            <button onClick={() => setRetryCount(c => c + 1)} className="text-gold font-bold underline">Reintentar</button>
           </div>
         )}
 
@@ -149,7 +150,10 @@ export default function RoomScreen() {
                 {Object.entries(extras).map(([key, val]: [string, { label: string; price: number }]) => (
                   <button
                     key={key}
-                    onClick={() => selectExtra(selectedExtra === key ? null : key)}
+                    onClick={() => {
+                      if (selectedExtra === key && isSuite) return
+                      selectExtra(selectedExtra === key ? null : key)
+                    }}
                     className={`tap-scale w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all duration-200 ${
                       selectedExtra === key
                         ? 'bg-white/10 text-white border-white/20 shadow-md'

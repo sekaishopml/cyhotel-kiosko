@@ -4,7 +4,8 @@ function resolveApiBase(): string {
   const w = typeof window !== 'undefined' ? (window as any) : undefined
   const fromWindow = w && w.__API_BASE__
   const fromEnv = (import.meta.env as any).VITE_API_BASE
-  return (fromWindow || fromEnv || '').trim().replace(/\/+$/, '')
+  const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('kiosco_server') : null
+  return (fromWindow || fromEnv || fromStorage || '').trim().replace(/\/+$/, '')
 }
 
 export const API_BASE = resolveApiBase()
@@ -95,6 +96,7 @@ export async function syncPending(): Promise<void> {
       await createOrder(payload)
     } catch {
       remaining.push(item)
+      break
     }
   }
   localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining))

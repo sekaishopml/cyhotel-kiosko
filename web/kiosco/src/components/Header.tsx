@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, memo } from 'react'
 
-export default function Header() {
+function Clock() {
   const [now, setNow] = useState(new Date())
 
   useEffect(() => {
@@ -24,14 +24,22 @@ export default function Header() {
   })
 
   return (
+    <div className="text-right">
+      <p className="text-[0.9rem] font-mono font-bold text-gold leading-none">{timeStr}</p>
+      <p className="text-[0.55rem] text-white/50 font-semibold uppercase mt-0.5">{dateStr}</p>
+    </div>
+  )
+}
+
+const Header = memo(function Header() {
+  return (
     <header className="bg-gradient-to-b from-navy to-[#1a2744] text-white px-4 py-2 flex items-center justify-between shrink-0 shadow-[0_4px_20px_rgba(15,23,42,0.2)]">
       <h1 className="font-display text-[length:var(--fs-body)] font-bold tracking-wide">
         Hotel Del Valle
       </h1>
-      <div className="text-right">
-        <p className="text-[0.9rem] font-mono font-bold text-gold leading-none">{timeStr}</p>
-        <p className="text-[0.55rem] text-white/50 font-semibold uppercase mt-0.5">{dateStr}</p>
-      </div>
+      <Clock />
     </header>
   )
-}
+})
+
+export default Header

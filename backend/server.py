@@ -38,7 +38,7 @@ if _parsed.username and _parsed.username == "cyhotel_app":
         os.environ["CYHOTEL_DB_PASSWORD"] = _parsed.password
 
 from db import (  # noqa: E402
-    db, set_app_hotel, init_db, verify_password,
+    db, release_conn, set_app_hotel, init_db, verify_password,
     exec as db_exec, fetch_one, fetch_all,
     ROOM_TYPES, AMANECIDA_ENTRY, AMANECIDA_EXIT, HOLD_MINUTES,
 )
@@ -218,7 +218,7 @@ def notify_listener_loop():
         finally:
             try:
                 if conn is not None:
-                    conn.close()
+                    release_conn(conn)
             except Exception:
                 pass
 
@@ -360,7 +360,7 @@ class Handler(BaseHTTPRequestHandler):
             row = fetch_one(conn, "SELECT slug FROM hotels WHERE id = %s", (hotel_id,))
             return row["slug"] if row else None
         finally:
-            conn.close()
+            release_conn(conn)
 
     def _static_map(self):
         if self.MODE == "kiosco":
@@ -691,7 +691,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
 
     def admin_pin_login(self, data):
         pin = (data.get("pin") or "").strip()
@@ -725,7 +725,7 @@ class Handler(BaseHTTPRequestHandler):
         except Exception:
             conn.rollback()
         finally:
-            conn.close()
+            release_conn(conn)
         sessions.pop(token, None)
         self._send(200, {"ok": True, "message": "Sesión cerrada"})
 
@@ -754,7 +754,7 @@ class Handler(BaseHTTPRequestHandler):
             ):
                 free_by_type[row["type"]] = int(row["n"])
         finally:
-            conn.close()
+            release_conn(conn)
         other_free = sum(n for t, n in free_by_type.items() if t in ("estandar", "matrimonial"))
         photo_for = lambda key: "/img/suite.jpeg" if key == "suite" else "/img/habitacion.jpeg"
         result = []
@@ -841,7 +841,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             rows = fetch_all(conn, "SELECT * FROM rooms ORDER BY id")
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"rooms": [self._room_dict(r, self.HOTEL) for r in rows]})
 
     def get_rooms_available(self):
@@ -849,7 +849,7 @@ class Handler(BaseHTTPRequestHandler):
         try:
             rows = fetch_all(conn, "SELECT * FROM rooms WHERE status = 'libre' ORDER BY id")
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"rooms": [self._room_dict(r, self.HOTEL) for r in rows]})
 
     ROOM_STATUS_TRANSITIONS = {
@@ -929,7 +929,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "estado_cuarto", "room_id": room_id, "status": status})
         self._send(200, result)
 
@@ -942,7 +942,9 @@ class Handler(BaseHTTPRequestHandler):
                     "hold_expires_at", "updated_at"):
             if key in d and d[key] is not None:
                 d[key] = local_str(d[key])
-        if row.get("room_id"):
+        if "room_number" in d:
+            pass
+        elif row.get("room_id"):
             room = fetch_one(conn, "SELECT number FROM rooms WHERE id = %s", (row["room_id"],))
             d["room_number"] = room["number"] if room else None
         else:
@@ -1109,10 +1111,20 @@ class Handler(BaseHTTPRequestHandler):
                 "INSERT INTO orders (hotel_id, guest_name, id_document, product, room_type, hours, "
                 "check_in, check_out, subtotal, status, payment_method, client_ref) "
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'por_asignar', 'pendiente', %s) "
-                "RETURNING id",
+                "ON CONFLICT (hotel_id, client_ref) DO NOTHING RETURNING id",
                 (hotel_id, guest_name, id_document, product, room_type, hours_val,
                  check_in_dt, check_out_dt, subtotal, client_ref),
             )
+            if not row:
+                if client_ref:
+                    existing = fetch_one(conn, "SELECT * FROM orders WHERE client_ref = %s", (client_ref,))
+                    conn.commit()
+                    self._send(200, {
+                        "order": self._order_dict(conn, existing),
+                        "message": "Solicitud duplicada: se devuelve la orden existente",
+                    })
+                    return
+                raise ValueError("Error al crear la orden")
             order_id = row[0]["id"]
             audit(conn, hotel_id, "crear_orden", order_id, None, "kiosco",
                   f"{guest_name}: {product} ${subtotal:.2f} (esperando asignación)")
@@ -1125,7 +1137,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
 
     def get_orders(self):
         qs = self._qs()
@@ -1181,7 +1193,7 @@ class Handler(BaseHTTPRequestHandler):
             rows = fetch_all(
                 conn,
                 f"""
-                SELECT o.* FROM orders o LEFT JOIN rooms r ON r.id = o.room_id
+                SELECT o.*, r.number AS room_number FROM orders o LEFT JOIN rooms r ON r.id = o.room_id
                 {where_sql}
                 ORDER BY o.id DESC LIMIT %s OFFSET %s
                 """,
@@ -1189,7 +1201,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             result = [self._order_dict(conn, r) for r in rows]
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"orders": result, "total": total, "page": page, "pages": pages})
 
     def get_order_detail(self, path):
@@ -1206,7 +1218,7 @@ class Handler(BaseHTTPRequestHandler):
             detail = self._order_dict(conn, order)
             detail["payments_history"] = self._order_payments(conn, order_id)
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"order": detail})
 
     def get_reservations(self):
@@ -1219,20 +1231,20 @@ class Handler(BaseHTTPRequestHandler):
         except ValueError:
             raise ValueError("limit debe ser un entero")
         limit = max(1, min(limit, 100))
-        where, params = ["product = 'reserva'"], []
+        where, params = ["o.product = 'reserva'"], []
         if status:
-            where.append("status = %s")
+            where.append("o.status = %s")
             params.append(status)
         conn = self._conn()
         try:
             rows = fetch_all(
                 conn,
-                f"SELECT * FROM orders WHERE {' AND '.join(where)} ORDER BY id DESC LIMIT %s",
+                f"SELECT o.*, r.number AS room_number FROM orders o LEFT JOIN rooms r ON r.id = o.room_id WHERE {' AND '.join(where)} ORDER BY o.id DESC LIMIT %s",
                 params + [limit],
             )
             result = [self._order_dict(conn, r) for r in rows]
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"reservations": result})
 
     def _assign_room(self, conn, room_type):
@@ -1311,7 +1323,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "orden_asignada", "order_id": order_id, "room_id": result.get("room_id")})
         self._send(200, {"order": result})
 
@@ -1428,7 +1440,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "pago_confirmado", "order_id": order_id})
         self._send(200, {"order": result})
 
@@ -1461,7 +1473,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "orden_anulada", "order_id": order_id})
         self._send(200, {"order": result})
 
@@ -1503,7 +1515,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "checkout", "order_id": order_id})
         self._send(200, {"order": result})
 
@@ -1587,7 +1599,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "orden_extendida", "order_id": order_id, "hours": hours})
         self._send(200, result)
 
@@ -1706,7 +1718,7 @@ class Handler(BaseHTTPRequestHandler):
                         d[key] = local_str(d[key])
                 result.append(d)
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"tasks": result})
 
     def _staff_dict(self, row):
@@ -1766,7 +1778,7 @@ class Handler(BaseHTTPRequestHandler):
                 d["avg_minutes"] = round(avg, 1) if avg is not None else None
                 staff.append(d)
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"staff": staff})
 
     def create_housekeeping_staff(self, data, sess):
@@ -1793,7 +1805,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "personal_actualizado", "staff_id": result["id"]})
         self._send(200, {"staff": result})
 
@@ -1824,7 +1836,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "personal_actualizado", "staff_id": result["id"]})
         self._send(200, {"staff": result})
 
@@ -1866,7 +1878,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("limpieza_asignada", {"task_id": task_id, "assigned_to": new_name})
         self._send(200, {"task": result})
 
@@ -1907,7 +1919,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "limpieza_iniciada", "task_id": task_id})
         self._send(200, {"task": result})
 
@@ -1956,7 +1968,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "limpieza_completada", "task_id": task_id})
         self._send(200, {"task": result})
 
@@ -2013,7 +2025,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "limpieza_incidencia", "task_id": task_id})
         self._send(200, {"task": task_dict, "incidence": inc_dict})
 
@@ -2053,7 +2065,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             result = [self._incidence_dict(r) for r in rows]
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"incidences": result})
 
     def resolve_incidence(self, path, sess):
@@ -2094,7 +2106,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         sse_broadcast("data_changed", {"type": "limpieza_reanudada", "task_id": task_id})
         self._send(200, result)
 
@@ -2184,12 +2196,12 @@ class Handler(BaseHTTPRequestHandler):
                 }
 
             pp_rows = fetch_all(
-                conn, "SELECT * FROM orders WHERE status = 'pendiente' AND product != 'reserva' ORDER BY check_out ASC LIMIT 8"
+                conn, "SELECT o.*, r.number AS room_number FROM orders o LEFT JOIN rooms r ON r.id = o.room_id WHERE o.status = 'pendiente' AND o.product != 'reserva' ORDER BY o.check_out ASC LIMIT 8"
             )
             attention_pending = [_attention_order(r) for r in pp_rows]
 
             assign_rows = fetch_all(
-                conn, "SELECT * FROM orders WHERE status = 'por_asignar' ORDER BY id ASC LIMIT 12"
+                conn, "SELECT o.*, r.number AS room_number FROM orders o LEFT JOIN rooms r ON r.id = o.room_id WHERE o.status = 'por_asignar' ORDER BY o.id ASC LIMIT 12"
             )
             attention_to_assign = []
             for r in assign_rows:
@@ -2212,7 +2224,7 @@ class Handler(BaseHTTPRequestHandler):
             assign_critical = [i for i in attention_to_assign if i["waiting_seconds"] > 600]
 
             hold_rows = fetch_all(
-                conn, "SELECT * FROM orders WHERE product = 'reserva' AND status = 'pendiente' ORDER BY created_at ASC"
+                conn, "SELECT o.*, r.number AS room_number FROM orders o LEFT JOIN rooms r ON r.id = o.room_id WHERE o.product = 'reserva' AND o.status = 'pendiente' ORDER BY o.created_at ASC"
             )
             attention_holds = []
             for r in hold_rows:
@@ -2230,7 +2242,7 @@ class Handler(BaseHTTPRequestHandler):
                 })
 
             dep_rows = fetch_all(
-                conn, "SELECT * FROM orders WHERE status IN ('pagado', 'confirmada') ORDER BY check_out ASC LIMIT 8"
+                conn, "SELECT o.*, r.number AS room_number FROM orders o LEFT JOIN rooms r ON r.id = o.room_id WHERE o.status IN ('pagado', 'confirmada') ORDER BY o.check_out ASC LIMIT 8"
             )
             attention_departures = [_attention_order(r) for r in dep_rows]
 
@@ -2285,7 +2297,7 @@ class Handler(BaseHTTPRequestHandler):
                 "created_at": local_str(r["created_at"]),
             } for r in activity_rows]
         finally:
-            conn.close()
+            release_conn(conn)
 
         self._send(200, {
             "as_of": now_dt.isoformat(),
@@ -2344,7 +2356,7 @@ class Handler(BaseHTTPRequestHandler):
                     totals[k] += group["counts"].get(k, 0)
                 totals["total"] += group["total"]
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"as_of": now().isoformat(), "types": result, "totals": totals})
 
     def dashboard_alerts(self):
@@ -2374,7 +2386,7 @@ class Handler(BaseHTTPRequestHandler):
                 (sla_minutes, now()),
             )["n"])
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {
             "to_assign": to_assign,
             "pending_payments": pending_payments,
@@ -2462,7 +2474,7 @@ class Handler(BaseHTTPRequestHandler):
                     "recorded_by": p["recorded_by"],
                 })
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {
             "date": date_str,
             "as_of": now().isoformat(),
@@ -2658,7 +2670,7 @@ class Handler(BaseHTTPRequestHandler):
                 "por_personal": por_personal,
             }
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {
             "date": date_str,
             "por_producto": list(por_producto.values()),
@@ -2675,7 +2687,7 @@ class Handler(BaseHTTPRequestHandler):
             row = fetch_one(conn, "SELECT config FROM hotels WHERE id = %s", (self.HOTEL,))
             cfg = dict(row["config"] or {}) if row else {}
         finally:
-            conn.close()
+            release_conn(conn)
         cfg.setdefault("reserva_tarifa", 0)
         cfg.setdefault("assign_ttl_minutes", 30)
         cfg.setdefault("cleaning_sla_minutes", 60)
@@ -2727,7 +2739,7 @@ class Handler(BaseHTTPRequestHandler):
                 cur.fetchone()
                 db_ok = True
             finally:
-                conn.close()
+                release_conn(conn)
         except Exception:
             db_ok = False
         status = "ok" if db_ok else "degraded"
@@ -2779,7 +2791,7 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
             raise
         finally:
-            conn.close()
+            release_conn(conn)
         saved.setdefault("reserva_tarifa", 0)
         saved.setdefault("assign_ttl_minutes", 30)
         saved.setdefault("cleaning_sla_minutes", 60)
@@ -2828,7 +2840,7 @@ class Handler(BaseHTTPRequestHandler):
                 d["created_at"] = local_str(r["created_at"])
                 audit_rows.append(d)
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"audit": audit_rows, "total": total, "limit": limit, "offset": offset})
 
     def master_hotels(self):
@@ -2866,7 +2878,7 @@ class Handler(BaseHTTPRequestHandler):
                     "ocupacion_pct": round(ocupadas / total * 100, 1) if total else 0,
                 })
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"hotels": hotels})
 
     def master_dashboard(self):
@@ -2985,7 +2997,7 @@ class Handler(BaseHTTPRequestHandler):
                 totales["ocupadas"] / totales["cuartos"] * 100, 1
             ) if totales["cuartos"] else 0
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {
             "as_of": now_dt.isoformat(),
             "totales": totales,
@@ -3049,8 +3061,9 @@ class Handler(BaseHTTPRequestHandler):
             rows = fetch_all(
                 conn,
                 f"""
-                SELECT o.*, h.nombre AS hotel_name
+                SELECT o.*, h.nombre AS hotel_name, r.number AS room_number
                 FROM orders o JOIN hotels h ON h.id = o.hotel_id
+                LEFT JOIN rooms r ON r.id = o.room_id
                 {where_sql}
                 ORDER BY o.id DESC LIMIT %s OFFSET %s
                 """,
@@ -3058,7 +3071,7 @@ class Handler(BaseHTTPRequestHandler):
             )
             result = [self._order_dict(conn, r) for r in rows]
         finally:
-            conn.close()
+            release_conn(conn)
         self._send(200, {"orders": result, "total": total, "page": page, "pages": pages})
 
     def _serve_upload(self, path):
