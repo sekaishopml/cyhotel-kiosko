@@ -51,7 +51,10 @@ ROOM_TYPES = {
         "momento": 12,
         "amanecida": 30,
         "hospedaje": 40,
-        "extras": {},
+        "extras": {
+            "1h": {"label": "1 hora adicional", "price": 5},
+            "6h": {"label": "Doble tiempo (6 horas)", "price": 24},
+        },
         "momento_solo_sin_otras": True,
     },
     "suite": {

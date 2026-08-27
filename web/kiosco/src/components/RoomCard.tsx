@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { RoomType } from '../types'
 import { imgUrl } from '../api'
 
@@ -11,6 +12,19 @@ interface Props {
 }
 
 export default function RoomCard({ room, selected, selectedPlan, expanded, onClick, selectedExtra }: Props) {
+  const [photoIdx, setPhotoIdx] = useState(0)
+  const photos = [room.photo]
+
+  useEffect(() => {
+    if (!expanded || photos.length <= 1) return
+    const id = setInterval(() => setPhotoIdx(i => (i + 1) % photos.length), 3500)
+    return () => clearInterval(id)
+  }, [expanded, photos.length])
+
+  useEffect(() => {
+    if (!expanded) setPhotoIdx(0)
+  }, [expanded])
+
   const timeLabel = selectedPlan === 'suite'
     ? selectedExtra === 'amanecida' ? '18:00 - 09:00'
     : selectedExtra === 'hospedaje' ? 'por noche'
@@ -25,7 +39,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
   return (
     <button
       onClick={onClick}
-      className={`tap-scale w-full text-left rounded-lg transition-all duration-400 room-card-inner ${
+      className={`tap-scale w-full text-left rounded-lg transition-[background-color,box-shadow,padding] duration-300 room-card-inner ${
         expanded
           ? 'bg-navy text-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.3)]'
           : selected
@@ -37,7 +51,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
         <img
           src={imgUrl(room.photo)}
           alt={room.label}
-          className={`rounded-md object-cover shrink-0 transition-all duration-400 ${
+          className={`rounded-md object-cover shrink-0 transition-[width,height] duration-300 ease-out ${
             expanded ? 'w-20 h-20' : 'w-14 h-14'
           }`}
           loading="lazy"
@@ -66,6 +80,43 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
               </svg>
             )}
           </div>
+        </div>
+      </div>
+
+      <div
+        className="overflow-hidden rounded-lg transition-[max-height,opacity] duration-400 ease-out"
+        style={{
+          maxHeight: expanded ? '180px' : '0px',
+          opacity: expanded ? 1 : 0,
+          contain: 'layout style paint',
+        }}
+      >
+        <div className="relative w-full h-[160px] mt-3">
+          {photos.map((photo, i) => (
+            <img
+              key={i}
+              src={imgUrl(photo)}
+              alt={room.label}
+              className="absolute inset-0 w-full h-full object-cover rounded-lg transition-[opacity,transform] duration-500 ease-out"
+              style={{
+                opacity: i === photoIdx ? 1 : 0,
+                transform: i === photoIdx ? 'scale(1)' : 'scale(1.05)',
+                willChange: 'opacity, transform',
+              }}
+            />
+          ))}
+          {photos.length > 1 && (
+            <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+              {photos.map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-[5px] rounded-full transition-[width,background] duration-300 ${
+                    i === photoIdx ? 'w-3.5 bg-gold' : 'w-1.5 bg-white/50'
+                  }`}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </button>
