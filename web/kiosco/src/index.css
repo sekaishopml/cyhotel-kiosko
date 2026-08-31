@@ -116,32 +116,73 @@ body {
 .skeleton {
   background: linear-gradient(90deg, rgba(15,23,42,0.06) 25%, rgba(15,23,42,0.12) 50%, rgba(15,23,42,0.06) 75%);
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 1.8s ease-in-out infinite;
   border-radius: 1rem;
+}
+
+.skeleton-thumb {
+  width: 52px;
+  height: 44px;
+  background: linear-gradient(90deg, rgba(15,23,42,0.06) 25%, rgba(15,23,42,0.14) 50%, rgba(15,23,42,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+
+.skeleton-text {
+  height: 18px;
+  width: 75%;
+  background: linear-gradient(90deg, rgba(15,23,42,0.06) 25%, rgba(15,23,42,0.16) 50%, rgba(15,23,42,0.06) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 4px;
+}
+
+.skeleton-text-short {
+  height: 14px;
+  width: 45%;
+  background: linear-gradient(90deg, rgba(15,23,42,0.05) 25%, rgba(15,23,42,0.12) 50%, rgba(15,23,42,0.05) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+  border-radius: 4px;
 }
 
 /* Slide transitions for screens */
 @keyframes slideInRight {
-  from { opacity: 0; transform: translateX(50px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(60px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 @keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-50px); }
-  to { opacity: 1; transform: translateX(0); }
+  from { opacity: 0; transform: translateX(-60px) scale(0.98); }
+  to { opacity: 1; transform: translateX(0) scale(1); }
 }
 
 .slide-in-right {
-  animation: slideInRight 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: slideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
 }
 
 .slide-in-left {
-  animation: slideInLeft 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: slideInLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
+/* Confirm progress pulse */
+@keyframes confirmProgress {
+  0% { width: 0%; }
+  50% { width: 80%; }
+  100% { width: 100%; }
 }
 
 /* Checkmark SVG draw animation */
 @keyframes drawCheck {
   to { stroke-dashoffset: 0; }
+}
+
+@keyframes waitDot {
+  0%, 100% { transform: translateY(0); opacity: 0.35; }
+  40% { transform: translateY(-6px); opacity: 1; }
 }
 
 .checkmark-circle {

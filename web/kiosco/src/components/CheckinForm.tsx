@@ -88,7 +88,7 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
           </div>
         </div>
 
-        <div className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 relative z-10">
           {activeField === 'name' ? (
             <CustomKeyboard
               value={name}
@@ -104,7 +104,6 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
               value={doc}
               onChange={setDoc}
               type="numeric"
-              placeholder="Sin puntos ni espacios"
               label="Documento"
               maxLength={12}
               onSubmit={() => onSubmit(name.trim(), doc.trim())}

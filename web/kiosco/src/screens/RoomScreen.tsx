@@ -62,7 +62,7 @@ export default function RoomScreen() {
     suite: 'SUITE JACUZZI',
   }
 
-  const extras = currentRoom?.extras ?? {}
+  const extras = selectedPlan === 'hospedaje' ? {} : (currentRoom?.extras ?? {})
   const hasExtras = Object.keys(extras).length > 0
   const isSuite = selectedPlan === 'suite'
 
@@ -89,7 +89,15 @@ export default function RoomScreen() {
         {loading && (
           <div className="flex flex-col gap-2">
             {[1, 2, 3, 4].map(i => (
-              <div key={i} className="skeleton w-full" style={{ height: '72px' }} />
+              <div key={i} className="skeleton w-full p-3" style={{ height: '76px', animationDelay: `${i * 0.15}s` }}>
+                <div className="flex items-center gap-3 h-full">
+                  <div className="skeleton-thumb shrink-0" />
+                  <div className="flex-1 flex flex-col justify-center gap-2">
+                    <div className="skeleton-text" />
+                    <div className="skeleton-text-short" />
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         )}

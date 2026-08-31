@@ -98,10 +98,21 @@ export default function CheckinScreen() {
       </div>
 
       {loading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl px-8 py-6 text-center shadow-lg">
-            <div className="w-10 h-10 border-[3px] border-navy/15 border-t-navy rounded-full animate-spin mx-auto" />
-            <p className="mt-3 font-bold text-navy uppercase text-[length:var(--fs-small)]">Confirmando…</p>
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-navy/50">
+          <div className="bg-white rounded-2xl px-10 py-8 text-center shadow-2xl animate-pop">
+            <div className="relative w-16 h-16 mx-auto">
+              <div className="w-16 h-16 border-4 border-navy/10 border-t-gold rounded-full animate-spin" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <svg className="w-6 h-6 text-gold" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+            <p className="mt-4 font-bold text-navy text-lg uppercase">Confirmando reserva…</p>
+            <p className="mt-1 text-sm text-navy/40 font-semibold">Procesando en recepción</p>
+            <div className="w-40 h-1 bg-navy/10 rounded-full overflow-hidden mx-auto mt-4">
+              <div className="h-full bg-gradient-to-r from-gold to-amber-400 rounded-full" style={{ animation: 'confirmProgress 2s ease-in-out infinite' }} />
+            </div>
           </div>
         </div>
       )}

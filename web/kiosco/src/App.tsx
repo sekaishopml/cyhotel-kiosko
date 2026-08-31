@@ -109,13 +109,13 @@ export default function App() {
 
   return (
     <div className="h-full flex flex-col bg-cream">
-      {screen !== 'room' && <Header />}
-      {screen !== 'room' && <StepBar step={step} />}
-      <main className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
+      {screen === 'plan' && <Header />}
+      {screen === 'plan' && <StepBar step={step} />}
+      <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
         {screen === 'plan' && <PlanScreen />}
         {screen === 'room' && <RoomScreen />}
         {screen === 'checkin' && <CheckinScreen />}
-      </main>
+      </div>
       <footer className="shrink-0 text-center py-1 bg-cream relative" style={{ pointerEvents: 'none' }}>
         <button
           onPointerDown={(e) => {
