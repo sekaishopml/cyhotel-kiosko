@@ -201,25 +201,25 @@ export default function RoomScreen() {
           {selectedPlan === 'hospedaje' && (
             <div className="mb-3">
               <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Noches</p>
-              <div className="grid grid-cols-2 gap-2 max-h-[240px] overflow-y-auto no-scrollbar pr-1">
+              <div className={`grid ${showMoreNights ? 'grid-cols-8' : 'grid-cols-4'} gap-1.5`}>
                 {Array.from({ length: showMoreNights ? 15 : 7 }, (_, i) => i + 1).map(d => (
                   <button
                     key={d}
                     onClick={() => selectDays(d)}
-                    className={`tap-scale w-full flex items-center justify-between px-4 py-3 rounded-lg text-[0.85rem] font-bold border transition-all duration-200 uppercase ${
+                    className={`tap-scale w-full flex items-center justify-center gap-1 px-2 py-2 rounded-lg text-[0.8rem] font-bold border transition-all duration-200 uppercase ${
                       selectedDays === d
                         ? 'bg-navy text-white border-navy shadow-md'
                         : 'bg-white text-navy border-navy/15 hover:border-gold/40'
                     }`}
                   >
-                    <span>{d} {d === 1 ? 'noche' : 'noches'}</span>
-                    <span className={`font-extrabold ${selectedDays === d ? 'text-gold' : 'text-navy/50'}`}>${basePrice * d}</span>
+                    <span>{d}</span>
+                    <span className={selectedDays === d ? 'text-gold' : 'text-navy/50'}>${basePrice * d}</span>
                   </button>
                 ))}
               </div>
               <button
                 onClick={() => setShowMoreNights(s => !s)}
-                className="tap-scale mt-2 w-full py-2.5 rounded-lg text-[0.8rem] font-bold border border-navy/15 bg-white text-navy hover:border-gold/40 transition-colors uppercase"
+                className="tap-scale mt-1.5 w-full py-2 rounded-lg text-[0.8rem] font-bold border border-navy/15 bg-white text-navy hover:border-gold/40 transition-colors uppercase"
               >
                 {showMoreNights ? 'Menos' : 'Más.'}
               </button>
