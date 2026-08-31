@@ -260,7 +260,7 @@ body {
 
 /* Título de marca: gran serif sobrio */
 .txt-brand-xl {
-  font-size: clamp(3.2rem, 9vw, 5.5rem);
+  font-size: clamp(3.8rem, 10vw, 6.2rem);
 }
 
 /* Reloj: serif fino, sobrio, azul marino */
@@ -270,41 +270,48 @@ body {
   font-weight: 400;
 }
 
-/* CTA: botón fino, azul marino, discreto y elegante */
+/* CTA: botón con fondo oscuro sólido, destacado */
 .idle-cta {
   position: relative;
   display: inline-block;
-  padding: 0.95rem 3rem;
-  border: 1px solid #0e1a2b;
-  color: #0e1a2b;
-  background: transparent;
-  border-radius: 0;
-  letter-spacing: 0.2em;
-  transition: background-color 0.35s ease, color 0.35s ease;
+  padding: 1.1rem 3.2rem;
+  border: 2px solid #0e1a2b;
+  color: #ffffff;
+  background: #0e1a2b;
+  border-radius: 0.5rem;
+  letter-spacing: 0.14em;
+  box-shadow: 0 12px 30px -8px rgba(14, 26, 43, 0.45);
+  transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
-.idle-cta:active { transform: scale(0.98); }
+.idle-cta:active { transform: scale(0.97); }
 .idle-cta:focus-visible { outline: 2px solid #0e1a2b; outline-offset: 3px; }
-.idle-cta:hover { background: #0e1a2b; color: #f7f5f0; }
+.idle-cta:hover { background: #1b2f4a; box-shadow: 0 16px 38px -8px rgba(14, 26, 43, 0.6); }
 
 /* Cards de planes: celdas en grilla editorial, bordes finos */
 .plan-card {
   position: relative;
-  padding: 1rem 0.5rem;
-  background: #fdfcf9;
+  padding: 1.1rem 0.5rem;
+  background: rgba(253, 252, 249, 0.9);
   color: #0e1a2b;
   text-align: center;
-  min-height: 6.5rem;
+  min-height: 7rem;
   transition: background-color 0.5s ease;
 }
-.plan-card:active { background: #f1ede4; }
-.plan-label { color: #4a5f77; transition: color 0.5s ease; }
-.plan-sub { transition: color 0.5s ease; }
+.plan-card:active { background: #eae6dc; }
+.plan-label { color: #2c3e50; transition: color 0.5s ease; }
+.plan-sub { color: #33475c; transition: color 0.5s ease; }
 .plan-card-hot {
   background: #0e1a2b;
 }
-.plan-card-hot .plan-label { color: #dfe7ef; }
-.plan-card-hot .plan-sub { color: #9fb0c2; }
-.plan-card-hot .plan-price, .plan-card-hot { color: #fff; }
+.plan-card-hot .plan-label { color: #e6edf4; }
+.plan-card-hot .plan-sub { color: #a9bcd0; }
+.plan-card-hot .plan-price { color: #fff; }
+
+.idle-clock {
+  font-size: clamp(5.5rem, 15vh, 8rem);
+  letter-spacing: 0.01em;
+  font-weight: 700;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .idle-kb-a, .idle-kb-b, .idle-bg, .idle-bg-out { animation: none; }

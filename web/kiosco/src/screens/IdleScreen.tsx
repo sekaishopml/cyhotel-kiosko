@@ -154,65 +154,66 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
       {/* ===== FONDO CLARO, AIRE, EDITORIAL ===== */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9] via-cream to-[#f4f1ea]" />
 
-      {/* ===== FOTO DE FONDO MUY SUTIL ===== */}
+      {/* ===== FOTO DE FONDO ===== */}
       {!imgFailed[slide] && (
         <div key={`bg-${slide}-${kb}`} className={`absolute inset-0 idle-bg ${transitioning ? 'idle-bg-out' : ''}`}>
           <img src={cur.img} alt="" draggable={false}
-            className="absolute inset-0 w-full h-full object-cover opacity-[0.10] idle-kb-a" />
+            className="absolute inset-0 w-full h-full object-cover opacity-[0.38] idle-kb-a" />
         </div>
       )}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9]/70 via-[#fdfcf9]/35 to-[#f4f1ea]/80" />
 
       {/* ===== CONTENIDO CENTRADO ===== */}
       <div className="relative h-full flex flex-col items-center justify-center px-10 text-center">
 
-        {/* Etiqueta superior en minúsculas con espaciado */}
-        <p className="text-[#5b6f86] text-[length:var(--fs-small)] font-light tracking-[0.28em] uppercase animate-fade-up">
+        {/* Etiqueta superior */}
+        <p className="text-[#2c3e50] text-[length:var(--fs-body)] font-bold tracking-[0.3em] uppercase animate-fade-up">
           {greeting}
         </p>
 
-        {/* Título en serif elegante, minúsculas */}
-        <h1 className="mt-3 font-display font-normal leading-none text-[#0e1a2b] txt-brand-xl">
+        {/* Título grande, bold */}
+        <h1 className="mt-3 font-display font-bold leading-none text-[#0e1a2b] txt-brand-xl">
           <span className="block animate-fade-up">{BRAND.hotel}</span>
         </h1>
 
-        {/* Regla fina + tagline */}
+        {/* Regla + tagline */}
         <div className="mt-4 flex items-center justify-center gap-4 animate-fade-up">
-          <span className="h-px w-16 bg-[#0e1a2b]/15" />
-          <span className="text-[#5b6f86] text-[length:var(--fs-small)] italic font-light">{BRAND.tagline}</span>
-          <span className="h-px w-16 bg-[#0e1a2b]/15" />
+          <span className="h-px w-16 bg-[#0e1a2b]/25" />
+          <span className="text-[#2c3e50] text-[length:var(--fs-body)] font-semibold italic">{BRAND.tagline}</span>
+          <span className="h-px w-16 bg-[#0e1a2b]/25" />
         </div>
 
-        {/* Reloj grande, sobrio */}
-        <div className="mt-7 font-display font-normal leading-none tabular-nums text-[#0e1a2b] idle-clock">
+        {/* Reloj grande, bold */}
+        <div className="mt-7 font-display font-bold leading-none tabular-nums text-[#0e1a2b] idle-clock">
           {clock}
         </div>
-        <p className="mt-3 text-[#6b7f96] text-[length:var(--fs-small)] capitalize tracking-wide">{dateStr}</p>
+        <p className="mt-3 text-[#2c3e50] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
 
-        {/* ===== PLANES: fila sobria ===== */}
+        {/* ===== PLANES ===== */}
         <div className="mt-9 w-full max-w-5xl">
-          <div className="grid grid-cols-4 gap-px bg-[#0e1a2b]/10 overflow-hidden rounded-lg">
+          <div className="grid grid-cols-4 gap-px bg-[#0e1a2b]/12 overflow-hidden rounded-lg">
             {plans.map((p, i) => (
               <button key={p.key}
                 onPointerDown={(e) => { e.stopPropagation(); start() }}
                 className={`plan-card ${heroChip === i ? 'plan-card-hot' : ''}`}>
-                <span className="block text-[0.85rem] uppercase tracking-[0.22em] font-medium plan-label">{p.label}</span>
-                <span className="block text-[0.95rem] text-[#5b6f86] font-light plan-sub">{p.sub}</span>
-                <span className="block mt-2 text-[length:var(--fs-section)] font-light tabular-nums plan-price">${p.from}</span>
+                <span className="block text-[1rem] uppercase tracking-[0.2em] font-bold plan-label">{p.label}</span>
+                <span className="block text-[1.05rem] text-[#33475c] font-semibold plan-sub">{p.sub}</span>
+                <span className="block mt-1.5 text-[length:var(--fs-plan-name)] font-bold tabular-nums plan-price">${p.from}</span>
               </button>
             ))}
           </div>
         </div>
 
-        {/* ===== CTA FINO ===== */}
+        {/* ===== CTA con fondo oscuro ===== */}
         <button onPointerDown={(e) => { e.stopPropagation(); start() }}
           className="idle-cta mt-10">
-          <span className="block text-[length:var(--fs-body)] font-medium tracking-[0.18em] uppercase">
+          <span className="block text-[length:var(--fs-section)] font-bold tracking-[0.16em] uppercase">
             tocar para comenzar
           </span>
         </button>
 
-        {/* Línea de pie editorial */}
-        <p className="mt-5 text-[#7a8ca1] text-[length:var(--fs-small)] font-light" key={promoLine || 'x'}>
+        {/* Línea de pie */}
+        <p className="mt-5 text-[#33475c] text-[length:var(--fs-body)] font-semibold" key={promoLine || 'x'}>
           {promoLine || `${cur.taste} · atención 24 horas`}
         </p>
       </div>
