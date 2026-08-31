@@ -22,7 +22,7 @@ const planLabels: Record<string, string> = {
 
 const extraLabels: Record<string, string> = {
   momento: '3 horas',
-  amanecida: '18:00 - 09:00',
+  amanecida: '19:00 - 09:00',
   hospedaje: 'por noche',
 }
 

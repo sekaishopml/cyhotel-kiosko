@@ -63,12 +63,14 @@ ROOM_TYPES = {
         "momento": 20,
         "amanecida": 35,
         "hospedaje": 50,
+        "amanecida_entry": "19:00",
         "extras": {
             "1h": {"label": "1 hora adicional", "price": 5},
             "6h": {"label": "Doble tiempo (6 horas)", "price": 40},
         },
     },
 }
+
 
 AMANECIDA_ENTRY = "18:00"
 AMANECIDA_EXIT = "09:00"

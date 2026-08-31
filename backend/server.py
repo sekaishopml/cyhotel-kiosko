@@ -815,9 +815,19 @@ class Handler(BaseHTTPRequestHandler):
             release_conn(conn)
         other_free = sum(n for t, n in free_by_type.items() if t in ("estandar", "matrimonial"))
         photo_for = lambda key: "/img/suite.jpeg" if key == "suite" else "/img/habitacion.jpeg"
+        merge_am = product in ("amanecida", "hospedaje")
         result = []
         for key, info in ROOM_TYPES.items():
+            if merge_am and key == "matrimonial":
+                continue
             free = free_by_type.get(key, 0)
+            if merge_am and key == "estandar":
+                free = free_by_type.get("estandar", 0) + free_by_type.get("matrimonial", 0)
+                info = {
+                    **info,
+                    "label": "Sencilla / Matrimonial",
+                    "desc": "Sencilla o matrimonial (la matrimonial es más amplia, con nevera y baño con mampara). A/C, TV Smart, WiFi, agua caliente, bebidas y piqueos",
+                }
             if product == "reserva":
                 result.append({
                     "key": key,
@@ -835,9 +845,10 @@ class Handler(BaseHTTPRequestHandler):
                 if key == "suite":
                     price = info.get("momento")
                     price = self._apply_price_override(overrides, key, price)
+                    _entry = info.get("amanecida_entry", AMANECIDA_ENTRY)
                     extras = {
                         "momento": {"label": "Momento (3h)", "price": info.get("momento", 0)},
-                        "amanecida": {"label": "Amanecida (18:00-09:00)", "price": info.get("amanecida", 0)},
+                        "amanecida": {"label": f"Amanecida ({_entry}-{AMANECIDA_EXIT})", "price": info.get("amanecida", 0)},
                         "hospedaje": {"label": "Hospedaje (por noche)", "price": info.get("hospedaje", 0)},
                     }
                 else:
