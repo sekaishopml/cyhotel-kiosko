@@ -1,17 +1,29 @@
 import { useState, useEffect } from 'react'
 import { useStore } from '../store'
-import { getTypes } from '../api'
+import { getTypes, getKioscoConfig } from '../api'
 import { RoomType } from '../types'
 import RoomCard from '../components/RoomCard'
 
 export default function RoomScreen() {
-  const { selectedPlan, selectedRoom, selectedExtra, selectedDays, selectRoom, selectExtra, selectDays, goBack, goTo } = useStore()
+  const { selectedPlan, selectedRoom, selectedExtra, selectedDays, selectRoom, selectExtra, selectDays, goBack, goTo, setCatalog } = useStore()
   const [rooms, setRooms] = useState<RoomType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expandedRoom, setExpandedRoom] = useState<string | null>(null)
   const [showMoreNights, setShowMoreNights] = useState(false)
+  const [nightLimit, setNightLimit] = useState({ base: 7, full: 15 })
   const [retryCount, setRetryCount] = useState(0)
+
+  useEffect(() => {
+    let active = true
+    getKioscoConfig()
+      .then(c => {
+        if (!active) return
+        setNightLimit({ base: c.max_days || 7, full: c.max_days_full || Math.max(c.max_days || 7, 15) })
+      })
+      .catch(() => {})
+    return () => { active = false }
+  }, [])
 
   useEffect(() => {
     let cancelled = false
@@ -21,6 +33,7 @@ export default function RoomScreen() {
       .then(data => {
         if (!cancelled) {
           setRooms(data.types)
+          setCatalog(data.types)
           if (selectedPlan === 'suite') {
             const suiteRoom = data.types.find((r: RoomType) => r.key === 'suite')
             if (suiteRoom && !selectedRoom) {
@@ -202,7 +215,7 @@ export default function RoomScreen() {
             <div className="mb-3">
               <p className="text-[0.7rem] font-semibold text-navy mb-2 uppercase tracking-wide">Noches</p>
               <div className={`grid ${showMoreNights ? 'grid-cols-8' : 'grid-cols-4'} gap-1.5`}>
-                {Array.from({ length: showMoreNights ? 15 : 7 }, (_, i) => i + 1).map(d => (
+                {Array.from({ length: showMoreNights ? nightLimit.full : nightLimit.base }, (_, i) => i + 1).map(d => (
                   <button
                     key={d}
                     onClick={() => selectDays(d)}

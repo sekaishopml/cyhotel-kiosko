@@ -43,16 +43,6 @@ body {
 }
 
 /* Transiciones CSS para animaciones ligeras */
-@keyframes screenIn {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes screenOut {
-  from { opacity: 1; transform: translateY(0); }
-  to { opacity: 0; transform: translateY(-12px); }
-}
-
 @keyframes fadeUp {
   from { opacity: 0; transform: translateY(16px); }
   to { opacity: 1; transform: translateY(0); }
@@ -68,11 +58,6 @@ body {
   to { opacity: 1; transform: scale(1); }
 }
 
-@keyframes slideUp {
-  from { opacity: 0; transform: translateY(40px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
 .animate-fade-up {
   animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
@@ -83,10 +68,6 @@ body {
 
 .animate-pop {
   animation: popIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.animate-slide-up {
-  animation: slideUp 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 /* Stagger delays for cards */
@@ -180,11 +161,6 @@ body {
   to { stroke-dashoffset: 0; }
 }
 
-@keyframes waitDot {
-  0%, 100% { transform: translateY(0); opacity: 0.35; }
-  40% { transform: translateY(-6px); opacity: 1; }
-}
-
 .checkmark-circle {
   stroke-dasharray: 166;
   stroke-dashoffset: 166;
@@ -202,17 +178,6 @@ body {
   content-visibility: auto;
 }
 
-/* Splash loading bar */
-@keyframes loadBar {
-  0% { width: 0%; }
-  60% { width: 70%; }
-  100% { width: 100%; }
-}
-
-.load-bar {
-  animation: loadBar 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
 /* Card hover shadow */
 .card-shadow {
   box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08);
@@ -226,55 +191,6 @@ body {
 /* Room card — smooth morph */
 .room-card-inner {
   transition: background-color 0.3s ease, color 0.3s ease, box-shadow 0.3s ease, padding 0.3s ease;
-}
-
-/* Photo carousel */
-.carousel-wrap {
-  position: relative;
-  width: 100%;
-  height: 0;
-  opacity: 0;
-  overflow: hidden;
-  border-radius: 0.75rem;
-  transition: height 0.3s ease, opacity 0.3s ease;
-}
-
-.carousel-wrap.open {
-  height: 150px;
-  opacity: 1;
-  margin-top: 0.75rem;
-}
-
-.carousel-img {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: opacity 0.5s ease;
-}
-
-.carousel-dots {
-  position: absolute;
-  bottom: 6px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 4px;
-}
-
-.carousel-dot {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.5);
-  transition: background 0.3s ease, width 0.3s ease;
-}
-
-.carousel-dot.active {
-  background: #D4A574;
-  width: 14px;
-  border-radius: 3px;
 }
 
 /* Bottom bar slide up */

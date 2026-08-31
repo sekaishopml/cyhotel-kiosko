@@ -1,9 +1,10 @@
 import { useEffect, useState, useRef } from 'react'
 import { useStore } from './store'
-import { syncPending } from './api'
-import Header from './components/Header'
-import StepBar from './components/StepBar'
-import Splash from './components/Splash'
+import { syncPending, getKioscoConfig } from './api'
+import { BRAND } from './constants'
+import Header from './components/ui/Header'
+import StepBar from './components/ui/StepBar'
+import Splash from './components/ui/Splash'
 import PlanScreen from './screens/PlanScreen'
 import RoomScreen from './screens/RoomScreen'
 import CheckinScreen from './screens/CheckinScreen'
@@ -23,6 +24,11 @@ export default function App() {
   const [showServerConfig, setShowServerConfig] = useState(false)
   const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('kiosco_server') || window.location.origin)
   const pinRef = useRef<HTMLInputElement>(null)
+  const [promoOpen, setPromoOpen] = useState(false)
+  const [promoIdx, setPromoIdx] = useState(0)
+  const [promos, setPromos] = useState<{ title: string; subtitle: string }[]>([])
+  const idleSec = useRef<number>(60)
+  const idleTimeout = useRef<number | null>(null)
 
   useEffect(() => {
     const tick = () => { syncPending().catch(() => {}) }
@@ -65,6 +71,48 @@ export default function App() {
     }
     return () => { delete (window as any).__updateStatus }
   }, [])
+
+  useEffect(() => {
+    let active = true
+    getKioscoConfig().then(c => {
+      if (!active) return
+      idleSec.current = c.idle_timeout_seconds || 60
+      const items = c.promos && c.promos.length > 0 ? c.promos : []
+      setPromos(items)
+    }).catch(() => {})
+    return () => { active = false }
+  }, [])
+
+  const clearIdleTimer = () => {
+    if (idleTimeout.current !== null) {
+      window.clearTimeout(idleTimeout.current)
+      idleTimeout.current = null
+    }
+  }
+
+  const blocked = screen === 'splash' || showPin || showAdmin || showServerConfig || promoOpen
+
+  useEffect(() => {
+    const arm = () => {
+      clearIdleTimer()
+      if (blocked) return
+      idleTimeout.current = window.setTimeout(() => setPromoOpen(true), idleSec.current * 1000)
+    }
+    const reset = () => { if (!promoOpen) arm() }
+    const evs: (keyof WindowEventMap)[] = ['pointerdown', 'pointermove', 'keydown', 'touchstart']
+    evs.forEach(ev => window.addEventListener(ev, reset))
+    arm()
+    return () => {
+      evs.forEach(ev => window.removeEventListener(ev, reset))
+      clearIdleTimer()
+    }
+  }, [blocked, promoOpen])
+
+  useEffect(() => {
+    if (!promoOpen) return
+    const id = window.setInterval(() => setPromoIdx(i => (i + 1) % (promos.length || 1)), 6000)
+    return () => window.clearInterval(id)
+  }, [promoOpen, promos.length])
 
   const handlePinSubmit = () => {
     if (pinInput === ADMIN_PIN) {
@@ -297,6 +345,35 @@ export default function App() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {promoOpen && (
+        <div
+          className="fixed inset-0 z-[150] bg-gradient-to-b from-navy to-[#1a2744] flex flex-col items-center justify-center text-center px-8 cursor-pointer"
+          onClick={() => setPromoOpen(false)}
+        >
+          {promos.length > 0 ? (
+            <>
+              <p className="text-gold/70 text-[length:var(--fs-small)] font-semibold tracking-[0.3em] uppercase mb-3">
+                {BRAND.hotel}
+              </p>
+              <h2 key={promoIdx} className="font-display text-[length:var(--fs-display)] text-white font-bold animate-pop leading-tight">
+                {promos[promoIdx % promos.length]?.title}
+              </h2>
+              <p className="mt-2 text-white/60 text-[length:var(--fs-body)]">
+                {promos[promoIdx % promos.length]?.subtitle}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-gold/70 text-[length:var(--fs-small)] font-semibold tracking-[0.3em] uppercase mb-3">Bienvenido</p>
+              <h2 className="font-display text-[length:var(--fs-display)] text-white font-bold">{BRAND.hotel}</h2>
+            </>
+          )}
+          <p className="absolute bottom-12 text-white/40 text-[length:var(--fs-small)] uppercase tracking-widest font-semibold">
+            Toca para continuar
+          </p>
         </div>
       )}
     </div>

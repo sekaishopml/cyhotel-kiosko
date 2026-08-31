@@ -1,0 +1,212 @@
+openapi: 3.0.3
+info:
+  title: CyHotel API
+  description: API del sistema de kiosco/hotel (modos kiosco, admin, master)
+  version: 1.0.0
+servers:
+  - url: /
+tags:
+  - name: kiosco
+    description: Endpoints usados por el kiosco (y algunos por admin)
+  - name: admin
+    description: Endpoints del panel administrativo (requieren autenticación)
+paths:
+  /api/kiosco-config:
+    get:
+      tags: [kiosco]
+      summary: Configuración del kiosco (max_days, promos, precios, branding, etc.)
+      responses:
+        '200':
+          description: Configuración del kiosco
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  config:
+                    $ref: '#/components/schemas/KioscoConfig'
+  /api/types:
+    get:
+      tags: [kiosco]
+      summary: Tipos de habitación, precios y disponibilidad por producto
+      parameters:
+        - name: product
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [momento, amanecida, hospedaje, suite, reserva]
+      responses:
+        '200':
+          description: Lista de tipos de habitación
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  product:
+                    type: string
+                  types:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        key: { type: string }
+                        label: { type: string }
+                        desc: { type: string }
+                        photo: { type: string }
+                        price:
+                          oneOf: [{ type: number }, { type: 'null' }]
+                        free: { type: integer }
+                        eligible: { type: boolean }
+                        reason:
+                          oneOf: [{ type: string }, { type: 'null' }]
+                        extras:
+                          type: object
+  /api/orders:
+    post:
+      tags: [kiosco]
+      summary: Crea una orden desde el kiosco
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Orden creada
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/kiosco-version:
+    get:
+      tags: [kiosco]
+      summary: Versión actual del APK del kiosco
+      responses:
+        '200':
+          description: Información de versión
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/kiosco-update:
+    get:
+      tags: [kiosco]
+      summary: Verificación de actualización del kiosco
+      responses:
+        '200':
+          description: Información de actualización
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/admin/hotel/settings:
+    get:
+      tags: [admin]
+      summary: Lee la configuración del hotel
+      security: [{ bearerAuth: [] }]
+      responses:
+        '200':
+          description: Configuración del hotel
+          content:
+            application/json:
+              schema:
+                type: object
+    post:
+      tags: [admin]
+      summary: Guarda la configuración del hotel (incluye claves del kiosco)
+      security: [{ bearerAuth: [] }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                config:
+                  type: object
+                  properties:
+                    price_overrides: { type: object }
+                    qr_url: { type: string }
+                    idle_timeout_seconds: { type: integer }
+                    promos: { type: array, items: { type: object } }
+                    max_days: { type: integer }
+                    max_days_full: { type: integer }
+                    suite_durations: { type: object }
+                    branding: { type: object }
+      responses:
+        '200':
+          description: Configuración guardada
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/admin/pin-login:
+    post:
+      tags: [admin]
+      summary: Autenticación del staff por PIN
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: Token de sesión
+          content:
+            application/json:
+              schema:
+                type: object
+  /api/docs.yaml:
+    get:
+      summary: Documento OpenAPI (YAML)
+      responses:
+        '200':
+          description: Documento OpenAPI en YAML
+          content:
+            text/yaml: {}
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    KioscoConfig:
+      type: object
+      properties:
+        max_days:
+          type: integer
+          default: 7
+        max_days_full:
+          type: integer
+          default: 15
+        qr_url:
+          type: string
+          default: ""
+        idle_timeout_seconds:
+          type: integer
+          default: 60
+        promos:
+          type: array
+          items:
+            type: object
+            properties:
+              title: { type: string }
+              subtitle: { type: string }
+        price_overrides:
+          type: object
+        branding:
+          type: object
+          properties:
+            hotel: { type: string }
+            tagline: { type: string }
+        suite_durations:
+          type: object
+          properties:
+            momento: { type: integer }
+            amanecida: { type: integer }
+            hospedaje: { type: integer }

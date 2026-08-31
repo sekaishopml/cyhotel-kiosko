@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import CustomKeyboard from './CustomKeyboard'
+import CustomKeyboard from './ui/CustomKeyboard'
+import { nameSchema } from '../lib/validation'
 
 interface Props {
   planKey: string
@@ -29,12 +30,24 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
   const [name, setName] = useState('')
   const [doc, setDoc] = useState('')
   const [activeField, setActiveField] = useState<'name' | 'doc'>('name')
+  const [nameError, setNameError] = useState(false)
 
   const handleDocChange = (val: string) => {
     setDoc(val)
     if (val.trim().length >= 10) {
+      const parsed = nameSchema.safeParse(name)
+      if (!parsed.success) {
+        setNameError(true)
+        setActiveField('name')
+        return
+      }
       onSubmit(name.trim(), val.trim())
     }
+  }
+
+  const handleNameChange = (val: string) => {
+    setName(val)
+    if (nameError) setNameError(false)
   }
 
   const durationLabel = planKey === 'suite' && extra
@@ -73,12 +86,15 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
             onClick={() => setActiveField('name')}
             className={`rounded-lg border-2 p-2.5 transition-all cursor-pointer ${
               activeField === 'name' ? 'border-gold shadow-[0_0_0_3px_rgba(212,175,55,0.15)]' : 'border-navy/10'
-            }`}
+            } ${nameError ? 'border-red-400' : ''}`}
           >
             <p className="text-[0.6rem] font-bold text-navy/40 uppercase mb-0.5">Nombre completo *</p>
             <p className="text-[length:var(--fs-small)] font-bold text-navy uppercase min-h-[20px]">
               {name || <span className="text-navy/20">Toca para escribir</span>}
             </p>
+            {nameError && (
+              <p className="text-[0.7rem] font-bold text-red-500 mt-1">Escriba su nombre</p>
+            )}
           </div>
           <div
             onClick={() => setActiveField('doc')}
@@ -97,12 +113,20 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
           {activeField === 'name' ? (
             <CustomKeyboard
               value={name}
-              onChange={setName}
+              onChange={handleNameChange}
               type="text"
               placeholder="TU NOMBRE"
               label="Nombre"
               maxLength={40}
-              onSubmit={() => setActiveField('doc')}
+              onSubmit={() => {
+                const parsed = nameSchema.safeParse(name)
+                if (!parsed.success) {
+                  setNameError(true)
+                  return
+                }
+                setNameError(false)
+                setActiveField('doc')
+              }}
             />
           ) : (
             <CustomKeyboard
@@ -111,7 +135,15 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
               type="numeric"
               label="Documento"
               maxLength={10}
-              onSubmit={() => onSubmit(name.trim(), doc.trim())}
+              onSubmit={() => {
+                const parsed = nameSchema.safeParse(name)
+                if (!parsed.success) {
+                  setNameError(true)
+                  setActiveField('name')
+                  return
+                }
+                onSubmit(name.trim(), doc.trim())
+              }}
             />
           )}
         </div>

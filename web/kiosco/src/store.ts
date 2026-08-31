@@ -1,5 +1,5 @@
 import { useState, useCallback, createContext, useContext, useMemo, createElement } from 'react'
-import { AppScreen } from './types'
+import { AppScreen, RoomType } from './types'
 
 interface StoreState {
   screen: AppScreen
@@ -7,6 +7,7 @@ interface StoreState {
   selectedRoom: string | null
   selectedExtra: string | null
   selectedDays: number
+  catalog: RoomType[] | null
 }
 
 const INITIAL: StoreState = {
@@ -15,6 +16,7 @@ const INITIAL: StoreState = {
   selectedRoom: null,
   selectedExtra: null,
   selectedDays: 1,
+  catalog: null,
 }
 
 interface Store extends StoreState {
@@ -24,6 +26,7 @@ interface Store extends StoreState {
   selectRoom: (roomKey: string) => void
   selectExtra: (extra: string | null) => void
   selectDays: (days: number) => void
+  setCatalog: (types: RoomType[]) => void
   goBack: () => void
   goHome: () => void
 }
@@ -53,6 +56,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     setState(s => ({ ...s, selectedDays: days }))
   }, [])
 
+  const setCatalog = useCallback((types: RoomType[]) => {
+    setState(s => ({ ...s, catalog: types }))
+  }, [])
+
   const goBack = useCallback(() => {
     setState(s => {
       if (s.screen === 'checkin') return { ...s, screen: 'room' }
@@ -76,9 +83,10 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
     selectRoom,
     selectExtra,
     selectDays,
+    setCatalog,
     goBack,
     goHome,
-  }), [state, step, goTo, selectPlan, selectRoom, selectExtra, selectDays, goBack, goHome])
+  }), [state, step, goTo, selectPlan, selectRoom, selectExtra, selectDays, setCatalog, goBack, goHome])
 
   return createElement(StoreContext.Provider, { value }, children)
 }

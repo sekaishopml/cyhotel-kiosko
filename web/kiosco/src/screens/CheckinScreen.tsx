@@ -1,12 +1,13 @@
 import { useState, useRef } from 'react'
 import { useStore } from '../store'
 import { createOrder, enqueueOrder } from '../api'
+import { computeTotal } from '../lib/pricing'
 import CheckinForm from '../components/CheckinForm'
-import ConfirmModal from '../components/ConfirmModal'
-import OfflineModal from '../components/OfflineModal'
+import ConfirmModal from '../components/ui/ConfirmModal'
+import OfflineModal from '../components/ui/OfflineModal'
 
 export default function CheckinScreen() {
-  const { selectedPlan, selectedRoom, selectedExtra, selectedDays, goBack, goHome } = useStore()
+  const { selectedPlan, selectedRoom, selectedExtra, selectedDays, catalog, goBack, goHome } = useStore()
   const [loading, setLoading] = useState(false)
   const submitting = useRef(false)
   const [order, setOrder] = useState<{
@@ -46,24 +47,13 @@ export default function CheckinScreen() {
     }
   }
 
-  const prices: Record<string, Record<string, number>> = {
-    momento: { estandar: 10, matrimonial: 12, doble: 12 },
-    amanecida: { estandar: 20, matrimonial: 20, doble: 30 },
-    hospedaje: { estandar: 30, matrimonial: 30, doble: 40 },
-  }
-  const suiteExtraPrices: Record<string, number> = { momento: 20, amanecida: 35, hospedaje: 50 }
+  const total = computeTotal(selectedPlan!, selectedRoom!, selectedExtra, selectedDays, catalog)
 
-  const total = selectedPlan === 'suite' && selectedExtra
-    ? suiteExtraPrices[selectedExtra] ?? 0
-    : selectedPlan === 'hospedaje'
-    ? (prices.hospedaje[selectedRoom!] ?? 0) * selectedDays
-    : (prices[selectedPlan!]?.[selectedRoom!] ?? 0)
-
-  const roomPrice = selectedPlan === 'suite' && selectedExtra
-    ? suiteExtraPrices[selectedExtra] ?? 0
-    : selectedPlan === 'hospedaje'
-    ? prices.hospedaje[selectedRoom!] ?? 0
-    : (prices[selectedPlan!]?.[selectedRoom!] ?? 0)
+  const roomPrice = selectedPlan === 'hospedaje'
+    ? (catalog?.find(r => r.key === selectedRoom)?.price ?? 0)
+    : selectedPlan === 'suite' && selectedExtra
+    ? computeTotal('suite', selectedRoom!, selectedExtra, selectedDays, catalog)
+    : (catalog?.find(r => r.key === selectedRoom)?.price ?? 0)
 
   return (
     <>

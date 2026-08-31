@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 import { RoomType } from '../types'
 import { imgUrl } from '../api'
+import { cn } from '../lib/cn'
+import { tap } from '../lib/haptics'
 
 interface Props {
   room: RoomType
@@ -38,22 +40,21 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
 
   return (
     <button
+      onPointerDown={() => tap()}
       onClick={onClick}
-      className={`tap-scale w-full text-left rounded-lg transition-[background-color,box-shadow,padding] duration-300 room-card-inner ${
+      className={cn('tap-scale w-full text-left rounded-lg transition-[background-color,box-shadow,padding] duration-300 room-card-inner',
         expanded
           ? 'bg-navy text-white p-3 shadow-[0_8px_30px_rgba(15,23,42,0.3)]'
           : selected
           ? 'bg-navy text-white p-3 shadow-[0_4px_20px_rgba(15,23,42,0.2)]'
-          : 'bg-white text-navy p-3 card-shadow'
-      }`}
+          : 'bg-white text-navy p-3 card-shadow')}
     >
       <div className="flex items-center gap-3">
         <img
           src={imgUrl(room.photo)}
           alt={room.label}
-          className={`rounded-md object-cover shrink-0 transition-[width,height] duration-300 ease-out ${
-            expanded ? 'w-20 h-20' : 'w-14 h-14'
-          }`}
+          className={cn('rounded-md object-cover shrink-0 transition-[width,height] duration-300 ease-out',
+            expanded ? 'w-20 h-20' : 'w-14 h-14')}
           loading="lazy"
         />
         <div className="flex-1 min-w-0">
@@ -61,19 +62,18 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
             {room.label}
           </h4>
           {timeLabel && (
-            <span className={`text-[0.6rem] font-semibold uppercase ${expanded || selected ? 'text-white/60' : 'text-navy/35'}`}>
+            <span className={cn('text-[0.6rem] font-semibold uppercase', expanded || selected ? 'text-white/60' : 'text-navy/35')}>
               {timeLabel}
             </span>
           )}
         </div>
         <div className="flex items-center gap-2 shrink-0">
-          <span className={`text-right font-extrabold leading-none ${expanded || selected ? 'text-gold' : 'text-navy'}`}
+          <span className={cn('text-right font-extrabold leading-none', expanded || selected ? 'text-gold' : 'text-navy')}
             style={{ fontSize: 'var(--fs-display)' }}>
             ${room.price}
           </span>
-          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
-            selected || expanded ? 'border-gold bg-gold' : 'border-navy/15'
-          }`}>
+          <div className={cn('w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-200',
+            selected || expanded ? 'border-gold bg-gold' : 'border-navy/15')}>
             {(selected || expanded) && (
               <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -84,7 +84,7 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
       </div>
 
       <div
-        className="overflow-hidden rounded-lg transition-[max-height,opacity] duration-400 ease-out"
+        className="overflow-hidden rounded-lg transition-[max-height,opacity] duration-500 ease-out"
         style={{
           maxHeight: expanded ? '180px' : '0px',
           opacity: expanded ? 1 : 0,
@@ -110,9 +110,8 @@ export default function RoomCard({ room, selected, selectedPlan, expanded, onCli
               {photos.map((_, i) => (
                 <div
                   key={i}
-                  className={`h-[5px] rounded-full transition-[width,background] duration-300 ${
-                    i === photoIdx ? 'w-3.5 bg-gold' : 'w-1.5 bg-white/50'
-                  }`}
+                  className={cn('h-[5px] rounded-full transition-[width,background] duration-300',
+                    i === photoIdx ? 'w-3.5 bg-gold' : 'w-1.5 bg-white/50')}
                 />
               ))}
             </div>

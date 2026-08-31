@@ -6,8 +6,8 @@
   "scope": "/kiosco/",
   "display": "standalone",
   "orientation": "landscape",
-  "background_color": "#FFFFFF",
-  "theme_color": "#143A2A",
+  "background_color": "#FBF7F0",
+  "theme_color": "#0F172A",
   "icons": [
     {
       "src": "/kiosco/icon.svg",

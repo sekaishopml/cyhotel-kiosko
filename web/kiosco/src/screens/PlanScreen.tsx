@@ -1,13 +1,6 @@
 import { useStore } from '../store'
 import PlanCard from '../components/PlanCard'
-import { Plan } from '../types'
-
-const plans: Plan[] = [
-  { key: 'momento', name: 'Momento', badge: 'El más pedido', hero: true },
-  { key: 'amanecida', name: 'Amanecida', hero: false },
-  { key: 'hospedaje', name: 'Hospedaje', hero: false },
-  { key: 'suite', name: 'Suite Jacuzzi', hero: false },
-]
+import { PLANS } from '../constants'
 
 export default function PlanScreen() {
   const { selectPlan } = useStore()
@@ -19,7 +12,7 @@ export default function PlanScreen() {
       </h2>
 
       <div className="flex flex-col gap-2 flex-1 min-h-0">
-        {plans.map((plan, i) => (
+        {PLANS.map((plan, i) => (
           <div
             key={plan.key}
             className="flex-1 min-h-0 opacity-0 animate-fade-up"

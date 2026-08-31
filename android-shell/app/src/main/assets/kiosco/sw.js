@@ -1,9 +1,16 @@
-const CACHE_NAME = 'kiosco-v1';
-const PRECACHE = ['/kiosco/'];
+const CACHE_NAME = "kiosco-v1.2.0";
+const PRECACHE = [
+  "./",
+  "./index.html",
+  "assets/index-DmCa56HC.js",
+  "assets/index-WP_nier1.css",
+  "manifest.webmanifest",
+  "icon.svg"
+];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE).catch(() => {}))
   );
   self.skipWaiting();
 });

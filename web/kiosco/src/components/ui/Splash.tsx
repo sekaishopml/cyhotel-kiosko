@@ -1,0 +1,26 @@
+import { useEffect } from 'react'
+import { BRAND } from '../../constants'
+
+interface Props {
+  onDone: () => void
+}
+
+export default function Splash({ onDone }: Props) {
+  useEffect(() => {
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    const timer = setTimeout(onDone, prefersReduced ? 1200 : 2200)
+    return () => clearTimeout(timer)
+  }, [onDone])
+
+  return (
+    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-navy to-[#1a2744] overflow-hidden">
+      <h1 className="font-display text-[length:var(--fs-display)] text-white font-bold tracking-wide">
+        {BRAND.hotel}
+      </h1>
+      <p className="mt-2 text-gold/70 text-[length:var(--fs-small)] font-semibold tracking-[0.3em] uppercase">
+        Kiosco
+      </p>
+      <div className="mt-8 w-14 h-14 border-4 border-white/15 border-t-gold rounded-full animate-spin" />
+    </div>
+  )
+}

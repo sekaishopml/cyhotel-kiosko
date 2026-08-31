@@ -394,10 +394,12 @@ class Handler(BaseHTTPRequestHandler):
             self.wfile.flush()
             while True:
                 try:
-                    msg = q.get(timeout=15)
+                    msg = q.get(timeout=30)
                     self.wfile.write(b"data: " + msg.encode("utf-8") + b"\n\n")
                     self.wfile.flush()
                 except Empty:
+                    # Keep-alive: comentario ': ping' cada ~30s para que los
+                    # proxies/proxies no corten la conexión SSE.
                     self.wfile.write(b": ping\n\n")
                     self.wfile.flush()
         except (BrokenPipeError, ConnectionResetError, ConnectionAbortedError):
@@ -431,6 +433,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.kiosco_version()
             elif path == "/api/kiosco-update":
                 self.kiosco_update()
+            elif path == "/api/kiosco-config":
+                self.kiosco_config()
+            elif path == "/api/docs.yaml":
+                self.serve_openapi()
             elif path == "/api/admin/me":
                 sess = self._require_auth()
                 if sess:
@@ -743,8 +749,60 @@ class Handler(BaseHTTPRequestHandler):
             "amanecida_exit": AMANECIDA_EXIT,
         })
 
+    def _price_overrides(self):
+        """Lee price_overrides del config del hotel (dict). Devuelve {} si no hay.
+
+        Estructuras soportadas (ambas se normalizan al segundo estilo):
+          {'momento': {'estandar': 8}, 'extras': {'doble': {'1h': 6}}}
+          {'estandar': {'price': 8, 'extras': {'1h': 6}}}
+        """
+        try:
+            conn = self._conn()
+            try:
+                cfg = self._hotel_config(conn, self.HOTEL)
+            finally:
+                release_conn(conn)
+        except Exception:
+            return {}
+        kiosco = cfg.get("kiosco")
+        kiosco = kiosco if isinstance(kiosco, dict) else {}
+        po = kiosco.get("price_overrides") if "price_overrides" in kiosco else cfg.get("price_overrides")
+        if not isinstance(po, dict):
+            return {}
+        return po
+
+    def _apply_price_override(self, overrides, key, default_price, extra_key=None):
+        """Devuelve el precio ajustado según overrides; si la estructura es rara,
+        devuelve el default sin romper."""
+        base = overrides.get(key)
+        if extra_key is None:
+            if isinstance(base, dict) and "price" in base:
+                try:
+                    return float(base["price"])
+                except (TypeError, ValueError):
+                    return default_price
+            if isinstance(base, (int, float)):
+                try:
+                    return float(base)
+                except (TypeError, ValueError):
+                    return default_price
+            return default_price
+        if isinstance(base, dict):
+            extras = base.get("extras")
+        else:
+            extras = None
+        if isinstance(extras, dict) and extra_key in extras:
+            val = extras.get(extra_key)
+            if isinstance(val, (int, float)):
+                try:
+                    return float(val)
+                except (TypeError, ValueError):
+                    return default_price
+        return default_price
+
     def get_types(self):
         product = self._query_product()
+        overrides = self._price_overrides()
         conn = self._conn()
         try:
             free_by_type = {}
@@ -776,6 +834,7 @@ class Handler(BaseHTTPRequestHandler):
             if product == "suite":
                 if key == "suite":
                     price = info.get("momento")
+                    price = self._apply_price_override(overrides, key, price)
                     extras = {
                         "momento": {"label": "Momento (3h)", "price": info.get("momento", 0)},
                         "amanecida": {"label": "Amanecida (18:00-09:00)", "price": info.get("amanecida", 0)},
@@ -789,7 +848,14 @@ class Handler(BaseHTTPRequestHandler):
                 extras = {}
             else:
                 price = info.get(product)
+                price = self._apply_price_override(overrides, key, price)
                 extras = {} if product == "amanecida" else (info.get("extras") or {})
+                if isinstance(extras, dict):
+                    extras = {ek: dict(ev) for ek, ev in extras.items()}
+                    for ek, ev in extras.items():
+                        ev["price"] = self._apply_price_override(
+                            overrides, key, ev.get("price", 0), extra_key=ek
+                        )
             if price is None:
                 continue
             eligible, reason = True, None
@@ -2693,6 +2759,69 @@ class Handler(BaseHTTPRequestHandler):
         cfg.setdefault("cleaning_sla_minutes", 60)
         self._send(200, {"config": cfg})
 
+    def kiosco_config(self):
+        """Configuración del kiosco (usable en MODE kiosco y admin).
+
+        Lee hotels.config; los valores pueden estar en un sub-objeto "kiosco"
+        o como claves de primer nivel. Si falta una clave se usa el default,
+        nunca se responde 500 por datos incompletos.
+        """
+        defaults = {
+            "max_days": 7,
+            "max_days_full": 15,
+            "qr_url": "",
+            "idle_timeout_seconds": 60,
+            "promos": [{"title": "Amanecida 18:00-09:00", "subtitle": "Desde $20"}],
+            "price_overrides": {},
+            "branding": {"hotel": "Hotel Del Valle", "tagline": "Tu descanso, tu espacio"},
+            "suite_durations": {"momento": 20, "amanecida": 35, "hospedaje": 50},
+        }
+        try:
+            conn = self._conn()
+            try:
+                cfg = self._hotel_config(conn, self.HOTEL)
+            finally:
+                release_conn(conn)
+        except Exception:
+            cfg = {}
+        kiosco = cfg.get("kiosco")
+        kiosco = kiosco if isinstance(kiosco, dict) else {}
+
+        def pick(key):
+            # Prioridad: sub-objeto "kiosco" -> clave de primer nivel -> default.
+            if key in kiosco and kiosco[key] is not None:
+                return kiosco[key]
+            if key in cfg and cfg[key] is not None:
+                return cfg[key]
+            return defaults[key]
+
+        config = {}
+        for key, default in defaults.items():
+            value = pick(key)
+            if key in ("price_overrides", "branding", "suite_durations", "promos"):
+                if not isinstance(value, dict if key != "promos" else list):
+                    value = default
+            config[key] = value
+        # 'promos' acepta dict o list; si llega dict lo dejamos de todos modos
+        # (pick ya devolvió default si no era list). Se normaliza a list si dict.
+        if isinstance(config["promos"], dict):
+            config["promos"] = defaults["promos"]
+        self._send(200, {"config": config})
+
+    def serve_openapi(self):
+        """Sirve el documento OpenAPI (openapi.yaml) en cualquier MODE."""
+        try:
+            p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "openapi.yaml")
+            with open(p, "r", encoding="utf-8") as f:
+                body = f.read().encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/yaml; charset=utf-8")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except Exception:
+            self._error(500, "No se pudo leer openapi.yaml")
+
     def kiosco_version(self):
         """Versión actual del APK del kiosco, para el auto-update de la app."""
         try:
@@ -2763,9 +2892,10 @@ class Handler(BaseHTTPRequestHandler):
             self._error(500, "No se pudo registrar crash")
 
     def post_settings(self, data, sess):
-        cfg = data.get("config")
-        if not isinstance(cfg, dict):
+        body_cfg = data.get("config")
+        if not isinstance(body_cfg, dict):
             raise ValueError("config debe ser un objeto")
+        cfg = dict(body_cfg)
         if "cleaning_sla_minutes" in cfg:
             try:
                 sla = int(cfg["cleaning_sla_minutes"])
@@ -2774,19 +2904,46 @@ class Handler(BaseHTTPRequestHandler):
             if sla < 10 or sla > 240:
                 raise ValueError("cleaning_sla_minutes debe estar entre 10 y 240 minutos")
             cfg["cleaning_sla_minutes"] = sla
+        # Nuevas claves del kiosco: se deep-mergean bajo el sub-objeto "kiosco"
+        # para no pisar otras claves de config ajenas.
+        kiosco_keys = ("price_overrides", "qr_url", "idle_timeout_seconds", "promos",
+                       "max_days", "max_days_full", "suite_durations", "branding")
+        kiosco_updates = {k: cfg.pop(k) for k in list(cfg) if k in kiosco_keys}
         hotel_id = self._hotel_id(sess)
         conn = self._conn(sess)
         try:
+            row = fetch_one(conn, "SELECT config FROM hotels WHERE id = %s FOR UPDATE", (hotel_id,))
+            current = dict(row["config"] or {}) if row else {}
+            # Cargar sub-objeto kiosco existente (o crear uno nuevo).
+            kiosco_now = current.get("kiosco")
+            kiosco_now = kiosco_now if isinstance(kiosco_now, dict) else {}
+            if kiosco_updates:
+                for k, v in kiosco_updates.items():
+                    if isinstance(v, (dict, list)):
+                        prev = kiosco_now.get(k)
+                        if isinstance(prev, dict) and isinstance(v, dict):
+                            merged = dict(prev)
+                            merged.update(v)
+                            kiosco_now[k] = merged
+                        else:
+                            kiosco_now[k] = v
+                    else:
+                        kiosco_now[k] = v
+            # Mezclar el resto de claves (las de settings clásicos) a primer nivel.
+            final = dict(current)
+            final.update(cfg)  # claves clásicas (incluye cleaning_sla_minutes, etc.)
+            if kiosco_updates or "kiosco" in final:
+                final["kiosco"] = kiosco_now
             db_exec(
                 conn,
                 "UPDATE hotels SET config = %s::jsonb WHERE id = %s",
-                (json.dumps(cfg), hotel_id),
+                (json.dumps(final), hotel_id),
             )
             audit(conn, hotel_id, "actualizar_config", None, None, sess["username"],
-                  f"Configuración actualizada: {json.dumps(cfg, ensure_ascii=False)}")
+                  f"Configuración actualizada: {json.dumps(final, ensure_ascii=False)}")
             conn.commit()
-            row = fetch_one(conn, "SELECT config FROM hotels WHERE id = %s", (hotel_id,))
-            saved = dict(row["config"] or {}) if row else {}
+            fresh = fetch_one(conn, "SELECT config FROM hotels WHERE id = %s", (hotel_id,))
+            saved = dict(fresh["config"] or {}) if fresh else {}
         except Exception:
             conn.rollback()
             raise

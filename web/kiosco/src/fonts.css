@@ -3,12 +3,12 @@
   font-style: normal;
   font-weight: 400 800;
   font-display: swap;
-  src: local('Inter');
+  src: local('Inter'), url('./fonts/inter.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: local('Cormorant Garamond');
+  src: local('Cormorant Garamond'), url('./fonts/cormorantgaramond.woff2') format('woff2');
 }

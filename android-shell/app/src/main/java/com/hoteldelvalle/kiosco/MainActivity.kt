@@ -22,6 +22,7 @@ import android.view.WindowInsets
 import android.view.WindowInsetsController
 import android.view.WindowManager
 import android.webkit.WebResourceRequest
+import android.webkit.WebResourceResponse
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -50,6 +51,7 @@ class MainActivity : Activity() {
     private var pageError = false
     private var lastUrl: String? = null
     private var usingFallback = false
+    private var embeddedFallbackUsed = false
     private var locked = false
     private val FALLBACK_TIMEOUT_MS = 6000L
     private val WATCHDOG_MS = 20000L
@@ -62,7 +64,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.1.24"
+        const val APP_VERSION = "1.2.0"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -304,10 +306,22 @@ class MainActivity : Activity() {
                 override fun onReceivedError(view: WebView?, req: WebResourceRequest?, err: android.webkit.WebResourceError?) {
                     super.onReceivedError(view, req, err)
                     val failing = req?.url?.toString()
-                    if (failing == lastUrl) {
+                    // Solo fallback si falla el frame principal (red/servidor inaccesible)
+                    val isMainFrame = req?.isForMainFrame == true
+                    if (!embeddedFallbackUsed && (isMainFrame || failing == lastUrl)) {
                         logBoot("WebView error ${err?.errorCode}: ${err?.description}")
                         pageError = true
-                        fallbackToLocal()
+                        handler.post { loadEmbedded() }
+                    }
+                }
+
+                override fun onReceivedHttpError(view: WebView?, request: WebResourceRequest?, errorResponse: WebResourceResponse?) {
+                    super.onReceivedHttpError(view, request, errorResponse)
+                    // Error HTTP del frame principal (ej. 404/500 del server): fallback offline
+                    if (!embeddedFallbackUsed && request?.isForMainFrame == true) {
+                        logBoot("WebView HTTP error ${errorResponse?.statusCode}")
+                        pageError = true
+                        handler.post { loadEmbedded() }
                     }
                 }
             }
@@ -364,10 +378,22 @@ class MainActivity : Activity() {
         if (usingFallback) return
         usingFallback = true
         handler.removeCallbacks(fallbackRunnable)
+        loadEmbedded()
+    }
+
+    // Carga la UI empaquetada en el APK (file:///android_asset, funciona sin red).
+    private fun loadEmbedded() {
+        // Protección anti-bucle: si el embebido también falla, no reintentar.
+        if (embeddedFallbackUsed) return
+        embeddedFallbackUsed = true
+        usingFallback = true
+        handler.removeCallbacks(fallbackRunnable)
         val base = serverBase()
         val url = "file:///android_asset/kiosco/index.html?api=$base"
-        logBoot("Cargando fallback local: $url")
-        handler.post { loadWebView(url) }
+        logBoot("Cargando fallback local embebido: $url")
+        val wv = webView ?: return
+        wv.stopLoading()
+        wv.loadUrl(url)
     }
 
     // Watchdog 24/7: si la web se queda en blanco o con error, recarga/fallback.

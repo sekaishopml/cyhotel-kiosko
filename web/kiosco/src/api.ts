@@ -1,4 +1,16 @@
 import { TypesResponse, OrderPayload, OrderResult } from './types'
+import { DEFAULT_CONFIG } from './constants'
+
+export interface KioscoConfig {
+  max_days: number
+  max_days_full: number
+  qr_url: string
+  idle_timeout_seconds: number
+  promos: { title: string; subtitle: string }[]
+  price_overrides: Record<string, unknown>
+  branding: { hotel: string; tagline: string }
+  suite_durations: Record<string, number>
+}
 
 function resolveApiBase(): string {
   const w = typeof window !== 'undefined' ? (window as any) : undefined
@@ -38,9 +50,65 @@ async function retryFetch(url: string, opts: RequestInit = {}, attempts = 3): Pr
 }
 
 export async function getTypes(product: string): Promise<TypesResponse> {
+  const cached = getTypesCache.get(product)
+  if (cached) return cached
   const res = await retryFetch(`${API_BASE}/api/types?product=${encodeURIComponent(product)}`)
   if (!res.ok) throw new Error(`Error ${res.status}`)
-  return res.json()
+  const data: TypesResponse = await res.json()
+  getTypesCache.set(product, data)
+  return data
+}
+
+const TYPES_TTL = 60_000
+
+export const getTypesCache = (() => {
+  const store = new Map<string, { value: TypesResponse; at: number }>()
+  return {
+    get(product: string): TypesResponse | undefined {
+      const e = store.get(product)
+      if (!e) return undefined
+      if (Date.now() - e.at > TYPES_TTL) {
+        store.delete(product)
+        return undefined
+      }
+      return e.value
+    },
+    set(product: string, value: TypesResponse): void {
+      store.set(product, { value, at: Date.now() })
+    },
+    clear(): void {
+      store.clear()
+    },
+  }
+})()
+
+const CONFIG_TTL = 5 * 60_000
+let configCacheEntry: { value: KioscoConfig; at: number } | null = null
+
+export async function getKioscoConfig(): Promise<KioscoConfig> {
+  if (configCacheEntry && Date.now() - configCacheEntry.at < CONFIG_TTL) {
+    return configCacheEntry.value
+  }
+  try {
+    const res = await retryFetch(`${API_BASE}/api/kiosco-config`)
+    if (!res.ok) throw new Error(`Error ${res.status}`)
+    const data = await res.json()
+    const merged: KioscoConfig = {
+      ...DEFAULT_CONFIG,
+      ...(data?.config || {}),
+      promos: data?.config?.promos?.length ? data.config.promos : DEFAULT_CONFIG.promos,
+      branding: { ...DEFAULT_CONFIG.branding, ...(data?.config?.branding || {}) },
+      suite_durations: { ...DEFAULT_CONFIG.suite_durations, ...(data?.config?.suite_durations || {}) },
+    }
+    configCacheEntry = { value: merged, at: Date.now() }
+    return merged
+  } catch {
+    return DEFAULT_CONFIG
+  }
+}
+
+export function clearKioscoConfigCache(): void {
+  configCacheEntry = null
 }
 
 export async function createOrder(payload: OrderPayload): Promise<OrderResult> {
