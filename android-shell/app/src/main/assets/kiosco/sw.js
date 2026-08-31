@@ -1,8 +1,8 @@
-const CACHE_NAME = "kiosco-v1.2.3";
+const CACHE_NAME = "kiosco-v1.2.4";
 const PRECACHE = [
   "./",
   "./index.html",
-  "assets/index-DJbo5TUm.js",
+  "assets/index-Cq1WKsyq.js",
   "assets/index-CKlWJnfF.css",
   "manifest.webmanifest",
   "icon.svg",
