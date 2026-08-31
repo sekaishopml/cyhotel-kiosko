@@ -30,7 +30,12 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
   const [doc, setDoc] = useState('')
   const [activeField, setActiveField] = useState<'name' | 'doc'>('name')
 
-  const canSubmit = name.trim().length > 0
+  const handleDocChange = (val: string) => {
+    setDoc(val)
+    if (val.trim().length >= 10) {
+      onSubmit(name.trim(), val.trim())
+    }
+  }
 
   const durationLabel = planKey === 'suite' && extra
     ? extraLabels[extra] ?? extra
@@ -82,7 +87,7 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
             }`}
           >
             <p className="text-[0.6rem] font-bold text-navy/40 uppercase mb-0.5">Documento (opcional)</p>
-            <p className="text-[length:var(--fs-small)] font-bold text-navy min-h-[20px]">
+            <p className={`font-bold text-navy min-h-[28px] ${doc ? 'text-2xl tracking-widest' : 'text-[length:var(--fs-small)]'}`}>
               {doc || <span className="text-navy/20">Toca para escribir</span>}
             </p>
           </div>
@@ -102,22 +107,14 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
           ) : (
             <CustomKeyboard
               value={doc}
-              onChange={setDoc}
+              onChange={handleDocChange}
               type="numeric"
               label="Documento"
-              maxLength={12}
+              maxLength={10}
               onSubmit={() => onSubmit(name.trim(), doc.trim())}
             />
           )}
         </div>
-
-        <button
-          onClick={() => onSubmit(name.trim(), doc.trim())}
-          disabled={!canSubmit || disabled}
-          className="shrink-0 tap-scale w-full bg-navy text-white rounded-lg py-3 mt-2 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide disabled:opacity-30 disabled:cursor-not-allowed hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
-        >
-          Confirmar Reserva
-        </button>
       </div>
     </div>
   )

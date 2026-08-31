@@ -50,7 +50,7 @@ export default function CustomKeyboard({ value, onChange, type = 'text', placeho
 
   return (
     <div className="flex flex-col h-full relative z-20">
-      <div className="flex-1 bg-slate-100 rounded-t-xl p-2.5 flex flex-col justify-center gap-2">
+      <div className="flex-1 bg-slate-100 rounded-t-xl p-2.5 pt-2 flex flex-col justify-end gap-2">
         {rows.map((row, ri) => (
           <div key={ri} className="flex justify-center gap-2">
             {type === 'text' && ri === 0 && (
