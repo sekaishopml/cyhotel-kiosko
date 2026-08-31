@@ -258,6 +258,18 @@ body {
 .idle-bg { animation: bgFadeIn 1.2s ease-out both; }
 .idle-bg-out { animation: bgFadeOut 0.7s ease-in both; }
 
+/* Fundido de entrada y salida de la fachada (afk -> menú de plan) */
+@keyframes idleFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes idleFadeOut {
+  from { opacity: 1; }
+  to   { opacity: 0; }
+}
+.idle-enter { animation: idleFadeIn 0.6s ease-out both; }
+.idle-leave { animation: idleFadeOut 0.4s ease-in both; }
+
 /* Título de marca: gran serif sobrio */
 .txt-brand-xl {
   font-size: clamp(3.8rem, 10vw, 6.2rem);
@@ -291,25 +303,17 @@ body {
 .plan-card {
   position: relative;
   padding: 0.9rem 0.3rem;
-  background: rgba(253, 252, 249, 0.88);
+  background: rgba(253, 252, 249, 0.85);
   color: #0e1a2b;
   text-align: center;
-  min-height: 6.2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   transition: background-color 0.5s ease;
 }
 .plan-card:active { background: #eae6dc; }
 .plan-label { color: #2c3e50; transition: color 0.5s ease; }
-.plan-sub { color: #33475c; transition: color 0.5s ease; }
 .plan-card-hot {
   background: #0e1a2b;
 }
 .plan-card-hot .plan-label { color: #e6edf4; }
-.plan-card-hot .plan-sub { color: #a9bcd0; }
-.plan-card-hot .plan-price { color: #fff; }
 
 .idle-clock {
   font-size: clamp(5.5rem, 15vh, 8rem);
@@ -318,6 +322,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .idle-kb-a, .idle-kb-b, .idle-bg, .idle-bg-out { animation: none; }
+  .idle-kb-a, .idle-kb-b, .idle-bg, .idle-bg-out, .idle-enter, .idle-leave { animation: none; }
   .plan-card, .idle-cta { transition: none; }
 }

@@ -44,6 +44,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
   const [promoLine, setPromoLine] = useState<string>('')
   const [imgFailed, setImgFailed] = useState<Record<number, boolean>>({})
   const [transitioning, setTransitioning] = useState(false)
+  const [leaving, setLeaving] = useState(false)
 
   const vTaps = useRef<number[]>([])
 
@@ -132,7 +133,12 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
     { key: 'suite', label: 'Suite Jacuzzi', sub: 'con jacuzzi', from: prices.suite },
   ], [prices])
 
-  const start = () => { tap(); onStart() }
+  const start = () => {
+    if (leaving) return
+    tap()
+    setLeaving(true)
+    window.setTimeout(() => onStart(), reduced ? 80 : 380)
+  }
 
   const adminTap = () => {
     const t = Date.now()
@@ -148,7 +154,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-[140] overflow-hidden bg-cream text-[#0e1a2b] select-none"
+      className={`fixed inset-0 z-[140] overflow-hidden bg-cream text-[#0e1a2b] select-none ${leaving ? 'idle-leave' : 'idle-enter'}`}
       onPointerDown={start}
     >
       {/* ===== FONDO CLARO, AIRE, EDITORIAL ===== */}
@@ -161,7 +167,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
             className="absolute inset-0 w-full h-full object-cover opacity-[0.5] idle-kb-a" />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9]/55 via-[#fdfcf9]/25 to-[#f4f1ea]/70" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9]/45 via-[#fdfcf9]/15 to-[#f4f1ea]/60" />
 
       {/* ===== CONTENIDO CENTRADO ===== */}
       <div className="relative h-full flex flex-col items-center justify-center px-10 text-center">
@@ -196,9 +202,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
               <button key={p.key}
                 onPointerDown={(e) => { e.stopPropagation(); start() }}
                 className={`plan-card ${heroChip === i ? 'plan-card-hot' : ''}`}>
-                <span className="block text-[0.95rem] uppercase tracking-[0.16em] font-bold plan-label">{p.label}</span>
-                <span className="block text-[0.85rem] text-[#33475c] font-semibold plan-sub mt-0.5">{p.sub}</span>
-                <span className="block mt-1.5 text-[1.9rem] leading-none font-bold tabular-nums plan-price">${p.from}</span>
+                <span className="block text-[1.05rem] uppercase tracking-[0.16em] font-bold plan-label">{p.label}</span>
               </button>
             ))}
           </div>
