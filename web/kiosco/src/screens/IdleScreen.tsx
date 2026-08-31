@@ -158,10 +158,10 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
       {!imgFailed[slide] && (
         <div key={`bg-${slide}-${kb}`} className={`absolute inset-0 idle-bg ${transitioning ? 'idle-bg-out' : ''}`}>
           <img src={cur.img} alt="" draggable={false}
-            className="absolute inset-0 w-full h-full object-cover opacity-[0.38] idle-kb-a" />
+            className="absolute inset-0 w-full h-full object-cover opacity-[0.5] idle-kb-a" />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9]/70 via-[#fdfcf9]/35 to-[#f4f1ea]/80" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9]/55 via-[#fdfcf9]/25 to-[#f4f1ea]/70" />
 
       {/* ===== CONTENIDO CENTRADO ===== */}
       <div className="relative h-full flex flex-col items-center justify-center px-10 text-center">
@@ -190,15 +190,15 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
         <p className="mt-3 text-[#2c3e50] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
 
         {/* ===== PLANES ===== */}
-        <div className="mt-9 w-full max-w-5xl">
-          <div className="grid grid-cols-4 gap-px bg-[#0e1a2b]/12 overflow-hidden rounded-lg">
+        <div className="mt-7 w-full max-w-5xl">
+          <div className="grid grid-cols-4 gap-px bg-[#0e1a2b]/15 overflow-hidden rounded-lg">
             {plans.map((p, i) => (
               <button key={p.key}
                 onPointerDown={(e) => { e.stopPropagation(); start() }}
                 className={`plan-card ${heroChip === i ? 'plan-card-hot' : ''}`}>
-                <span className="block text-[1rem] uppercase tracking-[0.2em] font-bold plan-label">{p.label}</span>
-                <span className="block text-[1.05rem] text-[#33475c] font-semibold plan-sub">{p.sub}</span>
-                <span className="block mt-1.5 text-[length:var(--fs-plan-name)] font-bold tabular-nums plan-price">${p.from}</span>
+                <span className="block text-[0.95rem] uppercase tracking-[0.16em] font-bold plan-label">{p.label}</span>
+                <span className="block text-[0.85rem] text-[#33475c] font-semibold plan-sub mt-0.5">{p.sub}</span>
+                <span className="block mt-1.5 text-[1.9rem] leading-none font-bold tabular-nums plan-price">${p.from}</span>
               </button>
             ))}
           </div>
