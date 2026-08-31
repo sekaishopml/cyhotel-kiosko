@@ -1,9 +1,24 @@
-import { readFileSync, writeFileSync } from 'fs'
-import { resolve, dirname } from 'path'
+import { readFileSync, writeFileSync, readdirSync, statSync } from 'fs'
+import { resolve, dirname, join } from 'path'
 import { fileURLToPath } from 'url'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const dist = resolve(root, 'dist')
+
+function walk(dir, acc = []) {
+  for (const e of readdirSync(dir)) {
+    const p = join(dir, e)
+    if (statSync(p).isDirectory()) {
+      walk(p, acc)
+    } else {
+      acc.push(p.replace(dist + '/', ''))
+    }
+  }
+  return acc
+}
+
+const staticFiles = walk(dist).filter(f => /\.(jpe?g|png|webp|svg|ico|woff2)$/i.test(f))
+
 const pkg = JSON.parse(readFileSync(resolve(root, 'package.json'), 'utf-8'))
 
 const indexHtml = readFileSync(resolve(dist, 'index.html'), 'utf-8')
@@ -13,8 +28,9 @@ const extra = ['manifest.webmanifest', 'icon.svg'].filter(f => {
 const assets = [
   ...[...indexHtml.matchAll(/(?:href|src)="([^"]+\.(?:js|css|woff2))"/g)].map(m => m[1].replace(/^\.\//, '')).filter(a => a.startsWith('assets/')),
   ...extra,
+  ...staticFiles,
 ]
-const precache = ['./', './index.html', ...assets]
+const precache = ['./', './index.html', ...[...new Set(assets)]]
 
 const cacheName = `kiosco-v${pkg.version}`
 

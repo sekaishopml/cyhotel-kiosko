@@ -1,5 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="96" fill="#143A2A"/>
-  <text x="50%" y="48%" text-anchor="middle" dominant-baseline="middle" font-family="Georgia, 'Times New Roman', serif" font-size="250" fill="#F3ECDD">H</text>
-  <text x="50%" y="82%" text-anchor="middle" font-family="'Manrope', Arial, sans-serif" font-weight="700" font-size="66" letter-spacing="10" fill="#3E9A63">VALLE</text>
+  <rect width="512" height="512" rx="104" fill="#0F172A"/>
+  <path d="M130 150 L256 372 L382 150" fill="none" stroke="#D4A574" stroke-width="44" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M256 372 L318 232 L338 232 L256 372 Z" fill="#D4A574"/>
+  <rect x="225" y="372" width="62" height="18" rx="9" fill="#D4A574"/>
 </svg>

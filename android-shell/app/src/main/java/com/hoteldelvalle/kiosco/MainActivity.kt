@@ -64,7 +64,7 @@ class MainActivity : Activity() {
         const val DEFAULT_PIN = "12345"
         const val UPDATE_API = "https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.2.2"
+        const val APP_VERSION = "1.2.3"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {

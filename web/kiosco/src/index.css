@@ -221,3 +221,134 @@ body {
   from { transform: scaleX(0); }
   to { transform: scaleX(1); }
 }
+
+/* ============================================================
+   FACHADA "VESTÍBULO DEL VALLE" (modo attract 24/7)
+   ============================================================ */
+@keyframes kenburns-a {
+  0%   { transform: scale(1.02) translate(-1.2%, -1%); }
+  33%  { transform: scale(1.14) translate(1.4%, 1%); }
+  66%  { transform: scale(1.1) translate(-1%, 1.4%); }
+  100% { transform: scale(1.02) translate(-1.2%, -1%); }
+}
+@keyframes kenburns-b {
+  0%   { transform: scale(1.06) translate(1.2%, 1%); }
+  33%  { transform: scale(1.12) translate(-1.4%, -1%); }
+  66%  { transform: scale(1.04) translate(1.2%, -1.2%); }
+  100% { transform: scale(1.06) translate(1.2%, 1%); }
+}
+.idle-kb-a, .idle-kb-b {
+  animation-duration: 26s;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  will-change: transform;
+}
+.idle-kb-a { animation-name: kenburns-a; }
+.idle-kb-b { animation-name: kenburns-b; }
+
+@keyframes idleZoomIn {
+  from { transform: scale(1) ; }
+  to   { transform: scale(1.06); }
+}
+.idle-zoom-in { animation: idleZoomIn 9s ease-out forwards; }
+
+@keyframes particleDrift {
+  0%   { transform: translate3d(0, 0, 0) scale(1); opacity: 0; }
+  12%  { opacity: .8; }
+  55%  { transform: translate3d(-46px, -34px, 0) scale(.8); opacity: .5; }
+  100% { transform: translate3d(-96px, -78px, 0) scale(.3); opacity: 0; }
+}
+.idle-particle {
+  position: absolute;
+  border-radius: 9999px;
+  background: radial-gradient(circle, rgba(212,175,55,.95), rgba(212,175,55,0) 70%);
+  animation-name: particleDrift;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+  pointer-events: none;
+}
+
+@keyframes ringPulse {
+  0%   { transform: scale(1); opacity: .55; }
+  100% { transform: scale(1.42); opacity: 0; }
+}
+@keyframes ctaShine {
+  0% { transform: translateX(-130%); }
+  55%, 100% { transform: translateX(130%); }
+}
+
+.idle-cta {
+  position: relative;
+  overflow: hidden;
+  display: inline-block;
+  padding: 0.85rem 1.8rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #c9a227, #d4af37 55%, #e8c65a);
+  color: #0F172A;
+  box-shadow: 0 10px 32px -6px rgba(212, 175, 55, 0.45);
+  transition: transform 0.15s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.idle-cta:active { transform: scale(0.97); }
+.idle-cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.idle-cta::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(105deg, transparent, rgba(255,255,255,.45), transparent);
+  animation: ctaShine 4.6s ease-in-out infinite;
+}
+
+@keyframes goldLineGrow {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+.gold-line {
+  display: inline-block;
+  background: linear-gradient(90deg, transparent, rgba(212,175,55,.85), transparent);
+  transform-origin: left;
+  animation: goldLineGrow 1.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes priceFlash {
+  0%   { opacity: 0; transform: translateY(-8px) scale(.9); }
+  16%  { opacity: 1; transform: translateY(0) scale(1); }
+  84%  { opacity: 1; }
+  100% { opacity: 0; transform: translateY(0) scale(1); }
+}
+.price-flash { animation: priceFlash 9s ease-in-out forwards; }
+
+.gold-frame {
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(212, 175, 55, 0.12), 0 24px 60px -26px rgba(0, 0, 0, 0.7);
+}
+
+.grace-card {
+  padding: 0.6rem 0.7rem;
+  border-radius: 0.7rem;
+  background: rgba(20, 30, 55, 0.88);
+  border: 1px solid rgba(255,255,255,0.12);
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.5s ease,
+              box-shadow 0.5s ease, background-color 0.5s ease;
+}
+.grace-card:active { transform: scale(0.97); }
+.grace-card-hot {
+  transform: translateY(-3px);
+  border-color: rgba(212,175,55,.7);
+  box-shadow: 0 10px 26px -10px rgba(0,0,0,.5), 0 0 0 1px rgba(212,175,55,.25);
+  background: rgba(212,175,55,0.14);
+}
+
+.idle-clock {
+  font-size: clamp(3.6rem, 9vh, 5.2rem);
+  letter-spacing: 0.02em;
+  text-shadow: 0 2px 24px rgba(0,0,0,.45);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .idle-kb-a, .idle-kb-b, .idle-zoom-in, .price-flash, .gold-line,
+  .idle-cta::after, .idle-particle { animation: none; }
+  .grace-card, .grace-card-hot { transition: none; }
+}

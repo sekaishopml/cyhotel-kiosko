@@ -1,13 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 import { useStore } from './store'
 import { syncPending, getKioscoConfig } from './api'
-import { BRAND } from './constants'
 import Header from './components/ui/Header'
 import StepBar from './components/ui/StepBar'
 import Splash from './components/ui/Splash'
 import PlanScreen from './screens/PlanScreen'
 import RoomScreen from './screens/RoomScreen'
 import CheckinScreen from './screens/CheckinScreen'
+import IdleScreen from './screens/IdleScreen'
 
 const ADMIN_PIN = '12345'
 const APP_VERSION = import.meta.env.PACKAGE_VERSION || '1.1.8'
@@ -24,9 +24,7 @@ export default function App() {
   const [showServerConfig, setShowServerConfig] = useState(false)
   const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('kiosco_server') || window.location.origin)
   const pinRef = useRef<HTMLInputElement>(null)
-  const [promoOpen, setPromoOpen] = useState(false)
-  const [promoIdx, setPromoIdx] = useState(0)
-  const [promos, setPromos] = useState<{ title: string; subtitle: string }[]>([])
+  const [showIdle, setShowIdle] = useState(false)
   const idleSec = useRef<number>(60)
   const idleTimeout = useRef<number | null>(null)
 
@@ -77,8 +75,6 @@ export default function App() {
     getKioscoConfig().then(c => {
       if (!active) return
       idleSec.current = c.idle_timeout_seconds || 60
-      const items = c.promos && c.promos.length > 0 ? c.promos : []
-      setPromos(items)
     }).catch(() => {})
     return () => { active = false }
   }, [])
@@ -90,29 +86,40 @@ export default function App() {
     }
   }
 
-  const blocked = screen === 'splash' || showPin || showAdmin || showServerConfig || promoOpen
+  const blocked = screen === 'splash' || showPin || showAdmin || showServerConfig || showIdle
 
   useEffect(() => {
     const arm = () => {
       clearIdleTimer()
-      if (blocked) return
-      idleTimeout.current = window.setTimeout(() => setPromoOpen(true), idleSec.current * 1000)
+      if (blocked || screen !== 'plan') return
+      idleTimeout.current = window.setTimeout(() => setShowIdle(true), idleSec.current * 1000)
     }
-    const reset = () => { if (!promoOpen) arm() }
+    const reset = () => { if (!showIdle) arm() }
     const evs: (keyof WindowEventMap)[] = ['pointerdown', 'pointermove', 'keydown', 'touchstart']
     evs.forEach(ev => window.addEventListener(ev, reset))
+    const onVis = () => {
+      if (document.visibilityState === 'visible') {
+        if (!showIdle) {
+          clearIdleTimer()
+          arm()
+        }
+      } else {
+        clearIdleTimer()
+      }
+    }
+    document.addEventListener('visibilitychange', onVis)
     arm()
     return () => {
       evs.forEach(ev => window.removeEventListener(ev, reset))
+      document.removeEventListener('visibilitychange', onVis)
       clearIdleTimer()
     }
-  }, [blocked, promoOpen])
+  }, [blocked, showIdle, screen])
 
-  useEffect(() => {
-    if (!promoOpen) return
-    const id = window.setInterval(() => setPromoIdx(i => (i + 1) % (promos.length || 1)), 6000)
-    return () => window.clearInterval(id)
-  }, [promoOpen, promos.length])
+  const handleSplashDone = () => {
+    goTo('plan')
+    setShowIdle(true)
+  }
 
   const handlePinSubmit = () => {
     if (pinInput === ADMIN_PIN) {
@@ -152,32 +159,43 @@ export default function App() {
   }
 
   if (screen === 'splash') {
-    return <Splash onDone={() => goTo('plan')} />
+    return <Splash onDone={handleSplashDone} />
   }
 
   return (
     <div className="h-full flex flex-col bg-cream">
-      {screen === 'plan' && <Header />}
-      {screen === 'plan' && <StepBar step={step} />}
-      <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
-        {screen === 'plan' && <PlanScreen />}
-        {screen === 'room' && <RoomScreen />}
-        {screen === 'checkin' && <CheckinScreen />}
-      </div>
-      <footer className="shrink-0 text-center py-1 bg-cream relative" style={{ pointerEvents: 'none' }}>
-        <button
-          onPointerDown={(e) => {
-            e.stopPropagation()
-            e.preventDefault()
-            e.nativeEvent.stopImmediatePropagation()
-            setShowPin(true)
-          }}
-          className="inline-flex items-center justify-center w-fit mx-auto px-2 py-0 text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors leading-none"
-          style={{ pointerEvents: 'auto', touchAction: 'none' }}
-        >
-          v{APP_VERSION}
-        </button>
-      </footer>
+      {showIdle && (
+        <IdleScreen
+          onStart={() => setShowIdle(false)}
+          onAdmin={() => { setShowIdle(false); setShowPin(true) }}
+          version={APP_VERSION}
+        />
+      )}
+      {!showIdle && (
+        <>
+          {screen === 'plan' && <Header />}
+          {screen === 'plan' && <StepBar step={step} />}
+          <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
+            {screen === 'plan' && <PlanScreen />}
+            {screen === 'room' && <RoomScreen />}
+            {screen === 'checkin' && <CheckinScreen />}
+          </div>
+          <footer className="shrink-0 text-center py-1 bg-cream relative" style={{ pointerEvents: 'none' }}>
+            <button
+              onPointerDown={(e) => {
+                e.stopPropagation()
+                e.preventDefault()
+                e.nativeEvent.stopImmediatePropagation()
+                setShowPin(true)
+              }}
+              className="inline-flex items-center justify-center w-fit mx-auto px-2 py-0 text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors leading-none"
+              style={{ pointerEvents: 'auto', touchAction: 'none' }}
+            >
+              v{APP_VERSION}
+            </button>
+          </footer>
+        </>
+      )}
 
       {showPin && (
         <div
@@ -345,35 +363,6 @@ export default function App() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {promoOpen && (
-        <div
-          className="fixed inset-0 z-[150] bg-gradient-to-b from-navy to-[#1a2744] flex flex-col items-center justify-center text-center px-8 cursor-pointer"
-          onClick={() => setPromoOpen(false)}
-        >
-          {promos.length > 0 ? (
-            <>
-              <p className="text-gold/70 text-[length:var(--fs-small)] font-semibold tracking-[0.3em] uppercase mb-3">
-                {BRAND.hotel}
-              </p>
-              <h2 key={promoIdx} className="font-display text-[length:var(--fs-display)] text-white font-bold animate-pop leading-tight">
-                {promos[promoIdx % promos.length]?.title}
-              </h2>
-              <p className="mt-2 text-white/60 text-[length:var(--fs-body)]">
-                {promos[promoIdx % promos.length]?.subtitle}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-gold/70 text-[length:var(--fs-small)] font-semibold tracking-[0.3em] uppercase mb-3">Bienvenido</p>
-              <h2 className="font-display text-[length:var(--fs-display)] text-white font-bold">{BRAND.hotel}</h2>
-            </>
-          )}
-          <p className="absolute bottom-12 text-white/40 text-[length:var(--fs-small)] uppercase tracking-widest font-semibold">
-            Toca para continuar
-          </p>
         </div>
       )}
     </div>

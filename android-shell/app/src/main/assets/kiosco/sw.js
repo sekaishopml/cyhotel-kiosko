@@ -1,11 +1,15 @@
-const CACHE_NAME = "kiosco-v1.2.2";
+const CACHE_NAME = "kiosco-v1.2.3";
 const PRECACHE = [
   "./",
   "./index.html",
-  "assets/index-CWVs6NQ8.js",
-  "assets/index-WP_nier1.css",
+  "assets/index-82jLafeQ.js",
+  "assets/index-LIu5ofZ0.css",
   "manifest.webmanifest",
-  "icon.svg"
+  "icon.svg",
+  "assets/cormorantgaramond-Bg62sWL9.woff2",
+  "assets/inter-BOeWTOD4.woff2",
+  "img/habitacion.jpeg",
+  "img/suite.jpeg"
 ];
 
 self.addEventListener('install', (event) => {
