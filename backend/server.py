@@ -825,7 +825,7 @@ class Handler(BaseHTTPRequestHandler):
                 free = free_by_type.get("estandar", 0) + free_by_type.get("matrimonial", 0)
                 info = {
                     **info,
-                    "label": "Sencilla / Matrimonial",
+                    "label": "Sencilla Matrimonial",
                     "desc": "Sencilla o matrimonial (la matrimonial es más amplia, con nevera y baño con mampara). A/C, TV Smart, WiFi, agua caliente, bebidas y piqueos",
                 }
             if product == "reserva":
