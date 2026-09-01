@@ -305,27 +305,23 @@ body {
   line-height: 1.02;
   letter-spacing: 0.02em;
 }
-.idle-plan-sub {
-  font-size: clamp(0.95rem, 2.2vh, 1.15rem);
-  letter-spacing: 0.14em;
-}
 .idle-plan-price {
   font-size: clamp(1.1rem, 2.8vh, 1.4rem);
   letter-spacing: 0.18em;
 }
 
-/* CTA: botón con fondo oscuro sólido, destacado */
+/* CTA: botón dorado (acento 10% de la paleta), destacado sobre azul */
 .idle-cta {
   position: relative;
   display: inline-block;
   padding: 1.25rem 3.6rem;
-  border: 2px solid #0e1a2b;
-  color: #ffffff;
-  background: #0e1a2b;
+  border: 2px solid #d4af37;
+  color: #0a1626;
+  background: linear-gradient(135deg, #e6c95a, #d4af37 55%, #bfa02f);
   border-radius: 0.5rem;
   letter-spacing: 0.14em;
-  box-shadow: 0 12px 30px -8px rgba(14, 26, 43, 0.45);
-  transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 14px 34px -8px rgba(212, 175, 55, 0.5);
+  transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
 }
 .idle-cta .cta-text {
   font-size: clamp(2rem, 5vh, 3rem);
@@ -333,8 +329,8 @@ body {
   font-weight: 700;
 }
 .idle-cta:active { transform: scale(0.97); }
-.idle-cta:focus-visible { outline: 2px solid #0e1a2b; outline-offset: 3px; }
-.idle-cta:hover { background: #1b2f4a; box-shadow: 0 16px 38px -8px rgba(14, 26, 43, 0.6); }
+.idle-cta:focus-visible { outline: 2px solid #d4af37; outline-offset: 3px; }
+.idle-cta:hover { filter: brightness(1.08); box-shadow: 0 18px 42px -8px rgba(212, 175, 55, 0.65); }
 
 .idle-clock {
   font-size: clamp(5.5rem, 15vh, 8rem);

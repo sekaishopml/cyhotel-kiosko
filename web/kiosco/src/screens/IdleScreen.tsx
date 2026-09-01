@@ -125,11 +125,11 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
     return d.charAt(0).toUpperCase() + d.slice(1)
   })()
 
-  const plans = useMemo<{ key: keyof Prices; label: string; sub: string; from: number }[]>(() => [
-    { key: 'momento', label: 'Momento', sub: '3 horas', from: prices.momento },
-    { key: 'amanecida', label: 'Amanecida', sub: '18:00 – 09:00', from: prices.amanecida },
-    { key: 'hospedaje', label: 'Hospedaje', sub: 'por noche', from: prices.hospedaje },
-    { key: 'suite', label: 'Suite Jacuzzi', sub: 'con jacuzzi', from: prices.suite },
+  const plans = useMemo<{ key: keyof Prices; label: string; from: number }[]>(() => [
+    { key: 'momento', label: 'Momento', from: prices.momento },
+    { key: 'amanecida', label: 'Amanecida', from: prices.amanecida },
+    { key: 'hospedaje', label: 'Hospedaje', from: prices.hospedaje },
+    { key: 'suite', label: 'Suite Jacuzzi', from: prices.suite },
   ], [prices])
 
   const start = () => {
@@ -153,77 +153,74 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-[140] overflow-hidden bg-cream text-[#0e1a2b] select-none ${leaving ? 'idle-leave' : 'idle-enter'}`}
+      className={`fixed inset-0 z-[140] overflow-hidden bg-[#0a1626] text-[#f5f1e8] select-none ${leaving ? 'idle-leave' : 'idle-enter'}`}
       onPointerDown={start}
     >
-      {/* ===== FONDO CLARO, AIRE, EDITORIAL ===== */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9] via-cream to-[#f4f1ea]" />
+      {/* ===== FONDO AZUL ELEGANTE ===== */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#0c1b30] via-[#0a1626] to-[#060e1a]" />
 
       {/* ===== FOTO DE FONDO ===== */}
       {!imgFailed[slide] && (
         <div key={`bg-${slide}-${kb}`} className={`absolute inset-0 idle-bg ${transitioning ? 'idle-bg-out' : ''}`}>
           <img src={cur.img} alt="" draggable={false}
-            className="absolute inset-0 w-full h-full object-cover opacity-[0.5] idle-kb-a" />
+            className="absolute inset-0 w-full h-full object-cover opacity-[0.55] idle-kb-a" />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#fdfcf9]/45 via-[#fdfcf9]/15 to-[#f4f1ea]/60" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1626]/70 via-[#0a1626]/40 to-[#060e1a]/85" />
 
       {/* ===== CONTENIDO CENTRADO ===== */}
       <div className="relative h-full flex flex-col items-center justify-center px-10 text-center">
 
         {/* Etiqueta superior */}
-        <p className="text-[#2c3e50] text-[length:var(--fs-body)] font-bold tracking-[0.3em] uppercase animate-fade-up">
+        <p className="text-[#d8c89a] text-[length:var(--fs-body)] font-bold tracking-[0.3em] uppercase animate-fade-up">
           {greeting}
         </p>
 
         {/* Título grande, bold */}
-        <h1 className="mt-2 font-display font-bold leading-none text-[#0e1a2b] txt-brand-xl">
+        <h1 className="mt-3 font-display font-bold leading-none text-white txt-brand-xl">
           <span className="block animate-fade-up">{BRAND.hotel}</span>
         </h1>
 
-        {/* Regla + tagline */}
-        <div className="mt-3 flex items-center justify-center gap-4 animate-fade-up">
-          <span className="h-px w-16 bg-[#0e1a2b]/25" />
-          <span className="text-[#2c3e50] text-[length:var(--fs-body)] font-semibold italic">{BRAND.tagline}</span>
-          <span className="h-px w-16 bg-[#0e1a2b]/25" />
+        {/* Regla dorada + tagline */}
+        <div className="mt-4 flex items-center justify-center gap-4 animate-fade-up">
+          <span className="h-px w-16 bg-[#d4af37]/40" />
+          <span className="text-[#e8e2d4] text-[length:var(--fs-body)] font-semibold italic">{BRAND.tagline}</span>
+          <span className="h-px w-16 bg-[#d4af37]/40" />
         </div>
 
         {/* Reloj grande, bold */}
-        <div className="mt-4 font-display font-bold leading-none tabular-nums text-[#0e1a2b] idle-clock">
+        <div className="mt-5 font-display font-bold leading-none tabular-nums text-white idle-clock">
           {clock}
         </div>
-        <p className="mt-2 text-[#2c3e50] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
+        <p className="mt-2 text-[#cfc7b4] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
 
         {/* ===== PLAN PRESENTADO 1-A-1 ===== */}
-        <div className="mt-6 w-full max-w-3xl">
+        <div className="mt-7 w-full max-w-3xl">
           <button
             key={`${heroPlan.key}-${heroChip}`}
             onPointerDown={(e) => { e.stopPropagation(); start() }}
             className="w-full idle-plan-enter group text-center outline-none"
           >
-            <p className="mx-auto mb-3 h-px w-24 bg-[#0e1a2b]/25 transition-all duration-500 group-hover:w-40 group-hover:bg-[#0e1a2b]/50" />
-            <span className="block idle-plan-name font-display font-bold uppercase text-[#0e1a2b]">
+            <p className="mx-auto mb-3 h-px w-24 bg-[#d4af37]/40 transition-all duration-500 group-hover:w-40 group-hover:bg-[#d4af37]/80" />
+            <span className="block idle-plan-name font-display font-bold uppercase text-white">
               {heroPlan.label}
             </span>
-            <span className="block mt-2 idle-plan-sub font-semibold uppercase tracking-[0.14em] text-[#2c3e50]">
-              {heroPlan.sub}
-            </span>
-            <span className="inline-block mt-3 idle-plan-price font-bold text-[#7a5c1e]">
+            <span className="inline-block mt-3 idle-plan-price font-bold text-[#d4af37]">
               desde ${heroPlan.from}
             </span>
           </button>
         </div>
 
-        {/* ===== CTA con fondo oscuro ===== */}
+        {/* ===== CTA con fondo dorado ===== */}
         <button onPointerDown={(e) => { e.stopPropagation(); start() }}
-          className="idle-cta mt-8">
+          className="idle-cta mt-10">
           <span className="cta-text block uppercase">
             tocar para comenzar
           </span>
         </button>
 
         {/* Línea de pie */}
-        <p className="mt-4 text-[#33475c] text-[length:var(--fs-body)] font-semibold" key={promoLine || 'x'}>
+        <p className="mt-5 text-[#cfc7b4] text-[length:var(--fs-body)] font-semibold" key={promoLine || 'x'}>
           {promoLine || `${cur.taste} · atención 24 horas`}
         </p>
       </div>
@@ -231,12 +228,12 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
       {/* Pies de página discretos */}
       <button
         onPointerDown={(e) => { e.stopPropagation(); adminTap() }}
-        className="absolute bottom-2 left-4 text-[0.55rem] text-[#0e1a2b]/25 tracking-[0.6em] uppercase"
+        className="absolute bottom-2 left-4 text-[0.55rem] text-white/25 tracking-[0.6em] uppercase"
         aria-label="Acceso técnico"
       >
         · · ·
       </button>
-      <span className="absolute bottom-2 right-4 text-[0.55rem] text-[#0e1a2b]/20 font-semibold">
+      <span className="absolute bottom-2 right-4 text-[0.55rem] text-white/25 font-semibold">
         v{version}
       </span>
     </div>
