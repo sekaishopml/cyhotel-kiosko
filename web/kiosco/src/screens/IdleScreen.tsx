@@ -85,7 +85,6 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
       setSlide(s => (s + 1) % SLIDES.length)
       setKb(k => (k === 'a' ? 'b' : 'a'))
       setCycle(c => c + 1)
-      setHeroChip(h => (h + 1) % 4)
       setTransitioning(false)
     }, 700)
   }
@@ -101,7 +100,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
   }, [cycle, reduced])
 
   useEffect(() => {
-    const hc = window.setInterval(() => setHeroChip(h => (h + 1) % 4), 4600)
+    const hc = window.setInterval(() => setHeroChip(h => (h + 1) % 4), 6000)
     return () => window.clearInterval(hc)
   }, [])
 
@@ -178,46 +177,53 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
         </p>
 
         {/* Título grande, bold */}
-        <h1 className="mt-3 font-display font-bold leading-none text-[#0e1a2b] txt-brand-xl">
+        <h1 className="mt-2 font-display font-bold leading-none text-[#0e1a2b] txt-brand-xl">
           <span className="block animate-fade-up">{BRAND.hotel}</span>
         </h1>
 
         {/* Regla + tagline */}
-        <div className="mt-4 flex items-center justify-center gap-4 animate-fade-up">
+        <div className="mt-3 flex items-center justify-center gap-4 animate-fade-up">
           <span className="h-px w-16 bg-[#0e1a2b]/25" />
           <span className="text-[#2c3e50] text-[length:var(--fs-body)] font-semibold italic">{BRAND.tagline}</span>
           <span className="h-px w-16 bg-[#0e1a2b]/25" />
         </div>
 
         {/* Reloj grande, bold */}
-        <div className="mt-7 font-display font-bold leading-none tabular-nums text-[#0e1a2b] idle-clock">
+        <div className="mt-4 font-display font-bold leading-none tabular-nums text-[#0e1a2b] idle-clock">
           {clock}
         </div>
-        <p className="mt-3 text-[#2c3e50] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
+        <p className="mt-2 text-[#2c3e50] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
 
-        {/* ===== PLANES ===== */}
-        <div className="mt-7 w-full max-w-4xl">
-          <div className="grid grid-cols-2 gap-3">
-            {plans.map((p, i) => (
-              <button key={p.key}
-                onPointerDown={(e) => { e.stopPropagation(); start() }}
-                className={`plan-card ${heroChip === i ? 'plan-card-hot' : ''}`}>
-                <span className="block text-[1.1rem] uppercase tracking-[0.14em] font-bold plan-label">{p.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* ===== PLAN PRESENTADO 1-A-1 ===== */}
+        <div className="mt-6 w-full max-w-3xl">
+          <button
+            key={`${heroPlan.key}-${heroChip}`}
+            onPointerDown={(e) => { e.stopPropagation(); start() }}
+            className="w-full idle-plan-enter group text-center outline-none"
+          >
+            <p className="mx-auto mb-3 h-px w-24 bg-[#0e1a2b]/25 transition-all duration-500 group-hover:w-40 group-hover:bg-[#0e1a2b]/50" />
+            <span className="block idle-plan-name font-display font-bold uppercase text-[#0e1a2b]">
+              {heroPlan.label}
+            </span>
+            <span className="block mt-2 idle-plan-sub font-semibold uppercase tracking-[0.14em] text-[#2c3e50]">
+              {heroPlan.sub}
+            </span>
+            <span className="inline-block mt-3 idle-plan-price font-bold text-[#7a5c1e]">
+              desde ${heroPlan.from}
+            </span>
+          </button>
         </div>
 
         {/* ===== CTA con fondo oscuro ===== */}
         <button onPointerDown={(e) => { e.stopPropagation(); start() }}
-          className="idle-cta mt-10">
-          <span className="block text-[length:var(--fs-section)] font-bold tracking-[0.16em] uppercase">
+          className="idle-cta mt-8">
+          <span className="cta-text block uppercase">
             tocar para comenzar
           </span>
         </button>
 
         {/* Línea de pie */}
-        <p className="mt-5 text-[#33475c] text-[length:var(--fs-body)] font-semibold" key={promoLine || 'x'}>
+        <p className="mt-4 text-[#33475c] text-[length:var(--fs-body)] font-semibold" key={promoLine || 'x'}>
           {promoLine || `${cur.taste} · atención 24 horas`}
         </p>
       </div>

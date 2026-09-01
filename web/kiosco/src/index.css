@@ -282,7 +282,7 @@ body {
 
 /* Título de marca: gran serif sobrio */
 .txt-brand-xl {
-  font-size: clamp(3.8rem, 10vw, 6.2rem);
+  font-size: clamp(4.4rem, 12vw, 7.6rem);
 }
 
 /* Reloj: serif fino, sobrio, azul marino */
@@ -292,11 +292,33 @@ body {
   font-weight: 400;
 }
 
+/* Showcase de planes 1-a-1: gran nombre + precio */
+@keyframes idlePlanIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.idle-plan-enter {
+  animation: idlePlanIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.idle-plan-name {
+  font-size: clamp(2.6rem, 7vh, 4.2rem);
+  line-height: 1.02;
+  letter-spacing: 0.02em;
+}
+.idle-plan-sub {
+  font-size: clamp(0.95rem, 2.2vh, 1.15rem);
+  letter-spacing: 0.14em;
+}
+.idle-plan-price {
+  font-size: clamp(1.1rem, 2.8vh, 1.4rem);
+  letter-spacing: 0.18em;
+}
+
 /* CTA: botón con fondo oscuro sólido, destacado */
 .idle-cta {
   position: relative;
   display: inline-block;
-  padding: 1.1rem 3.2rem;
+  padding: 1.25rem 3.6rem;
   border: 2px solid #0e1a2b;
   color: #ffffff;
   background: #0e1a2b;
@@ -305,30 +327,14 @@ body {
   box-shadow: 0 12px 30px -8px rgba(14, 26, 43, 0.45);
   transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease;
 }
+.idle-cta .cta-text {
+  font-size: clamp(2rem, 5vh, 3rem);
+  letter-spacing: 0.12em;
+  font-weight: 700;
+}
 .idle-cta:active { transform: scale(0.97); }
 .idle-cta:focus-visible { outline: 2px solid #0e1a2b; outline-offset: 3px; }
 .idle-cta:hover { background: #1b2f4a; box-shadow: 0 16px 38px -8px rgba(14, 26, 43, 0.6); }
-
-/* Cards de planes: celdas anchas en grilla 2x2 */
-.plan-card {
-  position: relative;
-  padding: 1.1rem 0.8rem;
-  background: rgba(253, 252, 249, 0.85);
-  border: 1px solid rgba(14, 26, 43, 0.12);
-  color: #0e1a2b;
-  text-align: center;
-  border-radius: 0.75rem;
-  transition: background-color 0.5s ease, border-color 0.5s ease, transform 0.2s ease,
-              box-shadow 0.4s ease;
-}
-.plan-card:active { transform: scale(0.98); }
-.plan-label { color: #2c3e50; transition: color 0.5s ease; }
-.plan-card-hot {
-  background: #0e1a2b;
-  border-color: #0e1a2b;
-  box-shadow: 0 10px 26px -12px rgba(14, 26, 43, 0.5);
-}
-.plan-card-hot .plan-label { color: #e6edf4; }
 
 .idle-clock {
   font-size: clamp(5.5rem, 15vh, 8rem);
@@ -338,5 +344,6 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .idle-kb-a, .idle-kb-b, .idle-bg, .idle-bg-out, .idle-enter, .idle-leave { animation: none; }
-  .plan-card, .idle-cta { transition: none; }
+  .idle-cta { transition: none; }
+  .idle-plan-enter { animation: none; }
 }
