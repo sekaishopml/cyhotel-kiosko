@@ -15,31 +15,25 @@ export default function CheckinScreen() {
   } | null>(null)
   const [offline, setOffline] = useState(false)
 
-  const handleSubmit = async (name: string, document: string) => {
+  const handleSubmit = async (name: string, document: string, docType: 'ci' | 'passport') => {
     if (submitting.current) return
     submitting.current = true
     setLoading(true)
+    const idDocument = document ? `${docType === 'passport' ? 'PAS-' : 'CI-'}${document}` : undefined
+    const payload = {
+      product: selectedPlan!,
+      room_type: selectedRoom!,
+      guest_name: name,
+      id_document: idDocument,
+      client_ref: `kiosco-${Date.now()}`,
+      extra: selectedExtra ?? undefined,
+      days: selectedPlan === 'hospedaje' ? selectedDays : undefined,
+    }
     try {
-      const result = await createOrder({
-        product: selectedPlan!,
-        room_type: selectedRoom!,
-        guest_name: name,
-        id_document: document || undefined,
-        client_ref: `kiosco-${Date.now()}`,
-        extra: selectedExtra ?? undefined,
-        days: selectedPlan === 'hospedaje' ? selectedDays : undefined,
-      })
+      const result = await createOrder(payload)
       setOrder(result.order)
     } catch {
-      enqueueOrder({
-        product: selectedPlan!,
-        room_type: selectedRoom!,
-        guest_name: name,
-        id_document: document || undefined,
-        client_ref: `kiosco-${Date.now()}`,
-        extra: selectedExtra ?? undefined,
-        days: selectedPlan === 'hospedaje' ? selectedDays : undefined,
-      })
+      enqueueOrder(payload)
       setOffline(true)
     } finally {
       setLoading(false)
@@ -57,7 +51,7 @@ export default function CheckinScreen() {
 
   return (
     <>
-      <div className="h-full flex flex-col slide-in-right">
+      <div className="h-full flex flex-col">
         <div className="shrink-0 px-4 pb-2 pt-1">
           <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
             <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '100%' }} />

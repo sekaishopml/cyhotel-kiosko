@@ -81,7 +81,7 @@ export default function RoomScreen() {
   const isSuite = selectedPlan === 'suite'
 
   return (
-    <div className="h-full flex flex-col slide-in-right">
+    <div className="h-full flex flex-col">
       <div className="shrink-0 px-4 pb-2 pt-1">
         <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
           <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '66%' }} />

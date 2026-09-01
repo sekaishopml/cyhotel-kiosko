@@ -8,6 +8,7 @@ interface StoreState {
   selectedExtra: string | null
   selectedDays: number
   catalog: RoomType[] | null
+  navDir: 'forward' | 'back' | null
 }
 
 const INITIAL: StoreState = {
@@ -17,10 +18,12 @@ const INITIAL: StoreState = {
   selectedExtra: null,
   selectedDays: 1,
   catalog: null,
+  navDir: 'forward',
 }
 
 interface Store extends StoreState {
   step: number
+  navDir: 'forward' | 'back' | null
   goTo: (screen: AppScreen) => void
   selectPlan: (planKey: string) => void
   selectRoom: (roomKey: string) => void
@@ -36,12 +39,12 @@ const StoreContext = createContext<Store | null>(null)
 export function StoreProvider({ children }: { children: React.ReactNode }) {
   const [state, setState] = useState<StoreState>(INITIAL)
 
-  const goTo = useCallback((screen: AppScreen) => {
-    setState(s => ({ ...s, screen }))
+  const goTo = useCallback((screen: AppScreen, dir: 'forward' | 'back' | null = 'forward') => {
+    setState(s => ({ ...s, screen, navDir: dir }))
   }, [])
 
   const selectPlan = useCallback((planKey: string) => {
-    setState(s => ({ ...s, selectedPlan: planKey, selectedRoom: null, selectedExtra: null, selectedDays: 1, screen: 'room' }))
+    setState(s => ({ ...s, selectedPlan: planKey, selectedRoom: null, selectedExtra: null, selectedDays: 1, screen: 'room', navDir: 'forward' }))
   }, [])
 
   const selectRoom = useCallback((roomKey: string) => {
@@ -62,15 +65,15 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
 
   const goBack = useCallback(() => {
     setState(s => {
-      if (s.screen === 'checkin') return { ...s, screen: 'room' }
-      if (s.screen === 'room') return { ...s, screen: 'plan', selectedRoom: null, selectedExtra: null, selectedDays: 1 }
+      if (s.screen === 'checkin') return { ...s, screen: 'room', navDir: 'back' }
+      if (s.screen === 'room') return { ...s, screen: 'plan', selectedRoom: null, selectedExtra: null, selectedDays: 1, navDir: 'back' }
       return s
     })
   }, [])
 
   const goHome = useCallback(() => {
     setState(INITIAL)
-    setTimeout(() => setState(s => ({ ...s, screen: 'plan' })), 0)
+    setTimeout(() => setState(s => ({ ...s, screen: 'plan', navDir: 'back' })), 0)
   }, [])
 
   const step = state.screen === 'plan' ? 0 : state.screen === 'room' ? 1 : 2
@@ -78,6 +81,7 @@ export function StoreProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo(() => ({
     ...state,
     step,
+    navDir: state.navDir ?? null,
     goTo,
     selectPlan,
     selectRoom,

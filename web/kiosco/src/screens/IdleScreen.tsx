@@ -196,13 +196,13 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
         <p className="mt-3 text-[#2c3e50] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
 
         {/* ===== PLANES ===== */}
-        <div className="mt-7 w-full max-w-5xl">
-          <div className="grid grid-cols-4 gap-px bg-[#0e1a2b]/15 overflow-hidden rounded-lg">
+        <div className="mt-7 w-full max-w-4xl">
+          <div className="grid grid-cols-2 gap-3">
             {plans.map((p, i) => (
               <button key={p.key}
                 onPointerDown={(e) => { e.stopPropagation(); start() }}
                 className={`plan-card ${heroChip === i ? 'plan-card-hot' : ''}`}>
-                <span className="block text-[1.05rem] uppercase tracking-[0.16em] font-bold plan-label">{p.label}</span>
+                <span className="block text-[1.1rem] uppercase tracking-[0.14em] font-bold plan-label">{p.label}</span>
               </button>
             ))}
           </div>

@@ -13,7 +13,7 @@ const ADMIN_PIN = '12345'
 const APP_VERSION = import.meta.env.PACKAGE_VERSION || '1.1.8'
 
 export default function App() {
-  const { screen, step, goTo } = useStore()
+  const { screen, step, goTo, navDir } = useStore()
   const [showPin, setShowPin] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
   const [pinInput, setPinInput] = useState('')
@@ -175,7 +175,7 @@ export default function App() {
         <>
           {screen === 'plan' && <Header />}
           {screen === 'plan' && <StepBar step={step} />}
-          <div className="flex-1 min-h-0 overflow-hidden pointer-events-auto">
+          <div className={`flex-1 min-h-0 overflow-hidden pointer-events-auto ${navDir === 'back' ? 'slide-in-left' : 'slide-in-right'}`} key={screen}>
             {screen === 'plan' && <PlanScreen />}
             {screen === 'room' && <RoomScreen />}
             {screen === 'checkin' && <CheckinScreen />}

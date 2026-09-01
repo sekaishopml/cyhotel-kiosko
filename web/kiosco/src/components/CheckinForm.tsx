@@ -9,9 +9,11 @@ interface Props {
   days: number
   roomPrice: number
   total: number
-  onSubmit: (name: string, document: string) => void
+  onSubmit: (name: string, document: string, docType: 'ci' | 'passport') => void
   disabled?: boolean
 }
+
+type DocType = 'ci' | 'passport'
 
 const planLabels: Record<string, string> = {
   momento: 'MOMENTO',
@@ -26,28 +28,49 @@ const extraLabels: Record<string, string> = {
   hospedaje: 'por noche',
 }
 
+const DOC_MAX: Record<DocType, number> = { ci: 10, passport: 9 }
+
 export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, total, onSubmit, disabled }: Props) {
   const [name, setName] = useState('')
   const [doc, setDoc] = useState('')
+  const [docType, setDocType] = useState<DocType>('ci')
   const [activeField, setActiveField] = useState<'name' | 'doc'>('name')
   const [nameError, setNameError] = useState(false)
+  const [docError, setDocError] = useState(false)
+
+  const validateName = () => {
+    const ok = nameSchema.safeParse(name).success
+    if (!ok) setNameError(true)
+    return ok
+  }
+
+  const validateDoc = (value: string) => {
+    const v = value.trim()
+    if (!v) return true
+    return docType === 'ci' ? /^\d{6,10}$/.test(v) : /^[A-Z0-9]{5,9}$/.test(v)
+  }
 
   const handleDocChange = (val: string) => {
     setDoc(val)
-    if (val.trim().length >= 10) {
-      const parsed = nameSchema.safeParse(name)
-      if (!parsed.success) {
-        setNameError(true)
-        setActiveField('name')
-        return
-      }
-      onSubmit(name.trim(), val.trim())
+    if (docError && validateDoc(val)) setDocError(false)
+    const v = val.trim()
+    const maxLen = DOC_MAX[docType]
+    const minLen = docType === 'ci' ? 6 : 5
+    if (v.length >= minLen && validateName() && validateDoc(v) && v.length === maxLen) {
+      onSubmit(name.trim(), v, docType)
     }
   }
 
   const handleNameChange = (val: string) => {
     setName(val)
     if (nameError) setNameError(false)
+  }
+
+  const switchDocType = (t: DocType) => {
+    setDocType(t)
+    setDoc('')
+    setDocError(false)
+    setActiveField('doc')
   }
 
   const durationLabel = planKey === 'suite' && extra
@@ -58,8 +81,8 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
 
   return (
     <div className="flex-1 flex flex-col min-h-0 px-4 pb-3">
-      <div className="shrink-0 bg-white border-l-4 border-gold rounded-lg p-3 mb-3">
-        <h3 className="text-[0.6rem] font-bold text-navy/40 uppercase tracking-widest mb-2">Resumen</h3>
+      <div className="shrink-0 bg-white border-l-4 border-gold rounded-lg p-3 mb-3 card-shadow">
+        <h3 className="text-[0.6rem] font-bold text-navy/40 uppercase tracking-widest mb-2">Resumen de tu reserva</h3>
         <div className="space-y-1">
           <div className="flex justify-between items-center">
             <span className="text-[0.8rem] text-navy/50">Plan</span>
@@ -96,16 +119,42 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
               <p className="text-[0.7rem] font-bold text-red-500 mt-1">Escriba su nombre</p>
             )}
           </div>
+
           <div
             onClick={() => setActiveField('doc')}
             className={`rounded-lg border-2 p-2.5 transition-all cursor-pointer ${
               activeField === 'doc' ? 'border-gold shadow-[0_0_0_3px_rgba(212,175,55,0.15)]' : 'border-navy/10'
-            }`}
+            } ${docError ? 'border-red-400' : ''}`}
           >
-            <p className="text-[0.6rem] font-bold text-navy/40 uppercase mb-0.5">Documento (opcional)</p>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[0.6rem] font-bold text-navy/40 uppercase">Documento (opcional)</p>
+              <div className="flex gap-1">
+                <button
+                  onPointerDown={(e) => { e.stopPropagation(); switchDocType('ci') }}
+                  className={`tap-scale px-2.5 py-0.5 rounded-full text-[0.6rem] font-extrabold uppercase tracking-wider border transition-colors ${
+                    docType === 'ci' ? 'bg-navy text-white border-navy' : 'text-navy/50 border-navy/15'
+                  }`}
+                >
+                  CI
+                </button>
+                <button
+                  onPointerDown={(e) => { e.stopPropagation(); switchDocType('passport') }}
+                  className={`tap-scale px-2.5 py-0.5 rounded-full text-[0.6rem] font-extrabold uppercase tracking-wider border transition-colors ${
+                    docType === 'passport' ? 'bg-navy text-white border-navy' : 'text-navy/50 border-navy/15'
+                  }`}
+                >
+                  Pasaporte
+                </button>
+              </div>
+            </div>
             <p className={`font-bold text-navy min-h-[28px] ${doc ? 'text-2xl tracking-widest' : 'text-[length:var(--fs-small)]'}`}>
               {doc || <span className="text-navy/20">Toca para escribir</span>}
             </p>
+            {docError && (
+              <p className="text-[0.7rem] font-bold text-red-500 mt-1">
+                {docType === 'ci' ? 'Ingrese 6 a 10 dígitos' : 'Ingrese 5 a 9 caracteres'}
+              </p>
+            )}
           </div>
         </div>
 
@@ -119,30 +168,41 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
               label="Nombre"
               maxLength={40}
               onSubmit={() => {
-                const parsed = nameSchema.safeParse(name)
-                if (!parsed.success) {
-                  setNameError(true)
-                  return
-                }
+                if (!validateName()) return
                 setNameError(false)
                 setActiveField('doc')
+              }}
+            />
+          ) : docType === 'ci' ? (
+            <CustomKeyboard
+              value={doc}
+              onChange={handleDocChange}
+              type="numeric"
+              label="Cédula"
+              maxLength={DOC_MAX.ci}
+              onSubmit={() => {
+                if (!validateName()) { setNameError(true); setActiveField('name'); return }
+                if (!doc.trim() || validateDoc(doc)) {
+                  onSubmit(name.trim(), doc.trim(), docType)
+                } else {
+                  setDocError(true)
+                }
               }}
             />
           ) : (
             <CustomKeyboard
               value={doc}
               onChange={handleDocChange}
-              type="numeric"
-              label="Documento"
-              maxLength={10}
+              type="text"
+              label="Pasaporte"
+              maxLength={DOC_MAX.passport}
               onSubmit={() => {
-                const parsed = nameSchema.safeParse(name)
-                if (!parsed.success) {
-                  setNameError(true)
-                  setActiveField('name')
-                  return
+                if (!validateName()) { setNameError(true); setActiveField('name'); return }
+                if (!doc.trim() || validateDoc(doc)) {
+                  onSubmit(name.trim(), doc.trim(), docType)
+                } else {
+                  setDocError(true)
                 }
-                onSubmit(name.trim(), doc.trim())
               }}
             />
           )}

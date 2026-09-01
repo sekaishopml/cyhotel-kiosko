@@ -70,6 +70,16 @@ body {
   animation: popIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* Entrada del título del menú de planes */
+@keyframes titleDrop {
+  from { opacity: 0; transform: translateY(-12px); letter-spacing: 0.08em; }
+  to { opacity: 1; transform: translateY(0); letter-spacing: 0.05em; }
+}
+.plan-enter-title {
+  animation: titleDrop 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  will-change: transform, opacity;
+}
+
 /* Stagger delays for cards */
 .stagger-1 { animation-delay: 0.05s; }
 .stagger-2 { animation-delay: 0.1s; }
@@ -299,19 +309,24 @@ body {
 .idle-cta:focus-visible { outline: 2px solid #0e1a2b; outline-offset: 3px; }
 .idle-cta:hover { background: #1b2f4a; box-shadow: 0 16px 38px -8px rgba(14, 26, 43, 0.6); }
 
-/* Cards de planes: celdas en grilla editorial, bordes finos */
+/* Cards de planes: celdas anchas en grilla 2x2 */
 .plan-card {
   position: relative;
-  padding: 0.9rem 0.3rem;
+  padding: 1.1rem 0.8rem;
   background: rgba(253, 252, 249, 0.85);
+  border: 1px solid rgba(14, 26, 43, 0.12);
   color: #0e1a2b;
   text-align: center;
-  transition: background-color 0.5s ease;
+  border-radius: 0.75rem;
+  transition: background-color 0.5s ease, border-color 0.5s ease, transform 0.2s ease,
+              box-shadow 0.4s ease;
 }
-.plan-card:active { background: #eae6dc; }
+.plan-card:active { transform: scale(0.98); }
 .plan-label { color: #2c3e50; transition: color 0.5s ease; }
 .plan-card-hot {
   background: #0e1a2b;
+  border-color: #0e1a2b;
+  box-shadow: 0 10px 26px -12px rgba(14, 26, 43, 0.5);
 }
 .plan-card-hot .plan-label { color: #e6edf4; }
 
