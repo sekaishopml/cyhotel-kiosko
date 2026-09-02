@@ -15,6 +15,9 @@ PG_DATABASE = os.environ.get("PGDATABASE", "cyhotel")
 
 APP_DB_USER = os.environ.get("CYHOTEL_DB_USER", "cyhotel_app")
 APP_DB_PASSWORD = os.environ.get("CYHOTEL_DB_PASSWORD", "cyhotel_app")
+# Superuser solo para init_db/migraciones (no se usa en runtime pool)
+PG_SUPER_USER = os.environ.get("CYHOTEL_DB_SUPERUSER", PG_USER)
+PG_SUPER_PASSWORD = os.environ.get("CYHOTEL_DB_SUPER_PASSWORD", PG_PASSWORD)
 
 # Hash PBKDF2-SHA256 compatible con el legacy: salt fijo "cyhotel::<user>", formato "pbkdf2_sha256$<iter>$<hex>".
 PBKDF2_ITERATIONS = 100_000
@@ -394,8 +397,8 @@ def _admin_db():
     conn = psycopg2.connect(
         host=PG_HOST,
         port=PG_PORT,
-        user=PG_USER,
-        password=PG_PASSWORD,
+        user=PG_SUPER_USER,
+        password=PG_SUPER_PASSWORD,
         dbname=PG_DATABASE,
         cursor_factory=RealDictCursor,
     )

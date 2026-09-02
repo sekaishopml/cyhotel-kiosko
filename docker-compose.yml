@@ -32,7 +32,9 @@ services:
     environment:
       APP_MODE: kiosco
       HOTEL_ID: "1"
-      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
+      DATABASE_URL: postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
+      CYHOTEL_DB_SUPERUSER: cyhotel
+      CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
     ports:
       - "8000:8000"
     depends_on:
@@ -60,7 +62,9 @@ services:
     environment:
       APP_MODE: admin
       HOTEL_ID: "1"
-      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
+      DATABASE_URL: postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
+      CYHOTEL_DB_SUPERUSER: cyhotel
+      CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
     ports:
       - "8001:8000"
     depends_on:
@@ -79,7 +83,9 @@ services:
     container_name: cyhotel-master
     environment:
       APP_MODE: master
-      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
+      DATABASE_URL: postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
+      CYHOTEL_DB_SUPERUSER: cyhotel
+      CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
     ports:
       - "8002:8000"
     depends_on:

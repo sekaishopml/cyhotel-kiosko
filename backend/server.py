@@ -31,7 +31,7 @@ if _parsed.username:
     os.environ["PGUSER"] = _parsed.username
     if _parsed.password:
         os.environ["PGPASSWORD"] = _parsed.password
-# El rol de app solo se sobrescribe si la URL trae 'cyhotel_app'; en docker trae superusuario (evade RLS).
+# Runtime usa cyhotel_app (no-superuser, sujeto a FORCE RLS). Superuser solo para init_db vía CYHOTEL_DB_SUPERUSER.
 if _parsed.username and _parsed.username == "cyhotel_app":
     os.environ["CYHOTEL_DB_USER"] = _parsed.username
     if _parsed.password:
