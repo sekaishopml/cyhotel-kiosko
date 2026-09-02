@@ -44,16 +44,18 @@ from db import (  # noqa: E402
 )
 from worker import worker_loop  # noqa: E402
 
-# Fase 2: servicios extraídos (después de db para que env esté listo)
+# Fase 2/3: servicios extraídos (después de db para que env esté listo)
 try:
     from app.services.pricing import apply_price_override as _svc_apply_price
     from app.services.pricing import suite_subtotal as _svc_suite_subtotal
     from app.services import auth as _auth_svc
+    from app.services import validation as _validation_svc
 except Exception as _e:
     print(f"[init] Fase2 services import fail: {_e}", flush=True)
     _svc_apply_price = None
     _svc_suite_subtotal = None
     _auth_svc = None
+    _validation_svc = None
 
 # Reintento con backoff ante deadlock/serialización; la transacción se re-ejecuta completa.
 DEADLOCK_RETRIES = 3

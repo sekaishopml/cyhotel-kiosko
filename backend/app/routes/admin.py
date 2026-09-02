@@ -1,0 +1,27 @@
+"""Admin routes — HOTEL_ID por sesión, ROLES_*."""
+def admin_routes():
+    return [
+        "GET /api/rooms",
+        "GET /api/rooms/available",
+        "POST /api/rooms/:id/status",
+        "GET /api/orders",
+        "GET /api/orders/:id",
+        "POST /api/orders/:id/assign",
+        "POST /api/orders/:id/pay",
+        "POST /api/orders/:id/cancel",
+        "POST /api/orders/:id/checkout",
+        "POST /api/orders/:id/extend",
+        "GET /api/reservations",
+        "GET /api/housekeeping/tasks",
+        "GET /api/housekeeping/staff",
+        "POST /api/housekeeping/staff",
+        "POST /api/housekeeping/staff/:id/deactivate",
+        "POST /api/housekeeping/tasks/:id/start|complete|incident|assign-staff",
+        "GET /api/incidences",
+        "POST /api/incidences/:id/resolve",
+        "GET /api/dashboard/*",
+        "GET /api/audit",
+        "GET /api/hotel/settings",
+        "POST /api/hotel/settings",
+        "GET /api/events?token=",
+    ]
