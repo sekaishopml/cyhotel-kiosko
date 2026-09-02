@@ -1,0 +1,85 @@
+diff --git a/docker-compose.yml b/docker-compose.yml
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -32,7 +32,9 @@ services:
+     environment:
+       APP_MODE: kiosco
+       HOTEL_ID: "1"
+-      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
++      DATABASE_URL: postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
++      CYHOTEL_DB_SUPERUSER: cyhotel
++      CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
+     ports:
+       - "8000:8000"
+     depends_on:
+@@ -60,7 +62,9 @@ services:
+     environment:
+       APP_MODE: admin
+       HOTEL_ID: "1"
+-      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
++      DATABASE_URL: postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
++      CYHOTEL_DB_SUPERUSER: cyhotel
++      CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
+     ports:
+       - "8001:8000"
+     depends_on:
+@@ -79,7 +83,9 @@ services:
+     environment:
+       APP_MODE: master
+-      DATABASE_URL: postgresql://cyhotel:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
++      DATABASE_URL: postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}@db:5432/cyhotel
++      CYHOTEL_DB_SUPERUSER: cyhotel
++      CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD:?Defina CYHOTEL_DB_PASSWORD en el .env}
+     ports:
+       - "8002:8000"
+     depends_on:
+diff --git a/backend/db.py b/backend/db.py
+--- a/backend/db.py
++++ b/backend/db.py
+@@ -10,10 +10,14 @@ PG_HOST = os.environ.get("PGHOST", "localhost")
+ PG_PORT = int(os.environ.get("PGPORT", "5432"))
+ PG_USER = os.environ.get("PGUSER", "postgres")
+ PG_PASSWORD = os.environ.get("PGPASSWORD", "postgres")
+ PG_DATABASE = os.environ.get("PGDATABASE", "cyhotel")
+ 
+ APP_DB_USER = os.environ.get("CYHOTEL_DB_USER", "cyhotel_app")
+ APP_DB_PASSWORD = os.environ.get("CYHOTEL_DB_PASSWORD", "cyhotel_app")
++# Superuser solo para init_db/migraciones (no se usa en runtime pool)
++PG_SUPER_USER = os.environ.get("CYHOTEL_DB_SUPERUSER", PG_USER)
++PG_SUPER_PASSWORD = os.environ.get("CYHOTEL_DB_SUPER_PASSWORD", PG_PASSWORD)
+ 
+ def _admin_db():
+     """Conexión admin (postgres) solo para init_db/migraciones: el superusuario evade RLS."""
+     conn = psycopg2.connect(
+         host=PG_HOST,
+         port=PG_PORT,
+-        user=PG_USER,
+-        password=PG_PASSWORD,
++        user=PG_SUPER_USER,
++        password=PG_SUPER_PASSWORD,
+         dbname=PG_DATABASE,
+         cursor_factory=RealDictCursor,
+     )
+     conn.autocommit = False
+     return conn
+diff --git a/backend/server.py b/backend/server.py
+--- a/backend/server.py
++++ b/backend/server.py
+@@ -22,15 +22,16 @@ DATABASE_URL = os.environ.get(
+     "DATABASE_URL", "postgresql://cyhotel_app:cyhotel_app@localhost:5432/cyhotel"
+ )
+ _parsed = urlparse(DATABASE_URL)
+ os.environ["PGHOST"] = _parsed.hostname or "localhost"
+ os.environ["PGPORT"] = str(_parsed.port or 5432)
+ os.environ["PGDATABASE"] = (_parsed.path or "/cyhotel").lstrip("/") or "cyhotel"
+ if _parsed.username:
+     os.environ["PGUSER"] = _parsed.username
+     if _parsed.password:
+         os.environ["PGPASSWORD"] = _parsed.password
+-# El rol de app solo se sobrescribe si la URL trae 'cyhotel_app'; en docker trae superusuario (evade RLS).
++# Runtime usa cyhotel_app (no-superuser, sujeto a FORCE RLS). Superuser solo para init_db vía CYHOTEL_DB_SUPERUSER.
+ if _parsed.username and _parsed.username == "cyhotel_app":
+     os.environ["CYHOTEL_DB_USER"] = _parsed.username
+     if _parsed.password:
+         os.environ["CYHOTEL_DB_PASSWORD"] = _parsed.password
+ 

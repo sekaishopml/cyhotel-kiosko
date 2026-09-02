@@ -45,17 +45,26 @@ from db import (  # noqa: E402
 from worker import worker_loop  # noqa: E402
 
 # Fase 2/3: servicios extraídos (después de db para que env esté listo)
+# Fase 3c: Handler delgado — delega a services con fallback (no romper prod)
 try:
     from app.services.pricing import apply_price_override as _svc_apply_price
     from app.services.pricing import suite_subtotal as _svc_suite_subtotal
+    from app.services.pricing import get_price_overrides as _svc_get_overrides
     from app.services import auth as _auth_svc
     from app.services import validation as _validation_svc
+    from app.services import rooms as _rooms_svc
+    from app.services import housekeeping as _housekeeping_svc
+    from app.services import orders as _orders_svc
 except Exception as _e:
-    print(f"[init] Fase2 services import fail: {_e}", flush=True)
+    print(f"[init] Fase2/3c services import fail: {_e}", flush=True)
     _svc_apply_price = None
     _svc_suite_subtotal = None
+    _svc_get_overrides = None
     _auth_svc = None
     _validation_svc = None
+    _rooms_svc = None
+    _housekeeping_svc = None
+    _orders_svc = None
 
 # Reintento con backoff ante deadlock/serialización; la transacción se re-ejecuta completa.
 DEADLOCK_RETRIES = 3
@@ -792,7 +801,18 @@ class Handler(BaseHTTPRequestHandler):
         Estructuras soportadas (ambas se normalizan al segundo estilo):
           {'momento': {'estandar': 8}, 'extras': {'doble': {'1h': 6}}}
           {'estandar': {'price': 8, 'extras': {'1h': 6}}}
+        Fase 3c: delega a pricing.get_price_overrides si está disponible, con fallback.
         """
+        # Fase 3c: delegación a pricing service (thin Handler)
+        if '_svc_get_overrides' in globals() and _svc_get_overrides:
+            try:
+                conn = self._conn()
+                try:
+                    return _svc_get_overrides(conn, self.HOTEL, self._hotel_config)
+                finally:
+                    release_conn(conn)
+            except Exception:
+                pass  # fallback a lógica inline
         try:
             conn = self._conn()
             try:
@@ -843,6 +863,7 @@ class Handler(BaseHTTPRequestHandler):
         return default_price
 
     def get_types(self):
+        # Fase 3c: precios vía pricing service helpers (_price_overrides + _apply_price_override delegan si disponible)
         product = self._query_product()
         overrides = self._price_overrides()
         conn = self._conn()
@@ -956,6 +977,21 @@ class Handler(BaseHTTPRequestHandler):
         return d
 
     def get_rooms(self):
+        # Fase 3c: delega a rooms service con fallback inline (thin Handler)
+        if '_rooms_svc' in globals() and _rooms_svc:
+            try:
+                conn = self._conn(master=False)
+                try:
+                    rooms = _rooms_svc.list_rooms(conn, self.HOTEL)
+                finally:
+                    release_conn(conn)
+                self._send(200, {"rooms": rooms})
+                return
+            except Exception as _e:
+                try:
+                    print(f"[rooms] get_rooms svc fallback: {_e}", flush=True)
+                except Exception:
+                    pass
         conn = self._conn(master=False)
         try:
             rows = fetch_all(conn, "SELECT * FROM rooms ORDER BY id")
@@ -964,6 +1000,21 @@ class Handler(BaseHTTPRequestHandler):
         self._send(200, {"rooms": [self._room_dict(r, self.HOTEL) for r in rows]})
 
     def get_rooms_available(self):
+        # Fase 3c: delega a rooms service con fallback inline
+        if '_rooms_svc' in globals() and _rooms_svc:
+            try:
+                conn = self._conn()
+                try:
+                    rooms = _rooms_svc.list_available(conn, self.HOTEL)
+                finally:
+                    release_conn(conn)
+                self._send(200, {"rooms": rooms})
+                return
+            except Exception as _e:
+                try:
+                    print(f"[rooms] get_rooms_available svc fallback: {_e}", flush=True)
+                except Exception:
+                    pass
         conn = self._conn()
         try:
             rows = fetch_all(conn, "SELECT * FROM rooms WHERE status = 'libre' ORDER BY id")
@@ -1175,6 +1226,35 @@ class Handler(BaseHTTPRequestHandler):
                 overrides = self._price_overrides()
             except Exception:
                 overrides = {}
+
+            # Fase 3c: delega validación/cálculo a orders service si disponible, con fallback inline
+            # Si _orders_svc existe, intenta validate_order_payload y build_order_times; si falla usa lógica inline.
+            _orders_delegated = False
+            if '_orders_svc' in globals() and _orders_svc:
+                try:
+                    _v = _orders_svc.validate_order_payload(data, hotel_id, conn)
+                    # Intento de build_order_times para suite/momento/amanecida/hospedaje (opcional, no persiste)
+                    # Se usa solo como validación adicional; el resultado se recalcula inline si no se usa.
+                    try:
+                        _extra_tmp = _v.get("extra")
+                        _days_tmp = _v.get("days", 1)
+                        _info_tmp = _v.get("info", info)
+                        _t = _orders_svc.build_order_times(product, room_type, extra=_extra_tmp, days=_days_tmp, info=_info_tmp, overrides=overrides, conn=conn)
+                        # Si build_order_times tuvo éxito, se podría usar _t directo y saltar inline; por ahora solo valida
+                        # y conserva fallback inline para no romper INSERT existente.
+                    except ValueError:
+                        raise
+                    except Exception:
+                        pass  # build optional, no bloquea
+                    _orders_delegated = True
+                except ValueError:
+                    raise
+                except Exception as _e:
+                    try:
+                        print(f"[orders] validate fallback inline: {_e}", flush=True)
+                    except Exception:
+                        pass
+                    _orders_delegated = False
 
             if product == "suite":
                 if room_type != "suite":
@@ -1841,6 +1921,32 @@ class Handler(BaseHTTPRequestHandler):
         return d
 
     def get_housekeeping_tasks(self):
+        # Fase 3c: delega a housekeeping service con fallback inline (thin Handler)
+        if '_housekeeping_svc' in globals() and _housekeeping_svc:
+            try:
+                qs = self._qs()
+                status = (qs.get("status") or [""])[0].strip()
+                from_raw = (qs.get("from") or [""])[0].strip()
+                to_raw = (qs.get("to") or [""])[0].strip()
+                conn = self._conn()
+                try:
+                    tasks = _housekeeping_svc.get_tasks(
+                        conn,
+                        status or None,
+                        from_raw or None,
+                        to_raw or None,
+                    )
+                finally:
+                    release_conn(conn)
+                self._send(200, {"tasks": tasks})
+                return
+            except ValueError:
+                raise
+            except Exception as _e:
+                try:
+                    print(f"[housekeeping] get_tasks svc fallback: {_e}", flush=True)
+                except Exception:
+                    pass
         qs = self._qs()
         status = (qs.get("status") or [""])[0].strip()
         from_raw = (qs.get("from") or [""])[0].strip()
@@ -3014,7 +3120,18 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(body_cfg, dict):
             raise ValueError("config debe ser un objeto")
         cfg = dict(body_cfg)
-        # Validación de config (Fase 1: evita JSONB con basura que rompe GET /types)
+        # Fase 3c: delega validación a validation service si disponible (thin Handler), con fallback inline
+        if '_validation_svc' in globals() and _validation_svc:
+            try:
+                cfg = _validation_svc.validate_hotel_config(dict(cfg))
+            except ValueError:
+                raise
+            except Exception as _e:
+                try:
+                    print(f"[validation] svc fallback inline: {_e}", flush=True)
+                except Exception:
+                    pass
+        # Validación inline fallback (Fase 1: evita JSONB con basura que rompe GET /types)
         if "price_overrides" in cfg and not isinstance(cfg["price_overrides"], dict):
             raise ValueError("price_overrides debe ser un objeto")
         if "branding" in cfg:

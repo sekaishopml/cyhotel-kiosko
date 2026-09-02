@@ -5,12 +5,22 @@
   font-display: swap;
   src: local('Inter'), url('./fonts/inter.woff2') format('woff2');
 }
+/* Manrope 400-800 variable — local woff2 offline-first.
+   Decisión Fase 4: antes se usaba URL remota https://fonts.gstatic.com/s/manrope/v15/...
+   que falla offline (kiosco sin internet). Ahora es local ./fonts/manrope.woff2
+   (latin subset v20, 25KB). Si el archivo falta, fallback es 'Inter' -> system-ui
+   definido en index.css: font-family 'Manrope','Inter',system-ui.
+   Para regenerar: curl -H "User-Agent: Chrome/120" \
+     "https://fonts.googleapis.com/css2?family=Manrope:wght@400..800&display=swap" \
+     | grep -o "https://[^)]*woff2" (latin) -> download.
+   No usar gstatic remoto en producción PWA.
+*/
 @font-face {
   font-family: 'Manrope';
   font-style: normal;
   font-weight: 400 800;
   font-display: swap;
-  src: local('Manrope'), url('https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRgAuSv_A.woff2') format('woff2');
+  src: local('Manrope'), url('./fonts/manrope.woff2') format('woff2');
 }
 @font-face {
   font-family: 'Cormorant Garamond';

@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh" 2>/dev/null || true
+
+# Lint-staged: ejecuta eslint + prettier solo en archivos staged
+# Requiere: npm run prepare (husky install) + npm install
+# Si husky/lint-staged no están instalados, no bloquea commit (warn only)
+if command -v npx >/dev/null 2>&1; then
+  npx lint-staged 2>&1 || {
+    echo "[husky] lint-staged falló — ejecuta 'npm run lint' y 'npm run format' manualmente"
+    exit 1
+  }
+else
+  echo "[husky] npx no encontrado — salto lint-staged"
+fi

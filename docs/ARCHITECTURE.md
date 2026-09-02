@@ -135,7 +135,71 @@ State machine órdenes: `por_asignar → pendiente → pagado|confirmada → fin
 **Decisión:** stdlib + `psycopg2` solo. **Por qué:** imagen mínima, sin deps, boot rápido en Mini-PC. **Consecuencia:** sin async, `ThreadedConnectionPool 20` puede bloquear en picos. **Mitigación:** `pgbouncer` transacción cuando escale a 8 hoteles (README-INFRA).
 
 ### ADR-003 — RLS con `FORCE` + `cyhotel_app`
-**Decisión:** multi-tenant vía RLS. **Por qué:** aislamiento a nivel BD. **Estado auditoría 2026-09-02:** `FORCE RLS` verificado en `orders`/`rooms`/`cleaning_tasks`/`payments` (ver `pg_class relforcerowsecurity=t`); `sessions relrowsecurity=f` sin policies — intencional global (ver `pg_policy WHERE polrelid='sessions'::regclass` 0 rows). `current_hotel_id()` STABLE existe — ver backend/db.py:264-281. Conexiones vía `cyhotel_app` (rol no-superuser creado en backend/db.py:340-356, `rolsuper=f` verificado). **Consecuencia pendiente:** `docker-compose.yml:35,62,82` aún trae `DATABASE_URL` con superuser `cyhotel` (`rolsuper=t`, evade RLS); runtime usa `_admin_db()` para init pero `db()` debería usar `cyhotel_app`. **Fix Fase 2:** cambiar compose `DATABASE_URL` a `cyhotel_app`; superuser solo en `_admin_db()` — ver backend/db.py:392-404.
+**Decisión:** multi-tenant vía RLS. **Por qué:** aislamiento a nivel BD. **Estado auditoría 2026-09-02:** `FORCE RLS` verificado en `orders`/`rooms`/`cleaning_tasks`/`payments` (ver `pg_class relforcerowsecurity=t`); `sessions relrowsecurity=f` sin policies — intencional global (ver `pg_policy WHERE polrelid='sessions'::regclass` 0 rows). `current_hotel_id()` STABLE existe — ver backend/db.py:264-281. Conexiones vía `cyhotel_app` (rol no-superuser creado en backend/db.py:340-356, `rolsuper=f` verificado). **Consecuencia pendiente:** `docker-compose.yml:35,62,82` aún trae `DATABASE_URL` con superuser `cyhotel` (`rolsuper=t`, evade RLS); runtime usa `_admin_db()` para init pero `db()` debería usar `cyhotel_app`. **Fix Fase 2 (patch preparado, NO aplicado aún - requiere restart):** ver `docs/rls-fix.patch`.
+
+#### Plan de migración RLS Fase 3c (zero-downtime, sin aplicar en esta tarea)
+
+**Hallazgo auditoría 2026-09-02 (producción actual):**
+- `SELECT rolname, rolsuper FROM pg_roles WHERE rolname IN ('cyhotel','cyhotel_app')` → `cyhotel t` (superuser, evade RLS incluso con FORCE), `cyhotel_app f` (verificado `backend/db.py:340-356` crea rol + `GRANT` 9 tablas + 10 sequences + `ALTER DEFAULT PRIVILEGES`).
+- `docker inspect cyhotel-{kiosco,admin,master} | grep DATABASE_URL` → `postgresql://cyhotel:***@db:5432/cyhotel` en los 3 servicios (líneas 35,63,82). El pool `backend/db.py:362-374 _get_pool()` usa `APP_DB_USER=cyhotel_app` pero `backend/server.py:26-38` parsea `DATABASE_URL` y sobrescribe `PGUSER/PGPASSWORD` y solo setea `CYHOTEL_DB_USER` si username==`cyhotel_app`; con `cyhotel` queda `APP_DB_USER=cyhotel` efectivo → pool conecta como superuser → `FORCE RLS` inefectivo (probado: `psql -U cyhotel -c "SET app.hotel_id='9999'; SELECT count(*) FROM orders"` devuelve 12 en vez de 0).
+- `psql -U cyhotel_app -c "SET app.hotel_id='9999'; SELECT count(*) FROM orders"` → 0 correcto; `INSERT INTO orders (hotel_id=1) ...` con `app.hotel_id='2'` → `new row violates row-level security policy` (WITH CHECK bloquea cross-tenant). `sessions` global verifica 6 filas iguales para `app.hotel_id='1'/'2'/'master'` (sin RLS intencional).
+
+**Patch preparado (`docs/rls-fix.patch`):**
+1. `docker-compose.yml:35,63,82`: `DATABASE_URL` → `postgresql://cyhotel_app:${CYHOTEL_DB_PASSWORD}@db:5432/cyhotel` + añadir `CYHOTEL_DB_SUPERUSER: cyhotel` y `CYHOTEL_DB_SUPER_PASSWORD: ${CYHOTEL_DB_PASSWORD}` en los 3 servicios (kiosco/admin/master).
+2. `backend/db.py:10-17,392-403`: añadir `PG_SUPER_USER/PG_SUPER_PASSWORD = os.environ.get("CYHOTEL_DB_SUPERUSER/SUPER_PASSWORD", PG_USER/PASSWORD)` y cambiar `_admin_db()` a usar `PG_SUPER_USER/PASSWORD` (así `init_db` conserva privilegios DDL/migraciones, runtime `db()` usa `cyhotel_app`).
+3. `backend/server.py:34-38`: actualizar comentario (runtime usa `cyhotel_app`, superuser solo en `_admin_db`).
+
+**Por qué no se aplica en esta tarea:** requiere `docker compose up -d --build` + restart de los 3 contenedores (downtime ~15-30s, healthcheck `pg_isready` + `depends_on: service_healthy`). Instrucción Fase 3c: documentar sin reiniciar.
+
+**Pasos de aplicación para main agent (con ventana de mantenimiento):**
+```bash
+# 1. Aplicar patch
+cd /home/CyHotel && git apply docs/rls-fix.patch
+# 2. Verificar diff
+git diff docker-compose.yml backend/db.py backend/server.py
+# 3. Rebuild + rolling restart (sin downtime total si se hace secuencial, o full si se prefiere atomicidad)
+docker compose up -d --build
+# Alternativa zero-downtime: uno a uno
+docker compose up -d --build kiosco && sleep 15 && docker compose up -d --build admin && sleep 15 && docker compose up -d --build master
+# 4. Esperar healthchecks
+docker compose ps && docker compose logs --tail=30 kiosco admin master
+```
+
+**Verificación post-apply (copiar/pegar):**
+```bash
+# a) Roles
+docker exec cyhotel-db psql -U cyhotel -d cyhotel -c "SELECT rolname, rolsuper FROM pg_roles WHERE rolname IN ('cyhotel','cyhotel_app')"
+# esperado: cyhotel t, cyhotel_app f
+
+# b) Compose usa cyhotel_app
+grep -n DATABASE_URL docker-compose.yml
+# esperado: 3 líneas con postgresql://cyhotel_app:
+
+# c) Runtime env (tras rebuild)
+docker exec cyhotel-kiosco env | grep DATABASE_URL
+docker exec cyhotel-admin env | grep DATABASE_URL
+docker exec cyhotel-master env | grep DATABASE_URL
+# esperado: cyhotel_app
+
+# d) RLS efectivo (como cyhotel_app, bloquea cross-hotel)
+docker exec cyhotel-db psql -U cyhotel_app -d cyhotel -c "SELECT set_config('app.hotel_id','1',false); SELECT count(*) FROM orders;"  # ~12
+docker exec cyhotel-db psql -U cyhotel_app -d cyhotel -c "SELECT set_config('app.hotel_id','9999',false); SELECT count(*) FROM orders;"  # 0
+docker exec cyhotel-db psql -U cyhotel_app -d cyhotel -c "SELECT set_config('app.hotel_id','2',false); INSERT INTO orders (hotel_id, guest_name, product, room_type, check_in, check_out, subtotal) VALUES (1,'CrossHotel','momento','estandar',NOW(),NOW()+interval '3 hours',10) RETURNING id;"  # debe fallar: violates row-level security policy
+docker exec cyhotel-db psql -U cyhotel_app -d cyhotel -c "SELECT set_config('app.hotel_id','1',false); SELECT * FROM orders LIMIT 1;"  # debe funcionar (current_hotel_id NULL ve todo, con hotel_id filtra)
+
+# e) Sessions global (sin RLS) intacta
+docker exec cyhotel-db psql -U cyhotel_app -d cyhotel -c "SELECT set_config('app.hotel_id','1',false); SELECT count(*) FROM sessions; SELECT set_config('app.hotel_id','9999',false); SELECT count(*) FROM sessions;"  # ambos 6
+
+# f) App health
+curl -s http://localhost:8000/api/health | jq
+curl -s http://localhost:8001/api/health | jq
+curl -s http://localhost:8002/api/health | jq
+# g) Login + aislamiento (crear orden hotel 1 no visible desde hotel 2 scope — requiere segundo hotel seed para prueba completa)
+```
+
+**Riesgos y mitigación:**
+- Si `CYHOTEL_DB_SUPERUSER` no se setea, `_admin_db` fallback a `PGUSER=cyhotel_app` y `init_db` fallará en CREATE ROLE/GRANT (permiso denegado). Mitigación: patch asegura env en compose; verificar `docker exec cyhotel-admin env | grep SUPER`.
+- Mismo `CYHOTEL_DB_PASSWORD` para ambos roles (actual `.env` solo tiene uno). Rotación futura: separar `CYHOTEL_APP_DB_PASSWORD`. Patch mantiene compatibilidad usando mismo valor.
 
 ### ADR-004 — Tiempo real vía `LISTEN/NOTIFY` + SSE
 **Decisión:** puente `pg_notify` dentro de tx → `LISTEN` en admin/master → `SSE`. **Por qué:** sin Redis, latencia ~23ms verificada. **Consecuencia:** solo admin/master escuchan; kiosco solo notifica.
@@ -145,7 +209,7 @@ State machine órdenes: `por_asignar → pendiente → pagado|confirmada → fin
 
 ## 6. Escalabilidad y Deuda Conocida
 
-Ver `README-INFRA.md` §Auditoría (deadlock retry 3×, índices, worker por hotel) y §Recomendaciones (pgbouncer, WAL PITR, REPEATABLE READ). **Auditoría Fase 3c 2026-09-02:** `sessions` PG + 3 índices críticos (`idx_orders_hold`, `idx_orders_room_type`, `idx_cleaning_room_status`) verificados existentes; `sessions` sin RLS confirmada; `worker _cleanup_sessions` operativo. Pendiente: migrar `DATABASE_URL` a `cyhotel_app` en compose. Frontend: 3 paletas divergentes, sin router, Context god-store, SW precache pesado — ver plan Fase 4.
+Ver `README-INFRA.md` §Auditoría (deadlock retry 3×, índices, worker por hotel) y §Recomendaciones (pgbouncer, WAL PITR, REPEATABLE READ). **Auditoría Fase 3c 2026-09-02:** `sessions` PG + 3 índices críticos (`idx_orders_hold`, `idx_orders_room_type`, `idx_cleaning_room_status`) verificados existentes; `sessions` sin RLS confirmada; `worker _cleanup_sessions` operativo. **Pendiente crítico:** migrar `DATABASE_URL` a `cyhotel_app` (patch `docs/rls-fix.patch` listo, requiere restart — ver ADR-003). Frontend: 3 paletas divergentes, sin router, Context god-store, SW precache pesado — ver plan Fase 4.
 
 ## 7. Roadmap (post Fase 0)
 
