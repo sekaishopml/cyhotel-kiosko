@@ -44,6 +44,17 @@ from db import (  # noqa: E402
 )
 from worker import worker_loop  # noqa: E402
 
+# Fase 2: servicios extraídos (después de db para que env esté listo)
+try:
+    from app.services.pricing import apply_price_override as _svc_apply_price
+    from app.services.pricing import suite_subtotal as _svc_suite_subtotal
+    from app.services import auth as _auth_svc
+except Exception as _e:
+    print(f"[init] Fase2 services import fail: {_e}", flush=True)
+    _svc_apply_price = None
+    _svc_suite_subtotal = None
+    _auth_svc = None
+
 # Reintento con backoff ante deadlock/serialización; la transacción se re-ejecuta completa.
 DEADLOCK_RETRIES = 3
 DEADLOCK_BACKOFF_MS = [0.05, 0.15, 0.35]
@@ -323,9 +334,14 @@ class Handler(BaseHTTPRequestHandler):
     def _require_auth(self, roles=None, scope=None):
         header = self.headers.get("Authorization") or ""
         token = header[len("Bearer "):].strip() if header.startswith("Bearer ") else ""
-        sess = sessions.get(token)
-        if not sess or sess["expires"] < now():
-            sessions.pop(token, None)
+        if _auth_svc:
+            sess = _auth_svc.get_session(token)
+        else:
+            sess = sessions.get(token)
+            if sess and sess["expires"] < now():
+                sessions.pop(token, None)
+                sess = None
+        if not sess:
             self._error(401, "Se requiere un token válido (Authorization: Bearer ...)")
             return None
         if scope and sess.get("scope") != scope:
@@ -377,9 +393,14 @@ class Handler(BaseHTTPRequestHandler):
     def get_events(self):
         qs = self._qs()
         token = (qs.get("token") or [""])[0]
-        sess = sessions.get(token)
-        if not sess or sess["expires"] < now():
-            sessions.pop(token, None)
+        if _auth_svc:
+            sess = _auth_svc.get_session(token)
+        else:
+            sess = sessions.get(token)
+            if sess and sess["expires"] < now():
+                sessions.pop(token, None)
+                sess = None
+        if not sess:
             self._error(401, "Token inválido o expirado")
             return
         q = sse_add_client()
@@ -676,14 +697,17 @@ class Handler(BaseHTTPRequestHandler):
                 conn.commit()
                 self._error(401, "Usuario o contraseña incorrectos")
                 return
-            token = secrets.token_hex(32)
-            sessions[token] = {
-                "username": user["username"],
-                "role": user["role"],
-                "hotel_id": hotel_id,
-                "scope": scope,
-                "expires": now() + TOKEN_TTL,
-            }
+            if _auth_svc:
+                token, _ = _auth_svc.create_session(None, user["username"], user["role"], hotel_id, scope)
+            else:
+                token = secrets.token_hex(32)
+                sessions[token] = {
+                    "username": user["username"],
+                    "role": user["role"],
+                    "hotel_id": hotel_id,
+                    "scope": scope,
+                    "expires": now() + TOKEN_TTL,
+                }
             audit(conn, hotel_id, "login_ok", None, None, user["username"],
                   f"Login exitoso como {user['role']}")
             conn.commit()
@@ -705,14 +729,17 @@ class Handler(BaseHTTPRequestHandler):
         if pin != admin_pin:
             self._error(401, "PIN incorrecto")
             return
-        token = secrets.token_hex(32)
-        sessions[token] = {
-            "username": "admin",
-            "role": "gerencia",
-            "hotel_id": self.HOTEL,
-            "scope": "hotel",
-            "expires": now() + TOKEN_TTL,
-        }
+        if _auth_svc:
+            token, _ = _auth_svc.create_session(None, "admin", "gerencia", self.HOTEL, "hotel")
+        else:
+            token = secrets.token_hex(32)
+            sessions[token] = {
+                "username": "admin",
+                "role": "gerencia",
+                "hotel_id": self.HOTEL,
+                "scope": "hotel",
+                "expires": now() + TOKEN_TTL,
+            }
         self._send(200, {
             "token": token,
             "username": "admin",
@@ -722,7 +749,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def admin_logout(self):
         token = self._bearer_token()
-        sess = sessions.get(token)
+        if _auth_svc:
+            sess = _auth_svc.get_session(token)
+        else:
+            sess = sessions.get(token)
         username = sess["username"] if sess else "anónimo"
         conn = self._conn(sess=sess, master=bool(sess and sess.get("scope") == "master"))
         try:
@@ -732,7 +762,10 @@ class Handler(BaseHTTPRequestHandler):
             conn.rollback()
         finally:
             release_conn(conn)
-        sessions.pop(token, None)
+        if _auth_svc:
+            _auth_svc.delete_session(token)
+        else:
+            sessions.pop(token, None)
         self._send(200, {"ok": True, "message": "Sesión cerrada"})
 
     def admin_me(self, sess):
@@ -774,6 +807,11 @@ class Handler(BaseHTTPRequestHandler):
     def _apply_price_override(self, overrides, key, default_price, extra_key=None):
         """Devuelve el precio ajustado según overrides; si la estructura es rara,
         devuelve el default sin romper."""
+        if _svc_apply_price:
+            try:
+                return _svc_apply_price(overrides, key, default_price, extra_key)
+            except Exception:
+                pass
         base = overrides.get(key)
         if extra_key is None:
             if isinstance(base, dict) and "price" in base:

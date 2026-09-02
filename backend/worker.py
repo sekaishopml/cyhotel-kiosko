@@ -203,6 +203,19 @@ def _tick_hotel(hotel_id, config):
         release_conn(conn)
 
 
+def _cleanup_sessions():
+    try:
+        conn = db()
+        try:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM sessions WHERE expires < NOW()")
+            conn.commit()
+        finally:
+            release_conn(conn)
+    except Exception as e:
+        print(f"[worker] cleanup sessions error: {e}", flush=True)
+
+
 def _worker_tick():
     conn = db()
     set_app_hotel(conn, "master")
@@ -215,6 +228,11 @@ def _worker_tick():
             _tick_hotel(h["id"], h.get("config") or {})
         except Exception as e:
             print(f"[worker] hotel {h['id']}: error: {e}", flush=True)
+    # Limpieza de sesiones expiradas (cada tick, barato con índice)
+    try:
+        _cleanup_sessions()
+    except Exception:
+        pass
 
 
 def worker_loop():
