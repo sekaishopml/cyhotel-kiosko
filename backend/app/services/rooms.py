@@ -5,11 +5,14 @@ No hacen _send/_error; lanzan ValueError o retornan dicts.
 """
 import os
 
-from db import ROOM_TYPES, fetch_one, fetch_all, ROOMS_PHOTO_DIR, STORAGE_DIR
+from db import ROOM_TYPES, fetch_one, fetch_all
 from db import exec as db_exec
 
-STORAGE_DIR_ABS = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "..", "storage"))
-WEB_DIR_FALLBACK = STORAGE_DIR  # compat
+# Paths — replican server.py BASE_DIR/STORAGE_DIR sin importar server
+_BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+STORAGE_DIR = os.path.abspath(os.path.join(_BASE_DIR, "..", "storage"))
+ROOMS_PHOTO_DIR = os.path.join(STORAGE_DIR, "rooms")
+STORAGE_DIR_ABS = STORAGE_DIR
 
 ROOM_STATUS_TRANSITIONS = {
     "libre": ("en_limpieza", "bloqueado"),
