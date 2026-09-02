@@ -1,11 +1,11 @@
-import { z } from 'zod'
+/**
+ * Hotel del Valle — Validación (Fase 4)
+ * Single source: @cyhotel/shared/validation
+ * Re-exporta desde shared; mantiene compatibilidad con nameSchemaSafe.
+ * Fallback: la validación local antigua usaba /^[0-9]{10}$/ para CI;
+ *           shared unifica a 6-10 dígitos CI + 5-9 alfanumérico pasaporte.
+ */
+export { nameSchema, docSchema, validateDoc } from '@cyhotel/shared/validation'
+import { nameSchema } from '@cyhotel/shared/validation'
 
-export const nameSchema = z.string().trim().min(2, 'Escriba su nombre').max(40)
-
-export const docSchema = z
-  .string()
-  .trim()
-  .optional()
-  .refine(v => !v || /^[0-9]{10}$/.test(v), 'Documento inválido')
-
-export const nameSchemaSafe = nameSchema.safeParse
+export const nameSchemaSafe = nameSchema.safeParse.bind(nameSchema)

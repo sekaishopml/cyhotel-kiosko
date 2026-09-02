@@ -15,7 +15,12 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "noFallthroughCasesInSwitch": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "baseUrl": ".",
+    "paths": {
+      "@cyhotel/shared": ["../../packages/shared/src"],
+      "@cyhotel/shared/*": ["../../packages/shared/src/*"]
+    }
   },
   "include": ["src"]
 }

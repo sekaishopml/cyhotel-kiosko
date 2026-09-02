@@ -543,6 +543,8 @@ class Handler(BaseHTTPRequestHandler):
                 self._serve_img(path)
             elif path.startswith("/kiosco/"):
                 self._serve_react_spa(path)
+            elif path == "/tokens.css":
+                self._serve_tokens()
             elif path in self._static_map():
                 self._serve_static(path)
             else:
@@ -3471,6 +3473,31 @@ class Handler(BaseHTTPRequestHandler):
         self.end_headers()
         # Envío directo desde RAM en un solo write (rápido, sin I/O de disco por request).
         self.wfile.write(apk)
+
+    def _serve_tokens(self):
+        """Sirve design tokens CSS (Fase 4) para admin/master/kiosco."""
+        # Orden: master -> web-master/tokens.css, resto -> web/tokens.css, fallback -> kiosco/src/tokens.css
+        candidates = []
+        if self.MODE == "master":
+            candidates.append(os.path.join(WEB_MASTER_DIR, "tokens.css"))
+            candidates.append(os.path.join(WEB_DIR, "tokens.css"))
+        else:
+            candidates.append(os.path.join(WEB_DIR, "tokens.css"))
+            candidates.append(os.path.join(WEB_MASTER_DIR, "tokens.css"))
+        candidates.append(os.path.join(WEB_DIR, "kiosco", "src", "tokens.css"))
+        target = next((p for p in candidates if os.path.isfile(p)), None)
+        if not target:
+            self._error(404, "tokens.css no encontrado")
+            return
+        with open(target, "rb") as f:
+            body = f.read()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/css; charset=utf-8")
+        self.send_header("Content-Length", str(len(body)))
+        # Tokens cambian poco; cache no-agresivo para reflejar bind mount al instante
+        self.send_header("Cache-Control", "no-cache, no-store, must-revalidate")
+        self.end_headers()
+        self.wfile.write(body)
 
     def _serve_static(self, path):
         base = WEB_MASTER_DIR if self.MODE == "master" else WEB_DIR

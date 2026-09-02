@@ -8,7 +8,7 @@ export const docSchema = z
   .string()
   .trim()
   .optional()
-  .refine(v => !v || /^[0-9]{6,10}$/.test(v) || /^[A-Z0-9]{5,9}$/i.test(v), 'Documento inválido (CI 6-10 dígitos o Pasaporte 5-9)')
+  .refine((v: string | undefined) => !v || /^[0-9]{6,10}$/.test(v) || /^[A-Z0-9]{5,9}$/i.test(v), 'Documento inválido (CI 6-10 dígitos o Pasaporte 5-9)')
 
 export function validateDoc(value: string, type: 'ci' | 'passport'): boolean {
   const v = value.trim()

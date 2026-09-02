@@ -4,10 +4,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        navy: '#0F172A',
-        gold: '#D4AF37',
-        cream: '#FBF7F0',
-        sage: '#6B8F71',
+        // Design tokens (web/tokens.css): paleta vigente 70/20/10 blanco+verde+bronce
+        // navy (#0F172A legacy)  -> var(--hc-verde-900) #123526 / --hc-verde-950 #0f281e
+        // gold (#D4AF37 legacy)  -> var(--hc-bronce-500) #B08D57 (acento, solo precio ≥24px, nunca CTA primario)
+        // cream (#FBF7F0 legacy) -> var(--hc-blanco) #FFFFFF / --hc-papel #FBF9F4 / --hc-arena-100 #F3EFE6
+        // sage (#6B8F71 aprox)   -> var(--hc-verde-200) #B8CBBF / --hc-verde-500 #3E9A63
+        // Mantener tailwind keys legacy (navy/gold/cream) por compatibilidad; migrar gradual a --hc-* vía tokens.css
+        navy: '#0F172A', // legacy compat -> var(--hc-verde-900)
+        gold: '#D4AF37', // legacy compat -> var(--hc-bronce-500)
+        cream: '#FBF7F0', // legacy compat -> var(--hc-blanco)
+        sage: '#6B8F71', // legacy -> var(--hc-verde-200)
         slate: {
           DEFAULT: '#64748B',
           50: '#f8fafc',

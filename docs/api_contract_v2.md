@@ -1,5 +1,7 @@
 # Contrato API v2 — CyHotel Multi-tenant
 
+> 2026-09-01 — producto `suite` habilitado: `orders.product CHECK` ahora incluye `'suite'` (migration `suite_product` — ver `backend/db.py:504-508`), `ORDER_PRODUCTS=("momento","amanecida","hospedaje","suite","reserva")` en `backend/server.py:115` y `backend/app/services/orders.py:45`, validado en `POST /api/orders` (ver `backend/server.py:937-938, 1179-1203`) y `GET /api/types` (ver `backend/server.py:886-899`). `ROOM_TYPES.suite` definido en `backend/db.py:60-71` (momento 20, amanecida 35, hospedaje 50, extras 1h/6h). Spec `backend/openapi.yaml` enum ya incluye `suite`.
+
 Sistema: PostgreSQL central, multi-hotel, 3 modos de app por contenedor:
 - `APP_MODE=kiosco` (puerto 8000, HOTEL_ID fijo) — solo endpoints públicos
 - `APP_MODE=admin` (puerto 8001, HOTEL_ID fijo) — API completa del hotel
@@ -25,7 +27,7 @@ El usuario master se autentica igual; sus sesiones llevan `scope: 'master'` y la
 | GET | /api/admin/me | auth | → {username,role,scope} |
 | GET | /api/catalog | público | tarifas ROOM_TYPES |
 | GET | /api/types?product= | público | disponibilidad por tipo del hotel |
-| POST | /api/orders | público (kiosco) | crea orden `por_asignar` sin habitación (client_ref idempotente) |
+| POST | /api/orders | público (kiosco) | crea orden `por_asignar` sin habitación (client_ref idempotente). `product` ∈ `momento,amanecida,hospedaje,suite,reserva` (ver `backend/server.py:115`); `suite` requiere `room_type=suite` y `extra∈momento/amanecida/hospedaje` con pricing via `price_overrides.suite` (ver `backend/app/services/pricing.py:45-65`) |
 | GET | /api/rooms | admin | rooms del hotel |
 | POST | /api/rooms/:id/status | housekeeping,gerencia | máquina de estados |
 | GET | /api/orders?status=&product=&search=&from=&to=&limit=&page= | recepcion,gerencia | filtros + paginación |
@@ -122,10 +124,11 @@ El usuario master se autentica igual; sus sesiones llevan `scope: 'master'` y la
 - `GET /api/master/orders?hotel_id=&status=&from=&to=&limit=&page=` (master) → lista de órdenes de todos/hotel.
 - El master NO usa `/api/dashboard/*` del hotel; usa `/api/master/*`.
 
-## Notas de implementación (server.py)
+## Notas de implementación (server.py + backend/app/* Fase 3)
 
 - Un solo `server.py` con `APP_MODE` (kiosco/admin/master). En modo kiosco SOLO se sirven: /api/catalog, /api/types, /api/orders POST, estáticos kiosco. En admin: todo del hotel. En master: login master + /api/master/* + /api/admin/me + estáticos web-master.
-- `HOTEL_ID` env: admin/kiosco la usan (y `set_app_hotel`); master no la fija (scope master).
-- El worker de vencimientos corre en el contenedor admin (un solo worker global, multi-hotel: itera hoteles activos).
+- `HOTEL_ID` env — ver `backend/server.py:80-88` (`HOTEL_ID = int(env) or 1` para admin/kiosco) y `backend/app/config.py:5` (`HOTEL_ID_ENV`); master no la fija (scope master, ver `backend/server.py:360-365`). `_hotel_config(conn, hotel_id)` — ver `backend/server.py:1514-1516` lee `hotels.config JSONB`; `price_overrides` soporta `kiosco.price_overrides` o raíz, validado en `backend/app/services/validation.py:9-11` y `backend/server.py:3018`.
+- Sesiones PG (Fase 2-3c): `backend/app/services/auth.py:16-44` (`create_session` INSERT PG + fallback `_sessions_mem`, `TOKEN_TTL 12h`), `get_session` lee PG primero verifica `expires` y borra expiradas, `delete_session` y `cleanup_expired` (`DELETE WHERE expires < NOW()`). Tabla `sessions` sin RLS (global, `hotel_id NULL` para master) — ver `backend/db.py:234-258` y auditoría `pg_class relrowsecurity=f`. `backend/server.py:336-355` `_require_auth` delega a `auth.py:get_session`.
+- El worker de vencimientos corre en el contenedor admin (un solo worker global, multi-hotel: itera hoteles activos) y limpia sesiones expiradas cada 35s — ver `backend/worker.py:206-238`.
 - SSE `/api/events` broadcast global (los paneles admin reaccionan y refrescan su hotel; el master refresca todo).
 - `storage/rooms/*.jpg` fotos: por hotel (`storage/<hotel_slug>/rooms/...`), servidas por /uploads/ con el hotel de la sesión (o público para kiosco con su HOTEL_ID).

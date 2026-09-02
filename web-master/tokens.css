@@ -1,0 +1,57 @@
+/* Hotel del Valle — Design Tokens Únicos
+   Fuente: docs/brand/DECISION.md (70/20/10 blanco+verde+bronce)
+   Mantiene compatibilidad con legacy navy/gold/cream para migración gradual.
+   Importar en: web/kiosco, web/admin.html, web-master/master.html
+*/
+
+:root {
+  /* 70% — Fondo */
+  --hc-blanco: #FFFFFF;
+  --hc-papel: #FBF9F4;
+  --hc-arena-100: #F3EFE6;
+  --hc-arena-300: #DCD5C6;
+
+  /* 20% — Verde estructura */
+  --hc-verde-950: #0f281e;
+  --hc-verde-900: #123526;
+  --hc-verde-800: #17452F;
+  --hc-verde-700: #1E5638;
+  --hc-verde-600: #2E7D4F;
+  --hc-verde-500: #3E9A63;
+  --hc-verde-200: #B8CBBF;
+  --hc-verde-100: #DFE9E2;
+  --hc-verde-50: #EEF3EF;
+  --hc-verde-15: rgba(23, 69, 47, 0.15);
+  --hc-verde-08: rgba(23, 69, 47, 0.08);
+  --hc-verde-05: rgba(23, 69, 47, 0.05);
+
+  /* 10% — Acento bronce (solo precio ≥24px, nunca CTA primario) */
+  --hc-bronce-500: #B08D57;
+  --hc-bronce-600: #8C6B33;
+  --hc-dorado-100: #F0E4CD;
+
+  /* Neutrales tinta */
+  --hc-tinta-900: #23211D;
+  --hc-tinta-700: #4A473F;
+
+  /* Funcionales */
+  --hc-exito-700: #1F6B4A;
+  --hc-exito-100: #DCEFE4;
+  --hc-error-700: #A63D2C;
+  --hc-error-100: #F6DED8;
+  --hc-aviso-700: #9C7A1E;
+  --hc-aviso-100: #F6ECD0;
+
+  /* Compatibilidad legacy — mapea tokens viejos a nuevos */
+  --navy: var(--hc-verde-900);
+  --gold: var(--hc-verde-800);
+  --cream: var(--hc-blanco);
+
+  /* Radios y sombras (02) */
+  --r-sm: 4px;
+  --r-md: 8px;
+  --r-lg: 12px;
+  --shadow-1: 0 1px 2px rgba(35, 33, 29, 0.06);
+  --shadow-2: 0 4px 12px rgba(35, 33, 29, 0.08);
+  --shadow-3: 0 12px 32px rgba(35, 33, 29, 0.14);
+}
