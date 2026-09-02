@@ -6,6 +6,13 @@
   src: local('Inter'), url('./fonts/inter.woff2') format('woff2');
 }
 @font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: local('Manrope'), url('https://fonts.gstatic.com/s/manrope/v15/xn7gYHE41ni1AdIRgAuSv_A.woff2') format('woff2');
+}
+@font-face {
   font-family: 'Cormorant Garamond';
   font-style: normal;
   font-weight: 400 700;

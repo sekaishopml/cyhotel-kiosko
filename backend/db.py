@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS orders (
     room_id INT NULL REFERENCES rooms(id),
     guest_name TEXT NOT NULL,
     id_document TEXT,
-    product TEXT NOT NULL CHECK (product IN ('momento', 'amanecida', 'hospedaje', 'reserva')),
+    product TEXT NOT NULL CHECK (product IN ('momento', 'amanecida', 'hospedaje', 'suite', 'reserva')),
     room_type TEXT,
     hours INT,
     check_in TIMESTAMPTZ NOT NULL,
@@ -231,15 +231,31 @@ CREATE TABLE IF NOT EXISTS schema_meta (
     value TEXT
 );
 
+CREATE TABLE IF NOT EXISTS sessions (
+    token TEXT PRIMARY KEY,
+    hotel_id INT NULL REFERENCES hotels(id),
+    username TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('recepcion', 'housekeeping', 'gerencia', 'master')),
+    scope TEXT NOT NULL CHECK (scope IN ('hotel', 'master')),
+    expires TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 CREATE INDEX IF NOT EXISTS idx_orders_status_checkout ON orders(hotel_id, status, check_out);
 CREATE INDEX IF NOT EXISTS idx_orders_product_status ON orders(hotel_id, product, status);
 CREATE INDEX IF NOT EXISTS idx_orders_created ON orders(hotel_id, created_at);
 CREATE INDEX IF NOT EXISTS idx_orders_room_status ON orders(hotel_id, room_id, status);
+CREATE INDEX IF NOT EXISTS idx_orders_hold ON orders(hotel_id, product, status, hold_expires_at);
+CREATE INDEX IF NOT EXISTS idx_orders_room_type ON orders(hotel_id, room_type, status);
 CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(hotel_id, order_id);
 CREATE INDEX IF NOT EXISTS idx_payments_paid_at ON payments(hotel_id, paid_at);
 CREATE INDEX IF NOT EXISTS idx_cleaning_status ON cleaning_tasks(hotel_id, status);
+CREATE INDEX IF NOT EXISTS idx_cleaning_room_status ON cleaning_tasks(hotel_id, room_id, status);
+CREATE INDEX IF NOT EXISTS idx_tasks_staff ON cleaning_tasks(hotel_id, assigned_to, status);
 CREATE INDEX IF NOT EXISTS idx_incidences_hotel_status ON incidences (hotel_id, status, id DESC);
 CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(hotel_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires);
+CREATE INDEX IF NOT EXISTS idx_sessions_hotel ON sessions(hotel_id);
 """
 
 # RLS multi-tenant: current_hotel_id() lee 'app.hotel_id' (NULL/'master' ve todo).
@@ -472,6 +488,23 @@ FEATURE_MIGRATIONS = {
         "DROP POLICY IF EXISTS housekeeping_staff_all ON housekeeping_staff",
         "CREATE POLICY housekeeping_staff_all ON housekeeping_staff FOR ALL TO PUBLIC "
         "USING (current_hotel_id() IS NULL OR hotel_id = current_hotel_id())",
+    ],
+    # Sesiones persistentes (Fase 1): reemplaza dict en memoria para compartir entre kiosco/admin/master
+    "sessions": [
+        "CREATE TABLE IF NOT EXISTS sessions (token TEXT PRIMARY KEY, hotel_id INT NULL REFERENCES hotels(id), username TEXT NOT NULL, role TEXT NOT NULL CHECK (role IN ('recepcion','housekeeping','gerencia','master')), scope TEXT NOT NULL CHECK (scope IN ('hotel','master')), expires TIMESTAMPTZ NOT NULL, created_at TIMESTAMPTZ NOT NULL DEFAULT NOW())",
+        "CREATE INDEX IF NOT EXISTS idx_sessions_expires ON sessions(expires)",
+        "CREATE INDEX IF NOT EXISTS idx_sessions_hotel ON sessions(hotel_id)",
+    ],
+    # Índices faltantes auditoría 2026-08-16 para instalaciones existentes
+    "missing_indexes": [
+        "CREATE INDEX IF NOT EXISTS idx_orders_hold ON orders(hotel_id, product, status, hold_expires_at)",
+        "CREATE INDEX IF NOT EXISTS idx_orders_room_type ON orders(hotel_id, room_type, status)",
+        "CREATE INDEX IF NOT EXISTS idx_cleaning_room_status ON cleaning_tasks(hotel_id, room_id, status)",
+    ],
+    # Producto suite para kiosco moderno (Fase 1)
+    "suite_product": [
+        "ALTER TABLE orders DROP CONSTRAINT IF EXISTS orders_product_check",
+        "ALTER TABLE orders ADD CONSTRAINT orders_product_check CHECK (product IN ('momento','amanecida','hospedaje','suite','reserva'))",
     ],
 }
 

@@ -1129,12 +1129,66 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(201, {"order": result})
                 return
 
-            price = info.get(product)
-            if price is None:
-                raise ValueError(f"'{info['label']}' no ofrece el producto '{product}'")
+            try:
+                overrides = self._price_overrides()
+            except Exception:
+                overrides = {}
 
-            hours_val = None
-            if product in ("momento", "suite"):
+            if product == "suite":
+                if room_type != "suite":
+                    raise ValueError("Suite solo disponible para tipo suite")
+                extra = (data.get("extra") or "momento").strip() or "momento"
+                if extra not in ("momento", "amanecida", "hospedaje"):
+                    raise ValueError("extra inválido para suite (momento/amanecida/hospedaje)")
+                base_price = info.get(extra)
+                if base_price is None:
+                    raise ValueError(f"Suite no ofrece '{extra}'")
+                subtotal = float(base_price)
+                suite_ov = overrides.get("suite")
+                if isinstance(suite_ov, dict):
+                    if extra in suite_ov and isinstance(suite_ov[extra], (int, float)):
+                        subtotal = float(suite_ov[extra])
+                    elif isinstance(suite_ov.get("extras"), dict) and extra in suite_ov["extras"]:
+                        try:
+                            subtotal = float(suite_ov["extras"][extra])
+                        except Exception:
+                            pass
+                elif isinstance(suite_ov, (int, float)) and extra == "momento":
+                    subtotal = float(suite_ov)
+                try:
+                    alt = self._apply_price_override(overrides, "suite", base_price)
+                    if alt != base_price and extra == "momento":
+                        subtotal = float(alt)
+                except Exception:
+                    pass
+                if extra == "momento":
+                    hours_val = 3
+                    check_in_dt = now()
+                    check_out_dt = check_in_dt + timedelta(hours=3)
+                elif extra == "amanecida":
+                    entry = info.get("amanecida_entry", AMANECIDA_ENTRY)
+                    entry_dt = now().replace(hour=int(entry[:2]), minute=int(entry[3:5]), second=0, microsecond=0)
+                    now_local = now()
+                    check_in_dt = now_local if now_local > entry_dt else entry_dt
+                    exit_dt = entry_dt + timedelta(days=1)
+                    check_out_dt = exit_dt.replace(hour=int(AMANECIDA_EXIT[:2]), minute=int(AMANECIDA_EXIT[3:5]))
+                    hours_val = None
+                else:
+                    try:
+                        days = int(data.get("days", 1))
+                    except Exception:
+                        days = 1
+                    days = max(1, min(days, 30))
+                    hours_val = days * 24
+                    check_in_dt = now()
+                    check_out_dt = check_in_dt + timedelta(days=days)
+                    if days > 1:
+                        subtotal = round(subtotal * days, 2)
+            elif product == "momento":
+                price = info.get(product)
+                if price is None:
+                    raise ValueError(f"'{info['label']}' no ofrece el producto '{product}'")
+                price = self._apply_price_override(overrides, room_type, price)
                 if info.get("momento_solo_sin_otras"):
                     other_free = fetch_one(
                         conn,
@@ -1158,20 +1212,31 @@ class Handler(BaseHTTPRequestHandler):
                 check_in_dt = now()
                 check_out_dt = check_in_dt + timedelta(hours=hours)
                 if extra == "6h":
-                    subtotal = info["extras"]["6h"]["price"]
+                    base_extra = info["extras"]["6h"]["price"]
+                    subtotal = self._apply_price_override(overrides, room_type, base_extra, extra_key="6h")
                 elif extra == "1h":
-                    subtotal = price + info["extras"]["1h"]["price"]
+                    base_extra = info["extras"]["1h"]["price"]
+                    subtotal = price + self._apply_price_override(overrides, room_type, base_extra, extra_key="1h")
                 else:
                     subtotal = price
             elif product == "amanecida":
+                price = info.get(product)
+                if price is None:
+                    raise ValueError(f"'{info['label']}' no ofrece el producto '{product}'")
+                price = self._apply_price_override(overrides, room_type, price)
                 entry = info.get("amanecida_entry", AMANECIDA_ENTRY)
                 entry_dt = now().replace(hour=int(entry[:2]), minute=int(entry[3:5]), second=0, microsecond=0)
                 now_local = now()
                 check_in_dt = now_local if now_local > entry_dt else entry_dt
                 exit_dt = entry_dt + timedelta(days=1)
                 check_out_dt = exit_dt.replace(hour=int(AMANECIDA_EXIT[:2]), minute=int(AMANECIDA_EXIT[3:5]))
+                hours_val = None
                 subtotal = price
             elif product == "hospedaje":
+                price = info.get(product)
+                if price is None:
+                    raise ValueError(f"'{info['label']}' no ofrece el producto '{product}'")
+                price = self._apply_price_override(overrides, room_type, price)
                 try:
                     days = int(data.get("days", 1))
                 except (TypeError, ValueError):
@@ -2907,6 +2972,61 @@ class Handler(BaseHTTPRequestHandler):
         if not isinstance(body_cfg, dict):
             raise ValueError("config debe ser un objeto")
         cfg = dict(body_cfg)
+        # Validación de config (Fase 1: evita JSONB con basura que rompe GET /types)
+        if "price_overrides" in cfg and not isinstance(cfg["price_overrides"], dict):
+            raise ValueError("price_overrides debe ser un objeto")
+        if "branding" in cfg:
+            if not isinstance(cfg["branding"], dict):
+                raise ValueError("branding debe ser un objeto")
+            for k in ("hotel", "tagline"):
+                if k in cfg["branding"] and not isinstance(cfg["branding"][k], str):
+                    raise ValueError(f"branding.{k} debe ser texto")
+        if "max_days" in cfg:
+            try:
+                md = int(cfg["max_days"])
+            except Exception:
+                raise ValueError("max_days debe ser entero 1-30")
+            if md < 1 or md > 30:
+                raise ValueError("max_days debe estar entre 1 y 30")
+            cfg["max_days"] = md
+        if "max_days_full" in cfg:
+            try:
+                mdf = int(cfg["max_days_full"])
+            except Exception:
+                raise ValueError("max_days_full debe ser entero 1-30")
+            if mdf < 1 or mdf > 30:
+                raise ValueError("max_days_full debe estar entre 1 y 30")
+            cfg["max_days_full"] = mdf
+        if "idle_timeout_seconds" in cfg:
+            try:
+                it = int(cfg["idle_timeout_seconds"])
+            except Exception:
+                raise ValueError("idle_timeout_seconds debe ser entero 10-600")
+            if it < 10 or it > 600:
+                raise ValueError("idle_timeout_seconds debe estar entre 10 y 600")
+            cfg["idle_timeout_seconds"] = it
+        if "promos" in cfg and not isinstance(cfg["promos"], list):
+            raise ValueError("promos debe ser una lista")
+        if "suite_durations" in cfg and not isinstance(cfg["suite_durations"], dict):
+            raise ValueError("suite_durations debe ser un objeto")
+        if "qr_url" in cfg and not isinstance(cfg["qr_url"], str):
+            raise ValueError("qr_url debe ser texto")
+        if "reserva_tarifa" in cfg:
+            try:
+                rt = float(cfg["reserva_tarifa"])
+                if rt < 0 or rt > 1000:
+                    raise ValueError
+            except Exception:
+                raise ValueError("reserva_tarifa debe ser número 0-1000")
+            cfg["reserva_tarifa"] = rt
+        if "assign_ttl_minutes" in cfg:
+            try:
+                at = int(cfg["assign_ttl_minutes"])
+            except Exception:
+                raise ValueError("assign_ttl_minutes debe ser entero 5-120")
+            if at < 5 or at > 120:
+                raise ValueError("assign_ttl_minutes debe estar entre 5 y 120")
+            cfg["assign_ttl_minutes"] = at
         if "cleaning_sla_minutes" in cfg:
             try:
                 sla = int(cfg["cleaning_sla_minutes"])
