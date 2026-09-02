@@ -60,7 +60,7 @@ body {
 }
 
 .animate-fade-up {
-  animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: fadeUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
 .animate-breathe {
@@ -151,12 +151,12 @@ body {
 }
 
 .slide-in-right {
-  animation: slideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: slideInRight 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform, opacity;
 }
 
 .slide-in-left {
-  animation: slideInLeft 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation: slideInLeft 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   will-change: transform, opacity;
 }
 
@@ -257,7 +257,7 @@ body {
 .idle-kb-a { animation-name: kenburns-a; }
 .idle-kb-b { animation-name: kenburns-b; }
 
-/* Transición suave del fondo al cambiar de imagen */
+/* Transición pausada del fondo al cambiar de imagen */
 @keyframes bgFadeIn {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -266,8 +266,8 @@ body {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
-.idle-bg { animation: bgFadeIn 1.2s ease-out both; }
-.idle-bg-out { animation: bgFadeOut 0.7s ease-in both; }
+.idle-bg { animation: bgFadeIn 1.8s ease-out both; }
+.idle-bg-out { animation: bgFadeOut 1.0s ease-in both; }
 
 /* Fundido de entrada y salida de la fachada (afk -> menú de plan) */
 @keyframes idleFadeIn {
@@ -278,8 +278,22 @@ body {
   from { opacity: 1; }
   to   { opacity: 0; }
 }
-.idle-enter { animation: idleFadeIn 0.6s ease-out both; }
-.idle-leave { animation: idleFadeOut 0.4s ease-in both; }
+.idle-enter { animation: idleFadeIn 1.0s ease-out both; }
+.idle-leave { animation: idleFadeOut 0.6s ease-in both; }
+
+/* Stagger delays para entrada pausada */
+.idle-stagger-1 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.idle-stagger-2 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.15s both; }
+.idle-stagger-3 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both; }
+.idle-stagger-4 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both; }
+.idle-stagger-5 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.65s both; }
+.idle-stagger-6 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.85s both; }
+.idle-stagger-7 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 1.05s both; }
+.idle-stagger-8 { opacity: 0; animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) 1.2s both; }
+.idle-fade-slow {
+  opacity: 0;
+  animation: fadeUp 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
 
 /* Título de marca: gran serif sobrio */
 .txt-brand-xl {
@@ -299,42 +313,46 @@ body {
   to   { opacity: 1; transform: translateY(0); }
 }
 .idle-plan-enter {
-  animation: idlePlanIn 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: idlePlanIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 .idle-plan-name {
-  font-size: clamp(2.6rem, 7vh, 4.2rem);
+  font-size: clamp(2.2rem, 6vh, 3.8rem);
   line-height: 1.02;
   letter-spacing: 0.02em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: 0;
 }
 .idle-plan-price {
-  font-size: clamp(1.1rem, 2.8vh, 1.4rem);
+  font-size: clamp(1rem, 2.5vh, 1.3rem);
   letter-spacing: 0.18em;
 }
 
-/* CTA: botón dorado (acento 10% de la paleta), destacado sobre azul */
+/* CTA: botón verde elegante (#17452F) */
 .idle-cta {
   position: relative;
   display: inline-block;
-  padding: 1.25rem 3.6rem;
-  border: 2px solid #d4af37;
-  color: #0a1626;
-  background: linear-gradient(135deg, #e6c95a, #d4af37 55%, #bfa02f);
+  padding: 1.1rem 3.2rem;
+  border: 2px solid #1E5638;
+  color: white;
+  background: #17452F;
   border-radius: 0.5rem;
   letter-spacing: 0.14em;
-  box-shadow: 0 14px 34px -8px rgba(212, 175, 55, 0.5);
-  transition: transform 0.15s ease, background-color 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease;
+  box-shadow: 0 14px 34px -8px rgba(18, 53, 38, 0.5);
+  transition: transform 0.2s ease, background-color 0.4s ease, box-shadow 0.4s ease;
 }
 .idle-cta .cta-text {
-  font-size: clamp(2rem, 5vh, 3rem);
+  font-size: clamp(1.6rem, 4vh, 2.4rem);
   letter-spacing: 0.12em;
   font-weight: 700;
 }
 .idle-cta:active { transform: scale(0.97); }
-.idle-cta:focus-visible { outline: 2px solid #d4af37; outline-offset: 3px; }
-.idle-cta:hover { filter: brightness(1.08); box-shadow: 0 18px 42px -8px rgba(212, 175, 55, 0.65); }
+.idle-cta:focus-visible { outline: 2px solid #2E7D4F; outline-offset: 3px; }
+.idle-cta:hover { background: #1E5638; box-shadow: 0 18px 42px -8px rgba(18, 53, 38, 0.65); }
 
 .idle-clock {
-  font-size: clamp(5.5rem, 15vh, 8rem);
+  font-size: clamp(4.5rem, 13vh, 7rem);
   letter-spacing: 0.01em;
   font-weight: 700;
 }
@@ -342,5 +360,6 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .idle-kb-a, .idle-kb-b, .idle-bg, .idle-bg-out, .idle-enter, .idle-leave { animation: none; }
   .idle-cta { transition: none; }
-  .idle-plan-enter { animation: none; }
+  .idle-plan-enter, .idle-stagger-1, .idle-stagger-2, .idle-stagger-3, .idle-stagger-4,
+  .idle-stagger-5, .idle-stagger-6, .idle-stagger-7, .idle-stagger-8, .idle-fade-slow { animation: none; opacity: 1; }
 }

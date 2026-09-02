@@ -8,18 +8,8 @@ interface Prices { momento: number; amanecida: number; hospedaje: number; suite:
 const FALLBACK: Prices = { momento: 10, amanecida: 20, hospedaje: 30, suite: 20 }
 
 const SLIDES = [
-  {
-    img: 'img/suite.jpeg',
-    title: 'Suite Jacuzzi',
-    sub: 'Jacuzzi con hidromasaje · Volcán · TV Smart',
-    taste: 'La favorita para consentirse',
-  },
-  {
-    img: 'img/habitacion.jpeg',
-    title: 'Habitación Sencilla',
-    sub: 'A/C · TV Smart · WiFi · agua caliente',
-    taste: 'Confort y comodidad a un clic',
-  },
+  { img: 'img/suite.jpeg' },
+  { img: 'img/habitacion.jpeg' },
 ]
 
 interface Props {
@@ -40,8 +30,6 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
   const [cycle, setCycle] = useState(0)
   const [heroChip, setHeroChip] = useState(0)
   const [prices, setPrices] = useState<Prices>(FALLBACK)
-  const [promos, setPromos] = useState<{ title: string; subtitle: string }[]>([])
-  const [promoLine, setPromoLine] = useState<string>('')
   const [imgFailed, setImgFailed] = useState<Record<number, boolean>>({})
   const [transitioning, setTransitioning] = useState(false)
   const [leaving, setLeaving] = useState(false)
@@ -74,7 +62,6 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
         hospedaje: est(hosp) ?? FALLBACK.hospedaje,
         suite: cfg?.status === 'fulfilled' ? cfg.value.suite_durations?.momento ?? FALLBACK.suite : FALLBACK.suite,
       })
-      setPromos(cfg?.status === 'fulfilled' ? cfg.value.promos ?? [] : [])
     })
     return () => { active = false }
   }, [])
@@ -86,13 +73,13 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
       setKb(k => (k === 'a' ? 'b' : 'a'))
       setCycle(c => c + 1)
       setTransitioning(false)
-    }, 700)
+    }, 1200)
   }
 
   useEffect(() => {
     const dwell = () => {
-      const base = reduced ? 15 : 11
-      const jitter = Math.round(((Date.now() % 19000) / 100) % 5)
+      const base = reduced ? 18 : 15
+      const jitter = Math.round(((Date.now() % 21000) / 100) % 4)
       return (base + jitter) * 1000
     }
     const t = window.setTimeout(advance, dwell())
@@ -100,21 +87,9 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
   }, [cycle, reduced])
 
   useEffect(() => {
-    const hc = window.setInterval(() => setHeroChip(h => (h + 1) % 4), 6000)
+    const hc = window.setInterval(() => setHeroChip(h => (h + 1) % 4), 8000)
     return () => window.clearInterval(hc)
   }, [])
-
-  useEffect(() => {
-    if (!promos.length) { setPromoLine(''); return }
-    const id = window.setInterval(() => {
-      setPromoLine(prev => {
-        const i = (promos.findIndex(p => `${p.title} · ${p.subtitle}` === prev) + 1 + promos.length) % promos.length
-        const p = promos[i]
-        return `${p.title} · ${p.subtitle}`
-      })
-    }, 9400)
-    return () => window.clearInterval(id)
-  }, [promos.length])
 
   const hour = now.getHours()
   const pad = (n: number) => String(n).padStart(2, '0')
@@ -136,7 +111,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
     if (leaving) return
     tap()
     setLeaving(true)
-    window.setTimeout(() => onStart(), reduced ? 80 : 380)
+    window.setTimeout(() => onStart(), reduced ? 80 : 450)
   }
 
   const adminTap = () => {
@@ -153,75 +128,76 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
 
   return (
     <div
-      className={`fixed inset-0 z-[140] overflow-hidden bg-[#0a1626] text-[#f5f1e8] select-none ${leaving ? 'idle-leave' : 'idle-enter'}`}
+      className={`fixed inset-0 z-[140] overflow-hidden text-[#f5f1e8] select-none ${leaving ? 'idle-leave' : 'idle-enter'}`}
       onPointerDown={start}
+      style={{ background: '#0f281e' }}
     >
-      {/* ===== FONDO AZUL ELEGANTE ===== */}
-      <div className="absolute inset-0 bg-gradient-to-br from-[#0c1b30] via-[#0a1626] to-[#060e1a]" />
+      {/* ===== FONDO VERDE ELEGANTE ===== */}
+      <div className="absolute inset-0 bg-gradient-to-br from-[#123526] via-[#0f281e] to-[#0a1c12]" />
 
       {/* ===== FOTO DE FONDO ===== */}
       {!imgFailed[slide] && (
         <div key={`bg-${slide}-${kb}`} className={`absolute inset-0 idle-bg ${transitioning ? 'idle-bg-out' : ''}`}>
           <img src={cur.img} alt="" draggable={false}
-            className="absolute inset-0 w-full h-full object-cover opacity-[0.55] idle-kb-a" />
+            className="absolute inset-0 w-full h-full object-cover opacity-[0.5] idle-kb-a" />
         </div>
       )}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1626]/70 via-[#0a1626]/40 to-[#060e1a]/85" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0f281e]/60 via-[#0f281e]/30 to-[#0a1c12]/80" />
 
       {/* ===== CONTENIDO CENTRADO ===== */}
-      <div className="relative h-full flex flex-col items-center justify-center px-10 text-center">
+      <div className="relative h-full flex flex-col items-center justify-center px-8 text-center gap-1">
 
         {/* Etiqueta superior */}
-        <p className="text-[#d8c89a] text-[length:var(--fs-body)] font-bold tracking-[0.3em] uppercase animate-fade-up">
+        <p className="idle-stagger-1 text-[#b8cbbf] text-[length:var(--fs-body)] font-bold tracking-[0.3em] uppercase idle-fade-slow">
           {greeting}
         </p>
 
         {/* Título grande, bold */}
-        <h1 className="mt-3 font-display font-bold leading-none text-white txt-brand-xl">
-          <span className="block animate-fade-up">{BRAND.hotel}</span>
+        <h1 className="idle-stagger-2 font-display font-bold leading-none text-white txt-brand-xl">
+          <span className="block idle-fade-slow">{BRAND.hotel}</span>
         </h1>
 
-        {/* Regla dorada + tagline */}
-        <div className="mt-4 flex items-center justify-center gap-4 animate-fade-up">
-          <span className="h-px w-16 bg-[#d4af37]/40" />
-          <span className="text-[#e8e2d4] text-[length:var(--fs-body)] font-semibold italic">{BRAND.tagline}</span>
-          <span className="h-px w-16 bg-[#d4af37]/40" />
+        {/* Regla verde + tagline */}
+        <div className="idle-stagger-3 flex items-center justify-center gap-4 idle-fade-slow">
+          <span className="h-px w-16 bg-[#2E7D4F]/50" />
+          <span className="text-[#d0dfcf] text-[length:var(--fs-body)] font-semibold italic">{BRAND.tagline}</span>
+          <span className="h-px w-16 bg-[#2E7D4F]/50" />
         </div>
 
         {/* Reloj grande, bold */}
-        <div className="mt-5 font-display font-bold leading-none tabular-nums text-white idle-clock">
+        <div className="idle-stagger-4 font-display font-bold leading-none tabular-nums text-white idle-clock">
           {clock}
         </div>
-        <p className="mt-2 text-[#cfc7b4] text-[length:var(--fs-body)] font-semibold capitalize tracking-wide">{dateStr}</p>
+        <p className="idle-stagger-5 text-[#b8cbbf] text-[length:var(--fs-small)] font-semibold capitalize tracking-wide idle-fade-slow">{dateStr}</p>
 
         {/* ===== PLAN PRESENTADO 1-A-1 ===== */}
-        <div className="mt-7 w-full max-w-3xl">
+        <div className="idle-stagger-6 mt-5 w-full max-w-3xl">
           <button
             key={`${heroPlan.key}-${heroChip}`}
             onPointerDown={(e) => { e.stopPropagation(); start() }}
             className="w-full idle-plan-enter group text-center outline-none"
           >
-            <p className="mx-auto mb-3 h-px w-24 bg-[#d4af37]/40 transition-all duration-500 group-hover:w-40 group-hover:bg-[#d4af37]/80" />
-            <span className="block idle-plan-name font-display font-bold uppercase text-white">
+            <p className="mx-auto mb-2 h-px w-20 bg-[#2E7D4F]/40 transition-all duration-700 group-hover:w-36 group-hover:bg-[#2E7D4F]/80" />
+            <span className="block idle-plan-name font-display font-bold uppercase text-white leading-none">
               {heroPlan.label}
             </span>
-            <span className="inline-block mt-3 idle-plan-price font-bold text-[#d4af37]">
+            <span className="inline-block mt-2 idle-plan-price font-bold text-[#d4af37]">
               desde ${heroPlan.from}
             </span>
           </button>
         </div>
 
-        {/* ===== CTA con fondo dorado ===== */}
+        {/* ===== CTA verde ===== */}
         <button onPointerDown={(e) => { e.stopPropagation(); start() }}
-          className="idle-cta mt-10">
+          className="idle-stagger-7 idle-cta mt-6">
           <span className="cta-text block uppercase">
             tocar para comenzar
           </span>
         </button>
 
         {/* Línea de pie */}
-        <p className="mt-5 text-[#cfc7b4] text-[length:var(--fs-body)] font-semibold" key={promoLine || 'x'}>
-          {promoLine || `${cur.taste} · atención 24 horas`}
+        <p className="idle-stagger-8 mt-3 text-[#b8cbbf] text-[length:var(--fs-small)] font-semibold idle-fade-slow">
+          Atención 24 horas
         </p>
       </div>
 
