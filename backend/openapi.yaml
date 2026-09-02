@@ -1,51 +1,104 @@
 openapi: 3.0.3
 info:
   title: CyHotel API
-  description: API del sistema de kiosco/hotel (modos kiosco, admin, master)
-  version: 1.0.0
+  description: API del sistema de kiosco/hotel multi-tenant (modos kiosco, admin, master). Fuente de verdad `docs/api_contract_v2.md`.
+  version: 2.0.0
 servers:
   - url: /
 tags:
   - name: kiosco
-    description: Endpoints usados por el kiosco (y algunos por admin)
+    description: Endpoints públicos del kiosco (tablet)
   - name: admin
-    description: Endpoints del panel administrativo (requieren autenticación)
+    description: Panel del hotel (requiere Bearer, scope hotel)
+  - name: master
+    description: Panel consolidado (scope master)
+  - name: system
+    description: Salud, docs y crash report
 paths:
-  /api/kiosco-config:
+  # ── SYSTEM ──
+  /api/health:
     get:
-      tags: [kiosco]
-      summary: Configuración del kiosco (max_days, promos, precios, branding, etc.)
+      tags: [system]
+      summary: Salud del backend y BD
       responses:
         '200':
-          description: Configuración del kiosco
+          description: ok | degraded
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  config:
-                    $ref: '#/components/schemas/KioscoConfig'
+                  status: { type: string, enum: [ok, degraded] }
+                  db: { type: string }
+                  mode: { type: string }
+  /api/docs.yaml:
+    get:
+      tags: [system]
+      summary: Este documento OpenAPI en YAML
+      responses:
+        '200':
+          description: YAML
+          content:
+            text/yaml: { schema: { type: string } }
+  /api/kiosco-crash:
+    post:
+      tags: [system]
+      summary: Reporte de crash/boot del APK
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type: { type: string, enum: [boot, crash] }
+                sdk: { type: integer }
+                model: { type: string }
+                version: { type: string }
+                log: { type: string }
+      responses:
+        '200': { description: ok }
+
+  # ── KIOSCO PÚBLICO ──
+  /api/catalog:
+    get:
+      tags: [kiosco]
+      summary: Catálogo de tarifas base
+      responses:
+        '200':
+          description: ROOM_TYPES
+          content: { application/json: { schema: { type: object } } }
+  /api/kiosco-config:
+    get:
+      tags: [kiosco]
+      summary: Config del kiosco (merge hotels.config + defaults)
+      responses:
+        '200':
+          description: config
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  config: { $ref: '#/components/schemas/KioscoConfig' }
   /api/types:
     get:
       tags: [kiosco]
-      summary: Tipos de habitación, precios y disponibilidad por producto
+      summary: Tipos, precios y disponibilidad por producto
       parameters:
         - name: product
           in: query
           required: true
-          schema:
-            type: string
-            enum: [momento, amanecida, hospedaje, suite, reserva]
+          schema: { type: string, enum: [momento, amanecida, hospedaje, suite, reserva] }
       responses:
         '200':
-          description: Lista de tipos de habitación
+          description: tipos
           content:
             application/json:
               schema:
                 type: object
                 properties:
-                  product:
-                    type: string
+                  product: { type: string }
                   types:
                     type: array
                     items:
@@ -55,69 +108,297 @@ paths:
                         label: { type: string }
                         desc: { type: string }
                         photo: { type: string }
-                        price:
-                          oneOf: [{ type: number }, { type: 'null' }]
+                        price: { oneOf: [{ type: number }, { type: 'null' }] }
                         free: { type: integer }
                         eligible: { type: boolean }
-                        reason:
-                          oneOf: [{ type: string }, { type: 'null' }]
-                        extras:
-                          type: object
+                        reason: { oneOf: [{ type: string }, { type: 'null' }] }
+                        extras: { type: object }
   /api/orders:
     post:
       tags: [kiosco]
-      summary: Crea una orden desde el kiosco
+      summary: Crea orden desde kiosco (idempotente client_ref)
       requestBody:
         required: true
         content:
           application/json:
-            schema:
-              type: object
+            schema: { $ref: '#/components/schemas/OrderCreate' }
       responses:
         '200':
-          description: Orden creada
-          content:
-            application/json:
-              schema:
-                type: object
+          description: orden creada (o existente si client_ref duplicado)
+          content: { application/json: { schema: { type: object } } }
   /api/kiosco-version:
     get:
       tags: [kiosco]
-      summary: Versión actual del APK del kiosco
+      summary: Versión APK
       responses:
         '200':
-          description: Información de versión
-          content:
-            application/json:
-              schema:
-                type: object
+          description: version
+          content: { application/json: { schema: { type: object, properties: { version: { type: string }, apk: { type: string } } } } }
   /api/kiosco-update:
     get:
       tags: [kiosco]
-      summary: Verificación de actualización del kiosco
+      summary: Verificación de actualización (local + GitHub fallback en APK)
       responses:
         '200':
-          description: Información de actualización
-          content:
-            application/json:
-              schema:
-                type: object
-  /api/admin/hotel/settings:
-    get:
-      tags: [admin]
-      summary: Lee la configuración del hotel
-      security: [{ bearerAuth: [] }]
-      responses:
-        '200':
-          description: Configuración del hotel
-          content:
-            application/json:
-              schema:
-                type: object
+          description: update info
+          content: { application/json: { schema: { type: object, properties: { version: { type: string }, download_url: { type: string }, apk: { type: string } } } } }
+
+  # ── AUTH ──
+  /api/admin/login:
     post:
       tags: [admin]
-      summary: Guarda la configuración del hotel (incluye claves del kiosco)
+      summary: Login por usuario/pass → Bearer 12h
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { username: { type: string }, password: { type: string } }, required: [username, password] } } }
+      responses:
+        '200': { description: token, content: { application/json: { schema: { type: object, properties: { token: { type: string }, username: { type: string }, role: { type: string }, scope: { type: string } } } } } }
+        '401': { description: credenciales inválidas }
+  /api/admin/pin-login:
+    post:
+      tags: [admin]
+      summary: Login por PIN (tablet)
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { pin: { type: string } }, required: [pin] } } }
+      responses:
+        '200': { description: token }
+  /api/admin/logout:
+    post:
+      tags: [admin]
       security: [{ bearerAuth: [] }]
+      summary: Cierra sesión
+      responses: { '200': { description: ok } }
+  /api/admin/me:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Sesión actual
+      responses: { '200': { description: me, content: { application/json: { schema: { type: object, properties: { username: { type: string }, role: { type: string }, scope: { type: string } } } } } } }
+  /api/events:
+    get:
+      tags: [admin]
+      summary: SSE tiempo real (LISTEN/NOTIFY)
+      parameters: [{ name: token, in: query, required: true, schema: { type: string } }]
+      responses: { '200': { description: text/event-stream, content: { 'text/event-stream': { schema: { type: string } } } } }
+
+  # ── ADMIN: Rooms & Orders ──
+  /api/rooms:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Habitaciones del hotel (recepcion,housekeeping,gerencia)
+      responses: { '200': { description: rooms, content: { application/json: { schema: { type: object, properties: { rooms: { type: array, items: { type: object } } } } } } } }
+  /api/rooms/available:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Solo habitaciones libres
+      responses: { '200': { description: rooms libres } }
+  /api/rooms/{id}/status:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Cambia estado (libre/en_limpieza/bloqueado) — FSM
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { status: { type: string, enum: [libre, en_limpieza, bloqueado] } }, required: [status] } } } }
+      responses: { '200': { description: ok } }
+  /api/orders:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Lista órdenes con filtros y paginación
+      parameters:
+        - { name: status, in: query, schema: { type: string } }
+        - { name: product, in: query, schema: { type: string } }
+        - { name: search, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer, default: 50 } }
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+      responses: { '200': { description: paginado } }
+  /api/orders/{id}:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Detalle de orden + payments_history
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: orden } }
+  /api/orders/{id}/assign:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Asigna habitación (auto o room_id)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { room_id: { type: integer } } } } } }
+      responses: { '200': { description: asignada } }
+  /api/orders/{id}/pay:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Confirma pago (efectivo/transferencia, amount para reserva, idempotency_key)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { payment_method: { type: string, enum: [efectivo, transferencia] }, payment_reference: { type: string }, amount: { type: number }, idempotency_key: { type: string } }, required: [payment_method] } } }
+      responses: { '200': { description: pagado } }
+  /api/orders/{id}/cancel:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Anula orden (solo por_asignar/pendiente)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: anulado } }
+  /api/orders/{id}/checkout:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Checkout (solo pagado/confirmada → finalizada + tarea limpieza)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: finalizada } }
+  /api/orders/{id}/extend:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Extiende estadía (1h $5 / 6h $20, solo pagado/confirmada)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { extra: { type: string, enum: ["1h", "6h"] }, payment_method: { type: string }, payment_reference: { type: string }, idempotency_key: { type: string } }, required: [extra, payment_method] } } } }
+      responses: { '200': { description: extendida } }
+  /api/reservations:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Reservas por estado
+      parameters: [{ name: status, in: query, schema: { type: string } }, { name: limit, in: query, schema: { type: integer } }]
+      responses: { '200': { description: reservas } }
+
+  # ── ADMIN: Housekeeping & Incidencias ──
+  /api/housekeeping/tasks:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Tareas de limpieza (filtros status, from, to)
+      parameters: [{ name: status, in: query, schema: { type: string } }, { name: from, in: query, schema: { type: string } }, { name: to, in: query, schema: { type: string } }]
+      responses: { '200': { description: tasks } }
+  /api/housekeeping/tasks/{id}/start:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Inicia limpieza pendiente→en_proceso
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: ok } }
+  /api/housekeeping/tasks/{id}/complete:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Completa limpieza → room libre
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: ok } }
+  /api/housekeeping/tasks/{id}/incident:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Reporta incidencia (pausa tarea)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { notes: { type: string } }, required: [notes] } } } }
+      responses: { '200': { description: incidencia abierta } }
+  /api/housekeeping/tasks/{id}/assign-staff:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Asigna/desasigna personal a tarea
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { staff_name: { type: string, nullable: true } } } } } }
+      responses: { '200': { description: ok } }
+  /api/housekeeping/staff:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Lista personal + avg minutos
+      responses: { '200': { description: staff } }
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Crea/activa personal
+      requestBody: { required: true, content: { application/json: { schema: { type: object, properties: { name: { type: string } }, required: [name] } } } }
+      responses: { '200': { description: creado } }
+  /api/housekeeping/staff/{id}/deactivate:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Desactiva personal (bloquea si tiene tareas activas)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: ok } }
+  /api/incidences:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Incidencias por estado
+      parameters: [{ name: status, in: query, schema: { type: string, enum: [abierta, resuelta] } }]
+      responses: { '200': { description: incidencias } }
+  /api/incidences/{id}/resolve:
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Resuelve incidencia (pausada→en_proceso)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: resuelta } }
+
+  # ── ADMIN: Dashboards & Settings ──
+  /api/dashboard/overview:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Resumen ocupación + attention (to_assign, pending_payments, holds, departures, cleaning)
+      responses: { '200': { description: overview } }
+  /api/dashboard/occupancy:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Ocupación por tipo
+      responses: { '200': { description: occupancy } }
+  /api/dashboard/alerts:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Badges sidebar (to_assign, pending_payments, departures_overdue, cleaning)
+      responses: { '200': { description: alerts } }
+  /api/dashboard/close-report:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Cuadre de caja por día (payments.paid_at)
+      parameters: [{ name: date, in: query, required: true, schema: { type: string, format: date } }]
+      responses: { '200': { description: close-report } }
+  /api/dashboard/daily-report:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Reporte diario completo (gerencia)
+      parameters: [{ name: date, in: query, required: true, schema: { type: string, format: date } }]
+      responses: { '200': { description: daily-report } }
+  /api/audit:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Auditoría
+      parameters:
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: offset, in: query, schema: { type: integer } }
+        - { name: action, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+      responses: { '200': { description: audit } }
+  /api/hotel/settings:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Lee config del hotel (hotels.config)
+      responses: { '200': { description: config } }
+    post:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Guarda config del hotel (merge)
       requestBody:
         required: true
         content:
@@ -136,77 +417,75 @@ paths:
                     max_days_full: { type: integer }
                     suite_durations: { type: object }
                     branding: { type: object }
-      responses:
-        '200':
-          description: Configuración guardada
-          content:
-            application/json:
-              schema:
-                type: object
-  /api/admin/pin-login:
+                    reserva_tarifa: { type: number }
+                    assign_ttl_minutes: { type: integer }
+      responses: { '200': { description: guardado } }
+  # Alias histórico documentado como /api/admin/hotel/settings (mismo handler)
+  /api/admin/hotel/settings:
+    get:
+      tags: [admin]
+      security: [{ bearerAuth: [] }]
+      summary: Alias de /api/hotel/settings (compat)
+      responses: { '200': { description: config } }
     post:
       tags: [admin]
-      summary: Autenticación del staff por PIN
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: Token de sesión
-          content:
-            application/json:
-              schema:
-                type: object
-  /api/docs.yaml:
+      security: [{ bearerAuth: [] }]
+      summary: Alias de /api/hotel/settings (compat)
+      requestBody: { required: true, content: { application/json: { schema: { type: object } } } }
+      responses: { '200': { description: guardado } }
+
+  # ── MASTER ──
+  /api/master/hotels:
     get:
-      summary: Documento OpenAPI (YAML)
-      responses:
-        '200':
-          description: Documento OpenAPI en YAML
-          content:
-            text/yaml: {}
+      tags: [master]
+      security: [{ bearerAuth: [] }]
+      summary: Lista hoteles con ocupación
+      responses: { '200': { description: hoteles } }
+  /api/master/dashboard:
+    get:
+      tags: [master]
+      security: [{ bearerAuth: [] }]
+      summary: Agregados todos los hoteles
+      responses: { '200': { description: dashboard master } }
+  /api/master/orders:
+    get:
+      tags: [master]
+      security: [{ bearerAuth: [] }]
+      summary: Órdenes consolidadas (filtros hotel_id, status, from, to, limit, page)
+      parameters:
+        - { name: hotel_id, in: query, schema: { type: integer } }
+        - { name: status, in: query, schema: { type: string } }
+        - { name: from, in: query, schema: { type: string } }
+        - { name: to, in: query, schema: { type: string } }
+        - { name: limit, in: query, schema: { type: integer } }
+        - { name: page, in: query, schema: { type: integer } }
+      responses: { '200': { description: órdenes master } }
+
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    bearerAuth: { type: http, scheme: bearer, bearerFormat: JWT }
   schemas:
     KioscoConfig:
       type: object
       properties:
-        max_days:
-          type: integer
-          default: 7
-        max_days_full:
-          type: integer
-          default: 15
-        qr_url:
-          type: string
-          default: ""
-        idle_timeout_seconds:
-          type: integer
-          default: 60
-        promos:
-          type: array
-          items:
-            type: object
-            properties:
-              title: { type: string }
-              subtitle: { type: string }
-        price_overrides:
-          type: object
-        branding:
-          type: object
-          properties:
-            hotel: { type: string }
-            tagline: { type: string }
-        suite_durations:
-          type: object
-          properties:
-            momento: { type: integer }
-            amanecida: { type: integer }
-            hospedaje: { type: integer }
+        max_days: { type: integer, default: 7 }
+        max_days_full: { type: integer, default: 15 }
+        qr_url: { type: string, default: "" }
+        idle_timeout_seconds: { type: integer, default: 60 }
+        promos: { type: array, items: { type: object, properties: { title: { type: string }, subtitle: { type: string } } } }
+        price_overrides: { type: object }
+        branding: { type: object, properties: { hotel: { type: string }, tagline: { type: string } } }
+        suite_durations: { type: object, properties: { momento: { type: integer }, amanecida: { type: integer }, hospedaje: { type: integer } } }
+        reserva_tarifa: { type: number }
+        assign_ttl_minutes: { type: integer, default: 30 }
+    OrderCreate:
+      type: object
+      required: [product, room_type, guest_name, client_ref]
+      properties:
+        product: { type: string, enum: [momento, amanecida, hospedaje, suite, reserva] }
+        room_type: { type: string }
+        guest_name: { type: string }
+        id_document: { type: string }
+        client_ref: { type: string, description: idempotencia kiosco }
+        extra: { type: string, enum: ["1h", "6h"], nullable: true }
+        days: { type: integer }

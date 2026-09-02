@@ -1,5 +1,7 @@
 # cyhotel-deploy — Infraestructura Docker (multi-tenant)
 
+> Ver `docs/ARCHITECTURE.md` para C4 y ADRs. Este archivo es el manual operativo.
+
 Despliegue Docker del sistema hotelero multi-tenant. Un solo código backend
 Python ejecutado con tres `APP_MODE` distintos, más PostgreSQL 16 como base
 central.
