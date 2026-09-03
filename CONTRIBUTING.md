@@ -13,11 +13,11 @@ Una sola versión para web + APK + backend:
 | Archivo | Campo |
 |---|---|
 | `web/kiosco/package.json` | `version` |
-| `web/kiosco-version.json` | `version` |
+| `web/kiosco-version.json` | `version` + `versionCode` (además `apk`, `minVersion`) |
 | `android-shell/app/build.gradle` | `versionName` + `versionCode` (incremental) |
 | `android-shell/app/src/main/java/com/hoteldelvalle/kiosco/MainActivity.kt` | `APP_VERSION` |
 
-Bump manual antes de release. El SW cache es `kiosco-v{version}`.
+Bump atómico con `scripts/bump-version.sh <x.y.z>`: valida semver, falla si las 4 fuentes no están sincronizadas, sube `versionCode` +1, muestra el diff y deja el worktree listo SIN commitear ni tagear. El SW cache es `kiosco-v{version}`. `minVersion` es la versión mínima aceptada por OTA; el servidor calcula `sha256` en runtime (no va en el manifiesto).
 
 ## Build
 
@@ -52,4 +52,22 @@ El kiosco verifica update en `GET /api/kiosco-update` (local) y fallback GitHub 
 
 ## Tests
 
-Aún sin suite. Antes de PR: `cd web/kiosco && npm run build` debe pasar `tsc` sin errores; `curl http://localhost:8000/api/health` debe responder `200`.
+Suite BASE (sin dependencias nuevas: `node:assert` + `unittest` stdlib, sin red/DB/docker):
+
+```bash
+# Frontend kiosco: semver OTA (parseVersion/isNewer/gte/shouldInstall)
+cd web/kiosco && npm test
+
+# Backend: pricing + validation + orders (stubs psycopg2, constantes reales de db.py)
+python3 -m unittest discover -s backend/tests
+
+# Higiene del diff (antes de PR)
+git diff --check
+```
+
+Cobertura actual:
+
+- `web/kiosco/tests/version.test.mjs`: compila `src/lib/version.ts` al vuelo con el esbuild local; cubre patch/minor/major, prefijo `v`, segmentos faltantes, orden numérico (`2.0.0 < 10.0.0`), `minVersion` que bloquea y downgrade dirigido permitido.
+- `backend/tests/test_pricing_validation.py`: `pricing.apply_price_override` / `suite_subtotal`, `validation.validate_hotel_config` y `orders.validate_order_payload` / `build_order_times` (casos felices y de error, guard de dobles, constantes reales `ROOM_TYPES` / `AMANECIDA_*` / `HOLD_MINUTES`).
+
+Regla: **todo PR con lógica nueva trae test**. Antes de PR, además: `cd web/kiosco && npm run build` debe pasar `tsc` sin errores; `curl http://localhost:8000/api/health` debe responder `200`. No tocar código fuente solo para hacer pasar un test: si un test revela un bug P0, repórtalo, no lo arregles en el mismo PR.

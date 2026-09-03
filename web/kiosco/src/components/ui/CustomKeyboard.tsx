@@ -49,30 +49,46 @@ export default function CustomKeyboard({ value, onChange, type = 'text', placeho
 
   const rows = type === 'numeric' ? ROWS_NUM : ROWS_TEXT
 
-  const keyH = type === 'numeric' ? 'h-[68px]' : 'h-[56px]'
+  // P1b táctil: teclas con min-height 64px+ y altura fluida.
+  // La clase aporta fallback con svh; el style pisa con dvh donde hay soporte
+  // (mismo patrón svh->dvh que index.css). Así el teclado encaja en 1024x600
+  // horizontal y crece en pantallas más altas sin cambiar props ni conducta.
+  const keyH =
+    type === 'numeric'
+      ? 'min-h-[64px] h-[clamp(64px,10svh,84px)]'
+      : 'min-h-[64px] h-[clamp(64px,8.5svh,76px)]'
+  const keyStyle =
+    type === 'numeric'
+      ? { height: 'clamp(64px, 10dvh, 84px)' }
+      : { height: 'clamp(64px, 8.5dvh, 76px)' }
 
   return (
-    <div className="flex flex-col h-full relative z-20">
-      <div className="flex-1 bg-slate-100 rounded-t-xl p-2.5 pt-2 flex flex-col justify-end gap-2">
+    <div className="flex flex-col h-full min-h-0 w-full max-w-full overflow-hidden relative z-20">
+      <div
+        className="flex-1 min-h-0 bg-[var(--hc-verde-50)] rounded-t-xl p-2.5 pt-2 flex flex-col justify-end gap-1.5 sm:gap-2"
+        style={{ paddingBottom: 'max(0.625rem, env(safe-area-inset-bottom))' }}
+      >
         {rows.map((row, ri) => (
-          <div key={ri} className="flex justify-center gap-2">
+          <div key={ri} className="flex w-full max-w-full justify-center gap-1.5 sm:gap-2">
             {type === 'text' && ri === 0 && (
               <button
                 onPointerDown={(e) => { e.preventDefault(); tap(); setShift(!shift) }}
-                className={cn('tap-scale', keyH, 'min-w-[52px] rounded-xl text-base font-bold transition-colors',
+                style={keyStyle}
+                className={cn('tap-scale touch-manipulation', keyH, 'w-[52px] shrink-0 rounded-xl text-base font-bold transition-colors',
                   shift ? 'bg-navy text-white' : 'bg-white text-navy border border-navy/15')}
               >
                 ⇧
               </button>
             )}
-            {type === 'numeric' && ri === 0 && <div className="min-w-[52px]" />}
+            {type === 'numeric' && ri === 0 && <div className="w-[52px] shrink-0" aria-hidden="true" />}
             {row.map(key => (
               <button
                 key={key}
                 onPointerDown={(e) => { e.preventDefault(); handleKey(key) }}
-                className={cn('tap-scale', keyH, 'min-w-[48px] flex-1 max-w-[72px] rounded-xl text-2xl font-bold transition-colors active:scale-95 shadow-sm',
+                style={keyStyle}
+                className={cn('tap-scale touch-manipulation', keyH, 'min-w-[48px] flex-1 max-w-[72px] rounded-xl text-2xl font-bold transition-colors active:scale-95 shadow-sm',
                   key === 'OK'
-                    ? 'bg-gold text-white text-xl'
+                    ? 'bg-[var(--hc-verde-800)] text-white text-xl'
                     : key === '⌫'
                     ? 'bg-red-100 text-red-600 border border-red-200 text-xl'
                     : 'bg-white text-navy border border-navy/10 hover:bg-navy/5')}
@@ -80,15 +96,16 @@ export default function CustomKeyboard({ value, onChange, type = 'text', placeho
                 {key}
               </button>
             ))}
-            {type === 'text' && ri === 0 && <div className="min-w-[52px]" />}
-            {type === 'numeric' && ri === 0 && <div className="min-w-[52px]" />}
+            {type === 'text' && ri === 0 && <div className="w-[52px] shrink-0" aria-hidden="true" />}
+            {type === 'numeric' && ri === 0 && <div className="w-[52px] shrink-0" aria-hidden="true" />}
           </div>
         ))}
         {type === 'text' && (
-          <div className="flex justify-center gap-2">
+          <div className="flex w-full max-w-full justify-center gap-2">
             <button
               onPointerDown={(e) => { e.preventDefault(); handleKey(' ') }}
-              className={cn('tap-scale', keyH, 'flex-1 max-w-[280px] rounded-xl text-base font-bold bg-white text-navy border border-navy/15')}
+              style={keyStyle}
+              className={cn('tap-scale touch-manipulation', keyH, 'flex-1 max-w-[280px] rounded-xl text-base font-bold bg-white text-navy border border-navy/15')}
             >
               ESPACIO
             </button>

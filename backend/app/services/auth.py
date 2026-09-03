@@ -1,7 +1,9 @@
-"""Auth service — sessions PG (Fase 2) con fallback dict para transición."""
+"""Auth service — sessions PG (Fase 2) con login (Fase 3). Import duro: falla en boot si DB no disponible."""
+import os
 import secrets
 from datetime import timedelta
-from db import db, release_conn, fetch_one, fetch_all
+from db import db, release_conn, fetch_one, fetch_all, verify_password
+from app.routes.common import ApiError
 
 # Compat: dict en memoria para transición; se vaciará cuando PG sea fuente única
 _sessions_mem = {}
@@ -128,3 +130,47 @@ def cleanup_expired():
 
 # Expose mem for compat durante transición
 sessions = _sessions_mem
+
+
+def get_login_user(conn, username, hotel_id, is_master):
+    """Busca usuario para login. Master: hotel_id IS NULL + role master; hotel: hotel_id fijo."""
+    if is_master:
+        return fetch_one(
+            conn,
+            "SELECT * FROM users WHERE hotel_id IS NULL AND username = %s AND role = 'master'",
+            (username,),
+        )
+    return fetch_one(
+        conn, "SELECT * FROM users WHERE hotel_id = %s AND username = %s",
+        (hotel_id, username),
+    )
+
+
+def login_with_password(conn, username, password, hotel_id, is_master):
+    """Valida credenciales y crea sesión. Retorna (token, username, role, scope).
+
+    Lanza ApiError(401, "Usuario o contraseña incorrectos") si falla.
+    No hace commit/audit: el router audita y commitea en la misma txn del login.
+    """
+    username = (username or "").strip()
+    password = password or ""
+    user = get_login_user(conn, username, hotel_id, is_master)
+    if not user or not verify_password(password, username, user["password_hash"]):
+        raise ApiError(401, "Usuario o contraseña incorrectos")
+    scope = "master" if is_master else "hotel"
+    scope_hotel = None if is_master else hotel_id
+    token, _ = create_session(None, user["username"], user["role"], scope_hotel, scope)
+    return token, user["username"], user["role"], scope, user
+
+
+def login_with_pin(pin, hotel_id):
+    """Valida PIN de emergencia (env CYHOTEL_ADMIN_PIN) y crea sesión gerencia.
+
+    Lanza ApiError(401, "PIN incorrecto") si falla. Retorna (token, username, role, scope).
+    """
+    pin = (pin or "").strip()
+    admin_pin = os.environ.get("CYHOTEL_ADMIN_PIN", "12345")
+    if pin != admin_pin:
+        raise ApiError(401, "PIN incorrecto")
+    token, _ = create_session(None, "admin", "gerencia", hotel_id, "hotel")
+    return token, "admin", "gerencia", "hotel"

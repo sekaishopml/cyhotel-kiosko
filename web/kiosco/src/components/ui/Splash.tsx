@@ -13,7 +13,7 @@ export default function Splash({ onDone }: Props) {
   }, [onDone])
 
   return (
-    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-navy to-[#1a2744] overflow-hidden">
+    <div className="h-full flex flex-col items-center justify-center bg-gradient-to-b from-navy to-[#17452F] overflow-hidden">
       <h1 className="font-display text-[length:var(--fs-display)] text-white font-bold tracking-wide">
         {BRAND.hotel}
       </h1>

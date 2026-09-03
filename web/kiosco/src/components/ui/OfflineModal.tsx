@@ -6,7 +6,7 @@ export default function OfflineModal({ onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/60 p-4" onClick={onClose}>
       <div
-        className="animate-pop bg-white rounded-2xl p-7 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)]"
+        className="animate-pop bg-white rounded-2xl p-7 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(18,53,38,0.4)]"
         onClick={e => e.stopPropagation()}
       >
         <svg className="w-20 h-20 mx-auto mb-4" viewBox="0 0 52 52" fill="none">
@@ -23,7 +23,7 @@ export default function OfflineModal({ onClose }: Props) {
 
         <button
           onClick={onClose}
-          className="tap-scale w-full bg-navy text-white rounded-lg py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
+          className="tap-scale w-full bg-navy text-white rounded-lg py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(18,53,38,0.25)]"
         >
           Listo
         </button>

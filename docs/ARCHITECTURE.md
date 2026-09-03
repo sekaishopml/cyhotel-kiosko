@@ -213,7 +213,7 @@ Ver `README-INFRA.md` §Auditoría (deadlock retry 3×, índices, worker por hot
 
 ## 7. Roadmap (post Fase 0)
 
-Fase 1 fundación (`tokens.css`, `packages/shared`, validación config) ✅, Fase 2 BD (RLS fix, sesiones PG, pricing unificado) ✅ — ver backend/app/services/auth.py + pricing.py + FEATURE_MIGRATIONS `sessions`/`suite_product`, Fase 3 backend modular (`backend/app/routes|services`) en curso — ver backend/app/services/* (Fase 3b) y stubs routes (Fase 3a), Fase 3c auditoría DB/docs (actual), Fase 4 frontend (`zustand+tanstack/query`, `react-router`, Workbox), Fase 5 marca (sesión fotos), Fase 6 Android (split MainActivity, PackageInstaller silent).
+Fase 1 fundación (`tokens.css`, `packages/shared`, validación config) ✅, Fase 2 BD (RLS fix, sesiones PG, pricing unificado) ✅ — ver backend/app/services/auth.py + pricing.py + FEATURE_MIGRATIONS `sessions`/`suite_product`, Fase 3 backend modular ✅ 2026-09-03 (`server.py` 3783→1012 líneas, routers funcionales `backend/app/routes/{common,kiosco,admin,master}.py`, `services/dashboard.py`, imports duros, paridad verificada por smoke), Fase 3c auditoría DB/docs (actual), Fase 4 frontend parcial ✅ 2026-09-03 (HashRouter + zustand, TanStack Query descartado — ver pwa-offline.md §8; P2: api-client unificado, IndexedDB, WebP, sin sw legacy), Fase 5 marca (sesión fotos), Fase 6 Android (split MainActivity ✅ parcial vía UpdateManager.kt, PackageInstaller silent ✅).
 
 ## 8. Referencias
 

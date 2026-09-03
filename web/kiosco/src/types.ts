@@ -15,25 +15,10 @@ export interface TypesResponse {
   types: RoomType[]
 }
 
-export interface OrderPayload {
-  product: string
-  room_type: string
-  guest_name: string
-  id_document?: string
-  client_ref: string
-  extra?: string
-  days?: number
-}
-
-export interface OrderResult {
-  order: {
-    id: string
-    room_number: string
-    check_in: string
-    check_out: string
-    subtotal: number
-  }
-}
+// P2: OrderPayload/OrderResult canónicos en @cyhotel/shared
+// (docs/architecture/pwa-offline.md §5). Se re-exportan para compatibilidad
+// con los imports existentes desde './types'.
+export type { OrderPayload, OrderResult } from '@cyhotel/shared'
 
 export interface Plan {
   key: string

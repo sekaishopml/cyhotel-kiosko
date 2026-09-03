@@ -6,6 +6,7 @@ interface Window {
   Android?: {
     exitApp?: () => void
     checkAndUpdate?: () => void
+    downloadUpdate?: (url: string, tag: string, sha256: string, size: number) => void
     getAppVersion?: () => string
   }
 }

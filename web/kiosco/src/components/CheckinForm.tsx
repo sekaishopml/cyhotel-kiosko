@@ -80,8 +80,9 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
     : '3 horas'
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 px-4 pb-3">
-      <div className="shrink-0 bg-white border-l-4 border-gold rounded-lg p-3 mb-3 card-shadow">
+    <div className="flex-1 min-h-0 flex flex-col px-4 pb-3">
+      {/* Resumen compacto arriba: siempre visible, sin scroll */}
+      <div className="shrink-0 bg-white border-l-4 border-gold rounded-lg p-2.5 mb-2 card-shadow">
         <h3 className="text-[0.6rem] font-bold text-navy/40 uppercase tracking-widest mb-2">Resumen de tu reserva</h3>
         <div className="space-y-1">
           <div className="flex justify-between items-center">
@@ -98,17 +99,18 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
           </div>
           <div className="border-t border-navy/10 pt-1 mt-1 flex justify-between items-center">
             <span className="text-[0.9rem] font-bold text-navy">Total</span>
-            <span className="text-xl font-extrabold text-gold">${total}</span>
+            <span className="text-xl font-extrabold text-[var(--hc-verde-800)]">${total}</span>
           </div>
         </div>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col">
-        <div className="shrink-0 space-y-2 mb-3">
+      {/* Centro: ÚNICA región con scroll (campos). El teclado queda fijo abajo. */}
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar">
+        <div className="shrink-0 space-y-2 pb-2">
           <div
             onClick={() => setActiveField('name')}
             className={`rounded-lg border-2 p-2.5 transition-all cursor-pointer ${
-              activeField === 'name' ? 'border-gold shadow-[0_0_0_3px_rgba(212,175,55,0.15)]' : 'border-navy/10'
+              activeField === 'name' ? 'border-gold shadow-[0_0_0_3px_rgba(176,141,87,0.15)]' : 'border-navy/10'
             } ${nameError ? 'border-red-400' : ''}`}
           >
             <p className="text-[0.6rem] font-bold text-navy/40 uppercase mb-0.5">Nombre completo *</p>
@@ -123,7 +125,7 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
           <div
             onClick={() => setActiveField('doc')}
             className={`rounded-lg border-2 p-2.5 transition-all cursor-pointer ${
-              activeField === 'doc' ? 'border-gold shadow-[0_0_0_3px_rgba(212,175,55,0.15)]' : 'border-navy/10'
+              activeField === 'doc' ? 'border-gold shadow-[0_0_0_3px_rgba(176,141,87,0.15)]' : 'border-navy/10'
             } ${docError ? 'border-red-400' : ''}`}
           >
             <div className="flex items-center justify-between mb-1">
@@ -157,56 +159,57 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
             )}
           </div>
         </div>
+      </div>
 
-        <div className="flex-1 min-h-0 relative z-10">
-          {activeField === 'name' ? (
-            <CustomKeyboard
-              value={name}
-              onChange={handleNameChange}
-              type="text"
-              placeholder="TU NOMBRE"
-              label="Nombre"
-              maxLength={40}
-              onSubmit={() => {
-                if (!validateName()) return
-                setNameError(false)
-                setActiveField('doc')
-              }}
-            />
-          ) : docType === 'ci' ? (
-            <CustomKeyboard
-              value={doc}
-              onChange={handleDocChange}
-              type="numeric"
-              label="Cédula"
-              maxLength={DOC_MAX.ci}
-              onSubmit={() => {
-                if (!validateName()) { setNameError(true); setActiveField('name'); return }
-                if (!doc.trim() || validateDoc(doc)) {
-                  onSubmit(name.trim(), doc.trim(), docType)
-                } else {
-                  setDocError(true)
-                }
-              }}
-            />
-          ) : (
-            <CustomKeyboard
-              value={doc}
-              onChange={handleDocChange}
-              type="text"
-              label="Pasaporte"
-              maxLength={DOC_MAX.passport}
-              onSubmit={() => {
-                if (!validateName()) { setNameError(true); setActiveField('name'); return }
-                if (!doc.trim() || validateDoc(doc)) {
-                  onSubmit(name.trim(), doc.trim(), docType)
-                } else {
-                  setDocError(true)
-                }
-              }}
-            />
-          )}
-        </div>
+      {/* Teclado en zona fija abajo (fuera del scroll, con min-h-0) */}
+      <div className="shrink-0 min-h-0 relative z-10">
+        {activeField === 'name' ? (
+          <CustomKeyboard
+            value={name}
+            onChange={handleNameChange}
+            type="text"
+            placeholder="TU NOMBRE"
+            label="Nombre"
+            maxLength={40}
+            onSubmit={() => {
+              if (!validateName()) return
+              setNameError(false)
+              setActiveField('doc')
+            }}
+          />
+        ) : docType === 'ci' ? (
+          <CustomKeyboard
+            value={doc}
+            onChange={handleDocChange}
+            type="numeric"
+            label="Cédula"
+            maxLength={DOC_MAX.ci}
+            onSubmit={() => {
+              if (!validateName()) { setNameError(true); setActiveField('name'); return }
+              if (!doc.trim() || validateDoc(doc)) {
+                onSubmit(name.trim(), doc.trim(), docType)
+              } else {
+                setDocError(true)
+              }
+            }}
+          />
+        ) : (
+          <CustomKeyboard
+            value={doc}
+            onChange={handleDocChange}
+            type="text"
+            label="Pasaporte"
+            maxLength={DOC_MAX.passport}
+            onSubmit={() => {
+              if (!validateName()) { setNameError(true); setActiveField('name'); return }
+              if (!doc.trim() || validateDoc(doc)) {
+                onSubmit(name.trim(), doc.trim(), docType)
+              } else {
+                setDocError(true)
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   )

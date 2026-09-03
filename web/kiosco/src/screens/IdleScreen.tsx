@@ -8,8 +8,8 @@ interface Prices { momento: number; amanecida: number; hospedaje: number; suite:
 const FALLBACK: Prices = { momento: 10, amanecida: 20, hospedaje: 30, suite: 20 }
 
 const SLIDES = [
-  { img: 'img/suite.jpeg' },
-  { img: 'img/habitacion.jpeg' },
+  { img: 'img/suite.jpeg', webp: 'img/suite.webp', w: 720, h: 1600 },
+  { img: 'img/habitacion.jpeg', webp: 'img/habitacion.webp', w: 899, h: 1599 },
 ]
 
 interface Props {
@@ -136,10 +136,17 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
       <div className="absolute inset-0 bg-gradient-to-br from-[#123526] via-[#0f281e] to-[#0a1c12]" />
 
       {/* ===== FOTO DE FONDO ===== */}
+      {/* P2 imágenes (§4): <picture> WebP + JPEG fallback, dims intrínsecas,
+          fetchpriority high solo en este hero; resto de la pantalla sin cambios. */}
       {!imgFailed[slide] && (
         <div key={`bg-${slide}-${kb}`} className={`absolute inset-0 idle-bg ${transitioning ? 'idle-bg-out' : ''}`}>
-          <img src={cur.img} alt="" draggable={false}
-            className="absolute inset-0 w-full h-full object-cover opacity-[0.5] idle-kb-a" />
+          <picture className="contents">
+            <source srcSet={cur.webp} type="image/webp" />
+            <img src={cur.img} alt="" draggable={false}
+              width={cur.w} height={cur.h}
+              decoding="async" fetchPriority="high"
+              className="absolute inset-0 w-full h-full object-cover opacity-[0.5] idle-kb-a" />
+          </picture>
         </div>
       )}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0f281e]/60 via-[#0f281e]/30 to-[#0a1c12]/80" />
@@ -181,7 +188,7 @@ export default function IdleScreen({ onStart, onAdmin, version }: Props) {
             <span className="block idle-plan-name font-display font-bold uppercase text-white leading-none">
               {heroPlan.label}
             </span>
-            <span className="inline-block mt-2 idle-plan-price font-bold text-[#d4af37]">
+            <span className="inline-block mt-2 idle-plan-price font-bold text-[var(--hc-bronce-500)]">
               desde ${heroPlan.from}
             </span>
           </button>

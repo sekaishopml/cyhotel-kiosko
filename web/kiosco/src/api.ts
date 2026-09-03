@@ -1,5 +1,21 @@
 import { TypesResponse, OrderPayload, OrderResult } from './types'
 import { DEFAULT_CONFIG } from './constants'
+import {
+  API_BASE,
+  ApiError,
+  fetchWithTimeout,
+  isExpired as isQueueExpired,
+  mirrorQueueToIdb,
+  QUEUE_CAP,
+  readQueue as readSharedQueue,
+  retryFetch,
+  syncPending as syncPendingShared,
+  writeQueue as writeSharedQueue,
+} from '@cyhotel/shared'
+
+// P2 (docs/architecture/pwa-offline.md §5): fuente única en @cyhotel/shared.
+// Se re-exporta para compatibilidad con los imports existentes.
+export { API_BASE, ApiError, fetchWithTimeout, imgUrl, retryFetch } from '@cyhotel/shared'
 
 export interface KioscoConfig {
   max_days: number
@@ -10,43 +26,6 @@ export interface KioscoConfig {
   price_overrides: Record<string, unknown>
   branding: { hotel: string; tagline: string }
   suite_durations: Record<string, number>
-}
-
-function resolveApiBase(): string {
-  const w = typeof window !== 'undefined' ? (window as any) : undefined
-  const fromWindow = w && w.__API_BASE__
-  const fromEnv = (import.meta.env as any).VITE_API_BASE
-  const fromStorage = typeof localStorage !== 'undefined' ? localStorage.getItem('kiosco_server') : null
-  return (fromWindow || fromEnv || fromStorage || '').trim().replace(/\/+$/, '')
-}
-
-export const API_BASE = resolveApiBase()
-
-const TIMEOUT = 8000
-
-async function fetchWithTimeout(url: string, opts: RequestInit = {}): Promise<Response> {
-  const controller = new AbortController()
-  const timer = setTimeout(() => controller.abort(), TIMEOUT)
-  try {
-    return await fetch(url, { ...opts, signal: controller.signal })
-  } finally {
-    clearTimeout(timer)
-  }
-}
-
-async function retryFetch(url: string, opts: RequestInit = {}, attempts = 3): Promise<Response> {
-  let lastError: Error | null = null
-  for (let i = 0; i < attempts; i++) {
-    try {
-      return await fetchWithTimeout(url, opts)
-    } catch (err) {
-      lastError = err as Error
-      if (i < attempts - 1) {
-        await new Promise(r => setTimeout(r, Math.pow(2, i) * 1000))
-      }
-    }
-  }
-  throw lastError
 }
 
 export async function getTypes(product: string): Promise<TypesResponse> {
@@ -117,7 +96,7 @@ export async function createOrder(payload: OrderPayload): Promise<OrderResult> {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(payload),
   })
-  if (!res.ok) throw new Error(`Error ${res.status}`)
+  if (!res.ok) throw new ApiError(`Error ${res.status}`, res.status)
   return res.json()
 }
 
@@ -130,42 +109,53 @@ export async function checkHealth(): Promise<boolean> {
   }
 }
 
-export async function checkVersion(): Promise<string | null> {
+export interface KioscoUpdateInfo {
+  version: string
+  download_url: string
+  sha256: string
+  size: number
+  minVersion?: string
+}
+
+export async function checkVersion(): Promise<KioscoUpdateInfo | null> {
   try {
-    const res = await fetchWithTimeout(`${API_BASE}/api/kiosco-version`)
+    const res = await fetchWithTimeout(`${API_BASE}/api/kiosco-update`)
     if (!res.ok) return null
     const data = await res.json()
-    return data.version || null
+    if (!data || typeof data.version !== 'string' || !data.version) return null
+    const info: KioscoUpdateInfo = {
+      version: data.version,
+      download_url: typeof data.download_url === 'string' ? data.download_url : '',
+      sha256: typeof data.sha256 === 'string' ? data.sha256 : '',
+      size: typeof data.size === 'number' ? data.size : 0,
+    }
+    if (typeof data.minVersion === 'string' && data.minVersion) {
+      info.minVersion = data.minVersion
+    }
+    return info
   } catch {
     return null
   }
 }
 
-export function imgUrl(photo: string): string {
-  return `${API_BASE}/img/${photo}`
-}
-
-// Offline queue
-const QUEUE_KEY = 'kiosko_offline_queue'
-
-export function enqueueOrder(payload: OrderPayload): void {
-  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]')
-  queue.push({ ...payload, queuedAt: Date.now() })
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(queue))
+// Cola offline P2: lectura/escritura defensiva + tipos desde @cyhotel/shared
+// (cap 50 FIFO, TTL 24h, dead-letter 4xx en syncPending). Persistencia
+// IndexedDB con fallback a localStorage (ver queue-store): el path síncrono
+// escribe localStorage y espeja a IndexedDB sin bloquear; syncPending lee la
+// vista unificada (fusión por client_ref).
+export function enqueueOrder(payload: OrderPayload): boolean {
+  const now = Date.now()
+  const valid = readSharedQueue().filter(q => !isQueueExpired(q.queuedAt, now))
+  while (valid.length >= QUEUE_CAP) valid.shift() // FIFO: descarta el más antiguo
+  valid.push({ ...payload, queuedAt: now })
+  if (!writeSharedQueue(valid)) return false
+  mirrorQueueToIdb(valid)
+  // Verifica persistencia real (modo privado/quota pueden fallar en silencio).
+  return readSharedQueue().some(q => q.client_ref === payload.client_ref)
 }
 
 export async function syncPending(): Promise<void> {
-  const queue = JSON.parse(localStorage.getItem(QUEUE_KEY) || '[]')
-  if (queue.length === 0) return
-  const remaining: typeof queue = []
-  for (const item of queue) {
-    try {
-      const { queuedAt, ...payload } = item
-      await createOrder(payload)
-    } catch {
-      remaining.push(item)
-      break
-    }
-  }
-  localStorage.setItem(QUEUE_KEY, JSON.stringify(remaining))
+  // Inyección P2 (§5): el cliente compartido recibe createOrder; la firma
+  // pública sin argumentos se mantiene (App.tsx y CheckinScreen intactos).
+  return syncPendingShared(createOrder)
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store'
 import { getTypes, getKioscoConfig } from '../api'
 import { RoomType } from '../types'
@@ -6,6 +7,7 @@ import RoomCard from '../components/RoomCard'
 
 export default function RoomScreen() {
   const { selectedPlan, selectedRoom, selectedExtra, selectedDays, selectRoom, selectExtra, selectDays, goBack, goTo, setCatalog } = useStore()
+  const navigate = useNavigate()
   const [rooms, setRooms] = useState<RoomType[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,6 +51,16 @@ export default function RoomScreen() {
     return () => { cancelled = true }
   }, [selectedPlan, retryCount])
 
+  const handleBack = () => {
+    goBack()
+    navigate('/plan')
+  }
+
+  const handleContinue = () => {
+    goTo('checkin')
+    navigate('/checkin')
+  }
+
   const handleRoomClick = (roomKey: string) => {
     if (expandedRoom === roomKey) {
       setExpandedRoom(null)
@@ -81,15 +93,15 @@ export default function RoomScreen() {
   const isSuite = selectedPlan === 'suite'
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full min-h-0 overflow-hidden flex flex-col">
       <div className="shrink-0 px-4 pb-2 pt-1">
         <div className="h-[3px] bg-navy/10 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-gold to-amber-500 rounded-full progress-fill" style={{ width: '66%' }} />
+          <div className="h-full bg-[var(--hc-verde-800)] rounded-full progress-fill" style={{ width: '66%' }} />
         </div>
       </div>
 
       <div className="shrink-0 px-4 py-2 flex items-center gap-3">
-        <button onClick={goBack} className="tap-scale w-12 h-12 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
+        <button onClick={handleBack} className="tap-scale w-12 h-12 rounded-full bg-navy/8 flex items-center justify-center text-navy hover:bg-navy/15 transition-colors">
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
           </svg>
@@ -99,7 +111,7 @@ export default function RoomScreen() {
         </h2>
       </div>
 
-      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar px-4 pb-4">
+      <div className="flex-1 min-h-0 overflow-y-auto no-scrollbar kiosk-scroll px-4 pb-4">
         {loading && (
           <div className="flex flex-col gap-2">
             {[1, 2, 3, 4].map(i => (
@@ -140,7 +152,7 @@ export default function RoomScreen() {
         )}
 
         {!loading && !error && rooms.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="grid grid-cols-1 gap-2 tablet-landscape:grid-cols-2">
             {rooms.map((room, i) => (
               <div
                 key={room.key}
@@ -162,7 +174,7 @@ export default function RoomScreen() {
       </div>
 
       {selectedRoom && (
-        <div className={`shrink-0 border-t px-4 py-3 bottom-bar ${
+        <div className={`shrink-0 border-t px-4 py-3 bottom-bar kiosk-cta-safe ${
           isSuite ? 'bg-navy border-navy/30' : 'bg-gold/10 border-gold/20'
         }`}>
           {hasExtras && isSuite && (
@@ -245,7 +257,7 @@ export default function RoomScreen() {
               <p className={`font-display text-3xl font-bold leading-none ${isSuite ? 'text-gold' : 'text-navy'}`}>${total}</p>
             </div>
             <button
-              onClick={() => goTo('checkin')}
+              onClick={handleContinue}
               className={`tap-scale text-white rounded-lg px-8 py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide transition-colors shadow-lg ${
                 isSuite
                   ? 'bg-gold hover:bg-gold/90 shadow-gold/25'

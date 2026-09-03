@@ -28,7 +28,7 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, s
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-navy/40 backdrop-blur-sm p-4" onClick={onClose}>
       <div
-        className="animate-pop bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(15,23,42,0.4)] overflow-y-auto no-scrollbar max-h-full"
+        className="animate-pop bg-white rounded-2xl p-6 max-w-sm w-full text-center shadow-[0_24px_60px_-20px_rgba(18,53,38,0.4)] overflow-y-auto no-scrollbar max-h-[calc(100dvh-2rem)]"
         onClick={e => e.stopPropagation()}
       >
         <svg className="w-16 h-16 mx-auto mb-3" viewBox="0 0 52 52">
@@ -58,7 +58,7 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, s
           </p>
           <div className="pt-2 border-t border-navy/10 flex items-baseline gap-2">
             <span className="font-bold text-navy text-[length:var(--fs-body)]">TOTAL:</span>
-            <span className="font-extrabold text-gold text-3xl">${subtotal}</span>
+            <span className="font-extrabold text-[var(--hc-verde-800)] text-3xl">${subtotal}</span>
           </div>
         </div>
 
@@ -70,9 +70,9 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, s
         </button>
 
         {showQr && (
-          <div className="mt-3 bg-white rounded-xl p-3 border border-gold/40 shadow-[0_4px_20px_rgba(212,175,116,0.25)] flex flex-col items-center gap-2">
+          <div className="mt-3 bg-white rounded-xl p-3 border border-gold/40 shadow-[0_4px_20px_rgba(176,141,87,0.25)] flex flex-col items-center gap-2">
             {qrValue ? (
-              <QRCodeSVG value={qrValue} size={160} fgColor="#0F172A" bgColor="#FFFFFF" />
+              <QRCodeSVG value={qrValue} size={160} fgColor="#123526" bgColor="#FFFFFF" />
             ) : (
               <div className="w-[160px] h-[160px] flex items-center justify-center text-xs text-navy/40">Sin código</div>
             )}
@@ -82,7 +82,7 @@ export default function ConfirmModal({ orderId, roomNumber, checkIn, checkOut, s
 
         <button
           onClick={onClose}
-          className="tap-scale mt-3 w-full bg-navy text-white rounded-lg py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(15,23,42,0.25)]"
+          className="tap-scale mt-3 w-full bg-navy text-white rounded-lg py-3 font-extrabold text-[length:var(--fs-body)] uppercase tracking-wide hover:bg-navy/90 transition-colors shadow-[0_4px_20px_rgba(18,53,38,0.25)]"
         >
           Cerrar
         </button>

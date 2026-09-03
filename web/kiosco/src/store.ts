@@ -1,6 +1,10 @@
-import { useState, useCallback, createContext, useContext, useMemo, createElement } from 'react'
+import { create } from 'zustand'
 import { AppScreen, RoomType } from './types'
 
+// Fase 4-parcial: mismo estado/acciones que el Context anterior, ahora en zustand.
+// La navegación URL vive en react-router (HashRouter en App.tsx); `screen` se
+// mantiene como espejo de la ruta para no tocar la lógica existente
+// (StepBar, idle-timer, guards) y `navDir` sigue alimentando slide-in-left/right.
 interface StoreState {
   screen: AppScreen
   selectedPlan: string | null
@@ -21,10 +25,13 @@ const INITIAL: StoreState = {
   navDir: 'forward',
 }
 
+function screenToStep(screen: AppScreen): number {
+  return screen === 'plan' ? 0 : screen === 'room' ? 1 : 2
+}
+
 interface Store extends StoreState {
   step: number
-  navDir: 'forward' | 'back' | null
-  goTo: (screen: AppScreen) => void
+  goTo: (screen: AppScreen, dir?: 'forward' | 'back' | null) => void
   selectPlan: (planKey: string) => void
   selectRoom: (roomKey: string) => void
   selectExtra: (extra: string | null) => void
@@ -34,69 +41,61 @@ interface Store extends StoreState {
   goHome: () => void
 }
 
-const StoreContext = createContext<Store | null>(null)
+export const useStore = create<Store>()((set) => ({
+  ...INITIAL,
+  step: screenToStep(INITIAL.screen),
 
-export function StoreProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<StoreState>(INITIAL)
+  goTo: (screen: AppScreen, dir: 'forward' | 'back' | null = 'forward') => {
+    set({ screen, navDir: dir, step: screenToStep(screen) })
+  },
 
-  const goTo = useCallback((screen: AppScreen, dir: 'forward' | 'back' | null = 'forward') => {
-    setState(s => ({ ...s, screen, navDir: dir }))
-  }, [])
+  selectPlan: (planKey: string) => {
+    set({
+      selectedPlan: planKey,
+      selectedRoom: null,
+      selectedExtra: null,
+      selectedDays: 1,
+      screen: 'room',
+      navDir: 'forward',
+      step: 1,
+    })
+  },
 
-  const selectPlan = useCallback((planKey: string) => {
-    setState(s => ({ ...s, selectedPlan: planKey, selectedRoom: null, selectedExtra: null, selectedDays: 1, screen: 'room', navDir: 'forward' }))
-  }, [])
+  selectRoom: (roomKey: string) => {
+    set({ selectedRoom: roomKey })
+  },
 
-  const selectRoom = useCallback((roomKey: string) => {
-    setState(s => ({ ...s, selectedRoom: roomKey }))
-  }, [])
+  selectExtra: (extra: string | null) => {
+    set({ selectedExtra: extra })
+  },
 
-  const selectExtra = useCallback((extra: string | null) => {
-    setState(s => ({ ...s, selectedExtra: extra }))
-  }, [])
+  selectDays: (days: number) => {
+    set({ selectedDays: days })
+  },
 
-  const selectDays = useCallback((days: number) => {
-    setState(s => ({ ...s, selectedDays: days }))
-  }, [])
+  setCatalog: (types: RoomType[]) => {
+    set({ catalog: types })
+  },
 
-  const setCatalog = useCallback((types: RoomType[]) => {
-    setState(s => ({ ...s, catalog: types }))
-  }, [])
-
-  const goBack = useCallback(() => {
-    setState(s => {
-      if (s.screen === 'checkin') return { ...s, screen: 'room', navDir: 'back' }
-      if (s.screen === 'room') return { ...s, screen: 'plan', selectedRoom: null, selectedExtra: null, selectedDays: 1, navDir: 'back' }
+  goBack: () => {
+    set((s) => {
+      if (s.screen === 'checkin') return { ...s, screen: 'room', navDir: 'back', step: 1 }
+      if (s.screen === 'room')
+        return {
+          ...s,
+          screen: 'plan',
+          selectedRoom: null,
+          selectedExtra: null,
+          selectedDays: 1,
+          navDir: 'back',
+          step: 0,
+        }
       return s
     })
-  }, [])
+  },
 
-  const goHome = useCallback(() => {
-    setState(INITIAL)
-    setTimeout(() => setState(s => ({ ...s, screen: 'plan', navDir: 'back' })), 0)
-  }, [])
-
-  const step = state.screen === 'plan' ? 0 : state.screen === 'room' ? 1 : 2
-
-  const value = useMemo(() => ({
-    ...state,
-    step,
-    navDir: state.navDir ?? null,
-    goTo,
-    selectPlan,
-    selectRoom,
-    selectExtra,
-    selectDays,
-    setCatalog,
-    goBack,
-    goHome,
-  }), [state, step, goTo, selectPlan, selectRoom, selectExtra, selectDays, setCatalog, goBack, goHome])
-
-  return createElement(StoreContext.Provider, { value }, children)
-}
-
-export function useStore(): Store {
-  const ctx = useContext(StoreContext)
-  if (!ctx) throw new Error('useStore must be used within StoreProvider')
-  return ctx
-}
+  goHome: () => {
+    set({ ...INITIAL, step: screenToStep(INITIAL.screen) })
+    setTimeout(() => set({ screen: 'plan', navDir: 'back', step: 0 }), 0)
+  },
+}))

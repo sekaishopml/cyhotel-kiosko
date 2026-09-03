@@ -1,6 +1,9 @@
 import { useEffect, useState, useRef } from 'react'
+import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom'
 import { useStore } from './store'
-import { syncPending, getKioscoConfig } from './api'
+import { AppScreen } from './types'
+import { syncPending, getKioscoConfig, checkVersion } from './api'
+import { shouldInstall } from './lib/version'
 import Header from './components/ui/Header'
 import StepBar from './components/ui/StepBar'
 import Splash from './components/ui/Splash'
@@ -12,15 +15,72 @@ import IdleScreen from './screens/IdleScreen'
 const ADMIN_PIN = '12345'
 const APP_VERSION = import.meta.env.PACKAGE_VERSION || '1.1.8'
 
+// Fase 4-parcial: HashRouter (ver reporte). La ruta es la URL; `screen` del
+// store se mantiene como espejo para no tocar la lógica del shell
+// (StepBar, idle-timer, bloqueos) ni las animaciones slide-in por navDir.
+const PATH_SCREEN: Record<string, AppScreen> = {
+  '/splash': 'splash',
+  '/plan': 'plan',
+  '/room': 'room',
+  '/checkin': 'checkin',
+}
+
+// Sincroniza store.screen con la URL (deep-link, back del navegador).
+// Las navegaciones normales ya actualizan el store antes de navegar,
+// así que aquí normalmente es no-op.
+function RouteSync() {
+  const location = useLocation()
+  const screen = useStore((s) => s.screen)
+  const goTo = useStore((s) => s.goTo)
+  useEffect(() => {
+    const target = PATH_SCREEN[location.pathname] ?? 'splash'
+    if (target !== screen) {
+      const order: AppScreen[] = ['plan', 'room', 'checkin']
+      const cur = order.indexOf(screen)
+      const nxt = order.indexOf(target)
+      const dir = cur !== -1 && nxt !== -1 && nxt < cur ? 'back' : 'forward'
+      goTo(target, dir)
+    }
+  }, [location.pathname, screen, goTo])
+  return null
+}
+
+// Guard: /room exige plan → redirect a /plan.
+function RequirePlan({ children }: { children: React.ReactElement }) {
+  const selectedPlan = useStore((s) => s.selectedPlan)
+  if (!selectedPlan) return <Navigate to="/plan" replace />
+  return children
+}
+
+// Guard: /checkin exige plan+room → redirect a /plan.
+function RequireCheckin({ children }: { children: React.ReactElement }) {
+  const selectedPlan = useStore((s) => s.selectedPlan)
+  const selectedRoom = useStore((s) => s.selectedRoom)
+  if (!selectedPlan || !selectedRoom) return <Navigate to="/plan" replace />
+  return children
+}
+
 export default function App() {
+  return (
+    <HashRouter>
+      <Shell />
+    </HashRouter>
+  )
+}
+
+function Shell() {
   const { screen, step, goTo, navDir } = useStore()
+  const navigate = useNavigate()
+  const location = useLocation()
   const [showPin, setShowPin] = useState(false)
   const [showAdmin, setShowAdmin] = useState(false)
   const [pinInput, setPinInput] = useState('')
   const [pinError, setPinError] = useState(false)
   const [updateStatus, setUpdateStatus] = useState<'idle' | 'checking' | 'ok' | 'available' | 'error' | 'downloading' | 'installing' | 'cancelled'>('idle')
   const [updateVersion, setUpdateVersion] = useState('')
+  const [updateMeta, setUpdateMeta] = useState<{ downloadUrl: string; sha256: string; size: number } | null>(null)
   const [updateProgress, setUpdateProgress] = useState(0)
+  const [swUpdate, setSwUpdate] = useState(false)
   const [showServerConfig, setShowServerConfig] = useState(false)
   const [serverUrl, setServerUrl] = useState(() => localStorage.getItem('kiosco_server') || window.location.origin)
   const pinRef = useRef<HTMLInputElement>(null)
@@ -71,6 +131,12 @@ export default function App() {
   }, [])
 
   useEffect(() => {
+    const onSwUpdated = () => setSwUpdate(true)
+    window.addEventListener('kiosco:sw-updated', onSwUpdated)
+    return () => window.removeEventListener('kiosco:sw-updated', onSwUpdated)
+  }, [])
+
+  useEffect(() => {
     let active = true
     getKioscoConfig().then(c => {
       if (!active) return
@@ -118,6 +184,7 @@ export default function App() {
 
   const handleSplashDone = () => {
     goTo('plan')
+    navigate('/plan')
     setShowIdle(true)
   }
 
@@ -133,22 +200,34 @@ export default function App() {
   }
 
   const handleCheckUpdate = () => {
-    if (window.Android?.checkAndUpdate) {
-      window.Android.checkAndUpdate()
-      return
-    }
     setUpdateStatus('checking')
-    fetch('https://api.github.com/repos/sekaishopml/cyhotel-kiosko/releases/latest', {
-      headers: { 'Accept': 'application/vnd.github.v3+json' }
-    }).then(r => r.json()).then(data => {
-      const tag = data.tag_name || ''
-      if (tag && tag !== `v${APP_VERSION}`) {
-        setUpdateVersion(tag)
+    // Fuente: LAN (/api/kiosco-update). Semver estricto, sin GitHub directo desde la web.
+    checkVersion().then(info => {
+      if (info && shouldInstall(info.version, APP_VERSION, info.minVersion)) {
+        setUpdateVersion(info.version)
+        setUpdateMeta({ downloadUrl: info.download_url, sha256: info.sha256, size: info.size })
         setUpdateStatus('available')
-      } else {
+      } else if (info) {
         setUpdateStatus('ok')
+      } else {
+        setUpdateStatus('error')
       }
     }).catch(() => setUpdateStatus('error'))
+  }
+
+  const hasNativeUpdater = typeof window.Android?.downloadUpdate === 'function'
+
+  const handleDownloadInstall = () => {
+    if (hasNativeUpdater && updateMeta && updateVersion) {
+      try {
+        window.Android!.downloadUpdate!(updateMeta.downloadUrl, updateVersion, updateMeta.sha256, updateMeta.size)
+      } catch {
+        setUpdateStatus('error')
+      }
+      return
+    }
+    // Fallback navegador: la LAN es la fuente — la versión + URL quedan
+    // visibles en el panel para descarga manual (sin GitHub directo).
   }
 
   const handleSaveServer = () => {
@@ -158,12 +237,29 @@ export default function App() {
     window.location.reload()
   }
 
-  if (screen === 'splash') {
-    return <Splash onDone={handleSplashDone} />
+  const isSplashRoute = location.pathname === '/splash'
+  const isPlanRoute = location.pathname === '/plan'
+
+  if (isSplashRoute) {
+    return (
+      <>
+        <RouteSync />
+        <Splash onDone={handleSplashDone} />
+      </>
+    )
   }
 
   return (
-    <div className="h-full flex flex-col bg-cream">
+    <div className="kiosk-shell bg-cream">
+      <RouteSync />
+      {swUpdate && (
+        <button
+          onClick={() => window.location.reload()}
+          className="fixed top-0 left-0 right-0 z-[200] w-full px-4 py-3 bg-navy text-white text-sm font-semibold text-center shadow-lg"
+        >
+          Nueva vista disponible — toque para recargar
+        </button>
+      )}
       {showIdle && (
         <IdleScreen
           onStart={() => setShowIdle(false)}
@@ -173,14 +269,19 @@ export default function App() {
       )}
       {!showIdle && (
         <>
-          {screen === 'plan' && <Header />}
-          {screen === 'plan' && <StepBar step={step} />}
-          <div className={`flex-1 min-h-0 overflow-hidden pointer-events-auto ${navDir === 'back' ? 'slide-in-left' : 'slide-in-right'}`} key={screen}>
-            {screen === 'plan' && <PlanScreen />}
-            {screen === 'room' && <RoomScreen />}
-            {screen === 'checkin' && <CheckinScreen />}
+          {isPlanRoute && <Header />}
+          {isPlanRoute && <StepBar step={step} />}
+          <div className={`kiosk-content pointer-events-auto ${navDir === 'back' ? 'slide-in-left' : 'slide-in-right'}`} key={location.pathname}>
+            <Routes>
+              <Route path="/plan" element={<PlanScreen />} />
+              <Route path="/room" element={<RequirePlan><RoomScreen /></RequirePlan>} />
+              <Route path="/checkin" element={<RequireCheckin><CheckinScreen /></RequireCheckin>} />
+              <Route path="/" element={<Navigate to="/splash" replace />} />
+              <Route path="*" element={<Navigate to="/splash" replace />} />
+            </Routes>
           </div>
-          <footer className="shrink-0 text-center py-1 bg-cream relative" style={{ pointerEvents: 'none' }}>
+          {/* Mantenimiento: punto mínimo superpuesto, sin ocupar layout ni causar desborde */}
+          <div className="kiosk-maint" style={{ pointerEvents: 'none' }}>
             <button
               onPointerDown={(e) => {
                 e.stopPropagation()
@@ -188,12 +289,13 @@ export default function App() {
                 e.nativeEvent.stopImmediatePropagation()
                 setShowPin(true)
               }}
-              className="inline-flex items-center justify-center w-fit mx-auto px-2 py-0 text-[0.5rem] text-navy/25 font-semibold hover:text-navy/50 transition-colors leading-none"
+              aria-label="Mantenimiento"
+              className="kiosk-maint-btn"
               style={{ pointerEvents: 'auto', touchAction: 'none' }}
             >
               v{APP_VERSION}
             </button>
-          </footer>
+          </div>
         </>
       )}
 
@@ -264,7 +366,7 @@ export default function App() {
 
             <div className="space-y-3">
               <button
-                onClick={handleCheckUpdate}
+                onClick={updateStatus === 'available' ? handleDownloadInstall : handleCheckUpdate}
                 disabled={updateStatus === 'checking' || updateStatus === 'downloading' || updateStatus === 'installing'}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-navy/10 hover:bg-navy/5 transition-colors text-left"
               >
@@ -290,6 +392,12 @@ export default function App() {
                   {updateStatus === 'error' && <div className="text-xs text-red-500 mt-0.5">Error al verificar</div>}
                 </div>
               </button>
+              {updateStatus === 'available' && !hasNativeUpdater && updateMeta?.downloadUrl && (
+                <div className="text-xs text-navy/60 px-1">
+                  <div className="font-semibold">Descarga manual desde la LAN:</div>
+                  <div className="font-mono break-all">{updateMeta.downloadUrl}</div>
+                </div>
+              )}
 
               <button
                 onClick={() => setShowServerConfig(true)}
@@ -305,7 +413,7 @@ export default function App() {
                     window.Android.exitApp()
                   } else {
                     window.close()
-                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#0F172A;text-align:center"><div><h2 style="font-size:1.5rem;font-weight:bold">Kiosco cerrado</h2><p style="opacity:.5;margin-top:.5rem">Puede apagar el dispositivo</p></div></div>'
+                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif;color:#123526;text-align:center"><div><h2 style="font-size:1.5rem;font-weight:bold">Kiosco cerrado</h2><p style="opacity:.5;margin-top:.5rem">Puede apagar el dispositivo</p></div></div>'
                   }
                 }}
                 className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-red-200 hover:bg-red-50 transition-colors text-left"

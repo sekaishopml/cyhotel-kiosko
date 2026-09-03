@@ -7,6 +7,7 @@ import os
 
 from db import ROOM_TYPES, fetch_one, fetch_all
 from db import exec as db_exec
+from app.routes.common import ApiError
 
 # Paths — replican server.py BASE_DIR/STORAGE_DIR sin importar server
 _BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
@@ -51,24 +52,32 @@ def list_available(conn, hotel_id):
     return [room_dict(conn, r, hotel_id) for r in rows]
 
 def set_room_status(conn, hotel_id, room_id, status, reason, username):
-    """Valida FSM y muta rooms + cleaning_tasks. Retorna {room, task}."""
+    """Valida FSM y muta rooms + cleaning_tasks. Retorna {room, task}.
+
+    Mensajes y SQL idénticos a server.py:set_room_status (contrato v2).
+    Lanza ApiError(400/404). No commitea/audita: el router lo hace.
+    """
     if status not in ("libre", "en_limpieza", "bloqueado"):
-        raise ValueError("status debe ser: libre, en_limpieza o bloqueado")
+        raise ApiError(400, "status debe ser: libre, en_limpieza o bloqueado")
     reason = reason.strip() if isinstance(reason, str) else ""
     if len(reason) > 200:
-        raise ValueError("reason no puede superar los 200 caracteres")
+        raise ApiError(400, "reason no puede superar los 200 caracteres")
     if status != "bloqueado":
         reason = ""
 
     room = fetch_one(conn, "SELECT * FROM rooms WHERE id = %s FOR UPDATE", (room_id,))
     if not room:
-        raise ValueError("Cuarto no encontrado:404")
+        raise ApiError(404, "Cuarto no encontrado")
     old = room["status"]
     if old == "ocupado":
-        raise ValueError("El cuarto está ocupado por una orden activa; use checkout o anule la orden primero")
+        raise ApiError(400, "El cuarto está ocupado por una orden activa; use checkout o anule la orden primero")
     valid = ROOM_STATUS_TRANSITIONS.get(old, ())
     if old == status or status not in valid:
-        raise ValueError(f"Transición inválida: {old} -> {status}. Desde '{old}' válidas: {', '.join(valid) or 'ninguna'}")
+        raise ApiError(
+            400,
+            f"Transición inválida: {old} -> {status}. "
+            f"Desde '{old}' las transiciones válidas son: {', '.join(valid) or 'ninguna'}",
+        )
     if old == "en_limpieza" and status == "libre":
         active = fetch_one(
             conn,
@@ -76,11 +85,13 @@ def set_room_status(conn, hotel_id, room_id, status, reason, username):
             (room_id,),
         )
         if active:
-            raise ValueError(f"Hay una tarea de limpieza activa (#{active['id']}). Completela o marque incidencia antes de liberar")
+            raise ApiError(
+                400,
+                f"Hay una tarea de limpieza activa (#{active['id']}). Completela o marque incidencia antes de liberar la habitación",
+            )
 
     db_exec(conn, "UPDATE rooms SET status = %s WHERE id = %s", (status, room_id))
-    # room_history usa current_hotel_id() en server.py; aquí insertamos con hotel_id explícito para no depender de RLS var
-    db_exec(conn, "INSERT INTO room_status_history (hotel_id, room_id, status) VALUES (%s, %s, %s)", (hotel_id, room_id, status))
+    db_exec(conn, "INSERT INTO room_status_history (hotel_id, room_id, status) VALUES ((SELECT current_hotel_id()), %s, %s)", (room_id, status))
 
     created_task = None
     if status == "en_limpieza":

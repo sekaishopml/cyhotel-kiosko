@@ -42,10 +42,24 @@
   --hc-aviso-700: #9C7A1E;
   --hc-aviso-100: #F6ECD0;
 
-  /* Compatibilidad legacy — mapea tokens viejos a nuevos */
+  /* Compatibilidad legacy — mapea tokens viejos a nuevos.
+     OJO: `--gold` es alias legacy a verde-800 (texto/bordes activos), NO al
+     bronce. El `gold` de tailwind.config.js (#B08D57) sí es el acento bronce
+     (solo precio ≥24px, nunca CTA). Valores intencionalmente distintos: no
+     unificar sin ADR (rompería snapshots). Ver docs/brand/DECISION.md §2. */
   --navy: var(--hc-verde-900);
   --gold: var(--hc-verde-800);
   --cream: var(--hc-blanco);
+
+  /* Aliases semánticos P1c 70/20/10 (DECISION.md §2) — usar estos en código nuevo */
+  --hc-surface: var(--hc-blanco);
+  --hc-surface-alt: var(--hc-papel);
+  --hc-surface-dark: var(--hc-verde-900);
+  --hc-ink: var(--hc-verde-900);
+  --hc-brand: var(--hc-verde-800);
+  --hc-brand-hover: var(--hc-verde-700);
+  --hc-accent: var(--hc-bronce-500);
+  --hc-line: var(--hc-verde-15);
 
   /* Radios y sombras (02) */
   --r-sm: 4px;

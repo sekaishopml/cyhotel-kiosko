@@ -21,23 +21,14 @@ from datetime import datetime, timedelta
 from zoneinfo import ZoneInfo
 
 # Must use imports from db (task requirement) — mantienen RLS + constantes compartidas
-from db import ROOM_TYPES, AMANECIDA_ENTRY, AMANECIDA_EXIT, HOLD_MINUTES, fetch_one
+from db import ROOM_TYPES, AMANECIDA_ENTRY, AMANECIDA_EXIT, HOLD_MINUTES, fetch_one, fetch_all
+from db import exec as db_exec
 
-# pricing helpers reutilizables (si existe Fase 2)
-try:  # pragma: no cover - import opcional para py_compile sin PYTHONPATH completo
-    from app.services.pricing import apply_price_override as _pricing_apply
-    from app.services.pricing import suite_subtotal as _pricing_suite_subtotal
-    from app.services.pricing import get_price_overrides as _pricing_get_overrides
-except Exception:  # fallback si pricing aun no cargado o path distinto
-    try:
-        from pricing import apply_price_override as _pricing_apply  # type: ignore
-        from pricing import suite_subtotal as _pricing_suite_subtotal  # type: ignore
-    except Exception:
-        _pricing_apply = None  # type: ignore
-        _pricing_suite_subtotal = None  # type: ignore
-        _pricing_get_overrides = None  # type: ignore
-    else:
-        _pricing_get_overrides = None  # type: ignore
+# pricing helpers reutilizables — import duro Fase 3 (fallar en boot si rompe)
+from app.services.pricing import apply_price_override as _pricing_apply
+from app.services.pricing import suite_subtotal as _pricing_suite_subtotal
+from app.services.pricing import get_price_overrides as _pricing_get_overrides
+from app.routes.common import ApiError
 
 # ---------------------------------------------------------------------------
 # Constantes — replicadas localmente para import-safe (tambien importadas de db)
@@ -509,3 +500,112 @@ def build_order_result(product, room_type, guest_name, id_document, client_ref, 
         "client_ref": validated["client_ref"],
         "info": info,
     }
+
+
+# ---------------------------------------------------------------------------
+# Persistencia — Fase 3: INSERT/UPDATE con mismo SQL/mensajes que server.py.
+# Reutilizan validate/build_order_times. No commitean: el router commitea,
+# audita y emite (pg_notify/SSE) en la misma txn. Lanzan ApiError(400/404).
+# ---------------------------------------------------------------------------
+
+def _parse_id(value, name="id de orden inválido"):
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        raise ApiError(400, name)
+
+
+def assign_room_candidate(conn, room_type):
+    """Reserva la primera libre del tipo (FOR UPDATE) y la marca ocupado.
+
+    Copia exacta server.py:_assign_room. Retorna row de rooms.
+    """
+    row = fetch_one(
+        conn,
+        """
+        SELECT * FROM rooms WHERE type = %s AND status = 'libre'
+        ORDER BY CASE WHEN number = 'Suite' THEN 1 ELSE 0 END,
+                 CASE WHEN number ~ '^[0-9]+$' THEN number::INTEGER ELSE 0 END
+        LIMIT 1 FOR UPDATE
+        """,
+        (room_type,),
+    )
+    if not row:
+        raise ApiError(400, f"No hay habitaciones libres de tipo '{room_type}'")
+    db_exec(conn, "UPDATE rooms SET status = 'ocupado' WHERE id = %s", (row["id"],))
+    db_exec(
+        conn,
+        "INSERT INTO room_status_history (hotel_id, room_id, status) "
+        "VALUES ((SELECT current_hotel_id()), %s, %s)",
+        (row["id"], "ocupado"),
+    )
+    return row
+
+
+def persist_create_order(conn, hotel_id, data, overrides):
+    """Crea orden por_asignar. Retorna (order_id, is_duplicate, existing_row).
+
+    - Idempotencia por client_ref (SELECT previo + ON CONFLICT).
+    - Reserva: INSERT sin hours, subtotal 0 (copia server.py).
+    - Resto: validate + build_order_times (reutiliza cálculo central).
+    Lanza ApiError(400) con mensajes de server.py.
+    """
+    if not isinstance(data, dict):
+        raise ApiError(400, "payload debe ser un objeto")
+    product = (data.get("product") or "").strip()
+    # Mensaje exacto server.py:create_order (sin 'suite' en la lista)
+    if product not in ORDER_PRODUCTS:
+        raise ApiError(400, "product inválido (momento, amanecida, hospedaje, reserva)")
+    guest_name = (data.get("guest_name") or "").strip()
+    id_document = (data.get("id_document") or "").strip() or None
+    if not guest_name:
+        raise ApiError(400, "guest_name es obligatorio")
+    room_type = (data.get("room_type") or "").strip()
+    if room_type not in ROOM_TYPES:
+        raise ApiError(400, "room_type inválido")
+    client_ref = (data.get("client_ref") or "").strip() or None
+
+    if client_ref:
+        try:
+            existing = fetch_one(conn, "SELECT * FROM orders WHERE client_ref = %s", (client_ref,))
+        except Exception:
+            existing = None
+        if existing:
+            return None, True, existing
+
+    if product == "reserva":
+        check_in_dt = _now()
+        check_out_dt = check_in_dt + timedelta(hours=1)
+        row = db_exec(
+            conn,
+            "INSERT INTO orders (hotel_id, guest_name, id_document, product, room_type, "
+            "check_in, check_out, subtotal, status, payment_method, client_ref) "
+            "VALUES (%s, %s, %s, 'reserva', %s, %s, %s, 0, 'por_asignar', 'pendiente', %s) "
+            "ON CONFLICT (hotel_id, client_ref) DO NOTHING RETURNING id",
+            (hotel_id, guest_name, id_document, room_type, check_in_dt, check_out_dt, client_ref),
+        )
+        if not row:
+            existing = fetch_one(conn, "SELECT * FROM orders WHERE client_ref = %s", (client_ref,))
+            return None, True, existing
+        return row[0]["id"], False, None
+
+    # No-reserva: validación + cálculo central reutilizado
+    try:
+        built = build_order_result(product, room_type, guest_name, id_document, client_ref, hotel_id, conn, overrides or {}, data)
+    except ValueError as e:
+        raise ApiError(400, str(e))
+    row = db_exec(
+        conn,
+        "INSERT INTO orders (hotel_id, guest_name, id_document, product, room_type, hours, "
+        "check_in, check_out, subtotal, status, payment_method, client_ref) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'por_asignar', 'pendiente', %s) "
+        "ON CONFLICT (hotel_id, client_ref) DO NOTHING RETURNING id",
+        (hotel_id, built["guest_name"], built["id_document"], built["product"], built["room_type"],
+         built["hours"], built["check_in"], built["check_out"], built["subtotal"], built["client_ref"]),
+    )
+    if not row:
+        if client_ref:
+            existing = fetch_one(conn, "SELECT * FROM orders WHERE client_ref = %s", (client_ref,))
+            return None, True, existing
+        raise ApiError(400, "Error al crear la orden")
+    return row[0]["id"], False, None
