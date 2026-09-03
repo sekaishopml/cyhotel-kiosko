@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import CustomKeyboard from './ui/CustomKeyboard'
-import { nameSchema } from '../lib/validation'
+import { fullNameSchema } from '../lib/validation'
 
 interface Props {
   planKey: string
@@ -39,7 +39,7 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
   const [docError, setDocError] = useState(false)
 
   const validateName = () => {
-    const ok = nameSchema.safeParse(name).success
+    const ok = fullNameSchema.safeParse(name).success
     if (!ok) setNameError(true)
     return ok
   }
@@ -118,7 +118,7 @@ export default function CheckinForm({ planKey, roomKey, extra, days, roomPrice, 
               {name || <span className="text-navy/20">Toca para escribir</span>}
             </p>
             {nameError && (
-              <p className="text-[0.7rem] font-bold text-red-500 mt-1">Escriba su nombre</p>
+              <p className="text-[0.7rem] font-bold text-red-500 mt-1">Escriba nombre y apellido</p>
             )}
           </div>
 

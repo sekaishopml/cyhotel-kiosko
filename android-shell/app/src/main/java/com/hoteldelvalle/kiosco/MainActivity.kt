@@ -55,7 +55,7 @@ class MainActivity : Activity() {
         const val DEFAULT_URL = "http://68.168.20.219:8000/kiosco/"
         const val DEFAULT_PIN = "12345"
         const val TAG = "KioskoShell"
-        const val APP_VERSION = "1.3.0"
+        const val APP_VERSION = "1.3.1"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
